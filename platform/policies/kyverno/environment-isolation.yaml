@@ -1,0 +1,48 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: dns-environment-isolation
+  annotations:
+    policies.kyverno.io/title: DNS Environment Isolation
+    policies.kyverno.io/category: Multi-Tenancy
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Prevents cross-environment DNS operations. Dev records cannot use prd zones,
+      prd records cannot use dev zones, etc.
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+
+  - name: prevent-cross-environment-record-creation
+    match:
+      any:
+      - resources:
+          kinds:
+          - DNSRecord
+          operations:
+          - CREATE
+          - UPDATE
+    context:
+    # Fetch the target zone to check its environment
+    - name: targetZone
+      apiCall:
+        urlPath: "/apis/dns.crossplane.poc/v1alpha1/dnszones"
+        jmesPath: "items[?status.zoneId=='{{request.object.spec.zoneId}}'] | [0]"
+    preconditions:
+      all:
+      # Only validate if zone was found in cluster
+      - key: "{{ targetZone.spec.environment || '' }}"
+        operator: NotEquals
+        value: ""
+    validate:
+      message: >-
+        Environment mismatch: Cannot create {{request.object.spec.environment}}
+        DNS record in {{targetZone.spec.environment}} zone '{{request.object.spec.zoneId}}'.
+        Record environment must match zone environment.
+      deny:
+        conditions:
+          any:
+          - key: "{{request.object.spec.environment}}"
+            operator: NotEquals
+            value: "{{targetZone.spec.environment}}"

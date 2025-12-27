@@ -1,0 +1,49 @@
+apiVersion: dns.crossplane.poc/v1alpha1
+kind: DNSZone
+metadata:
+  name: new-zone-with-batch-records
+  annotations:
+    # Use CloudFormation batch composition
+    crossplane.io/composition-resource-name: dnszones.batch.cloudformation
+spec:
+  zoneName: newapp.dev.dock.tech
+  environment: dev
+  comment: "New zone created with batch records"
+  tags:
+    ManagedBy: Crossplane
+    Team: Platform
+    CostCenter: Engineering
+
+  # Create zone + add all records in batch (1 API call)
+  records:
+    - name: api
+      type: A
+      ttl: 300
+      values:
+        - "10.0.2.10"
+
+    - name: web
+      type: A
+      ttl: 300
+      values:
+        - "10.0.2.11"
+
+    - name: db
+      type: A
+      ttl: 300
+      values:
+        - "10.0.2.12"
+
+    - name: cache
+      type: A
+      ttl: 300
+      values:
+        - "10.0.2.13"
+
+    - name: queue
+      type: A
+      ttl: 300
+      values:
+        - "10.0.2.14"
+
+    # Add up to 500 records - all created in ONE CloudFormation batch operation

@@ -1,0 +1,22 @@
+apiVersion: dns.infra.dock.tech/v1alpha1
+kind: DNSRequest
+metadata:
+  name: req-example-simple-a-record
+  namespace: dns-system
+  labels:
+    env: dev
+    action: create_record
+    business-unit: banking
+spec:
+  requesterName: example.user@dock.tech
+  requesterId: U12345678
+  action: create_record
+  env: dev
+  hostedzone: myapp.dev.dock.tech
+  businessUnit: banking
+  originTicket: https://jira.dock.tech/browse/REQUEST-12345
+  records:
+    - name: api
+      type: A
+      value: "10.0.1.100"
+      ttl: "300"

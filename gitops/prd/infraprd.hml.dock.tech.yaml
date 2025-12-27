@@ -1,0 +1,19 @@
+apiVersion: dns.crossplane.poc/v1alpha1
+kind: DNSZone
+metadata:
+  name: infraprd-hml-dock-tech
+  namespace: dns-system
+  annotations:
+    crossplane.io/external-name: "Z0195231ON0MEFO4W8P4"
+spec:
+  zoneName: infraprd.hml.dock.tech
+  environment: prd
+  compositionRef:
+    name: dnszones.aws.dns.crossplane.poc.observe
+  tags:
+    Account: prd
+    Environment: prd
+    ManagedBy: crossplane
+    Team: infrastructure-services
+    Tribe: cloud
+  comment: Production environment zone (observe-only)

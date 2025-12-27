@@ -1,0 +1,651 @@
+apiVersion: v1
+data:
+  app.py: |
+    import os
+    import sys
+    from flask import Flask, render_template, request, redirect, url_for, flash
+    from dotenv import load_dotenv
+    from kubernetes.client.rest import ApiException
+
+    from provisioner import Provisioner
+    from dns_provisioner import DNSProvisioner
+    from validator import validate_project_name, validate_domain
+
+    load_dotenv(os.path.join(os.path.dirname(__file__), "..", "config.env"))
+
+    app = Flask(__name__)
+    app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
+
+    provisioner = Provisioner()
+    dns_provisioner = DNSProvisioner()
+
+
+    @app.route("/")
+    def index():
+        try:
+            zones = dns_provisioner.list_zones()
+            return render_template("index.html", zones=zones)
+        except Exception as e:
+            flash(f"Error loading zones: {str(e)}", "error")
+            return render_template("index.html", zones=[])
+
+
+    @app.route("/dns")
+    def dns_dashboard():
+        """DNS zones management dashboard"""
+        try:
+            zones = dns_provisioner.list_zones()
+            return render_template("dns_dashboard.html", zones=zones)
+        except Exception as e:
+            flash(f"Error loading zones: {str(e)}", "error")
+            return render_template("dns_dashboard.html", zones=[])
+
+
+    @app.route("/provision", methods=["POST"])
+    def provision():
+        project_name = request.form.get("project_name", "").strip().lower()
+        domain = request.form.get("domain", "").strip().lower()
+
+        valid, error = validate_project_name(project_name)
+        if not valid:
+            flash(error, "error")
+            return redirect(url_for("index"))
+
+        valid, error = validate_domain(domain)
+        if not valid:
+            flash(error, "error")
+            return redirect(url_for("index"))
+
+        try:
+            if provisioner.exists(project_name):
+                flash(f"App '{project_name}' already exists", "error")
+                return redirect(url_for("index"))
+
+            provisioner.provision(
+                project_name=project_name,
+                domain=domain,
+                region="us-east-2"
+            )
+
+            flash(f"App '{project_name}' provisioning started. URL: {project_name}.{domain}", "success")
+            return redirect(url_for("resources"))
+
+        except ApiException as e:
+            flash(f"Kubernetes API error: {e.reason}", "error")
+            return redirect(url_for("index"))
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+            return redirect(url_for("index"))
+
+
+    @app.route("/resources")
+    def resources():
+        try:
+            apps = provisioner.list_all()
+            return render_template("resources.html", apps=apps)
+        except ApiException as e:
+            flash(f"Failed to list resources: {e.reason}", "error")
+            return render_template("resources.html", apps=[])
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+            return render_template("resources.html", apps=[])
+
+
+    @app.route("/delete/<name>", methods=["POST"])
+    def delete(name):
+        try:
+            provisioner.delete(name)
+            flash(f"App '{name}' deletion started", "success")
+        except ApiException as e:
+            if e.status == 404:
+                flash(f"App '{name}' not found", "error")
+            else:
+                flash(f"Failed to delete: {e.reason}", "error")
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+
+        return redirect(url_for("resources"))
+
+
+    @app.route("/dns/zones/create", methods=["POST"])
+    def create_zone():
+        """Create a new DNS zone"""
+        zone_name = request.form.get("zone_name", "").strip()
+        comment = request.form.get("comment", "").strip()
+        environment = request.form.get("environment", "dev").strip()
+
+        if not zone_name:
+            flash("Zone name is required", "error")
+            return redirect(url_for("dns_dashboard"))
+
+        try:
+            if dns_provisioner.zone_exists(dns_provisioner._sanitize_name(zone_name)):
+                flash(f"Zone '{zone_name}' already exists", "error")
+                return redirect(url_for("dns_dashboard"))
+
+            dns_provisioner.create_zone(zone_name, environment, comment)
+            flash(f"Zone '{zone_name}' created successfully", "success")
+        except ApiException as e:
+            flash(f"Kubernetes API error: {e.reason}", "error")
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+
+        return redirect(url_for("dns_dashboard"))
+
+
+    @app.route("/dns/zones/<zone_name>")
+    def zone_detail(zone_name):
+        """Show zone details and records"""
+        try:
+            zone = dns_provisioner.get_zone(zone_name)
+            records = dns_provisioner.list_records()
+
+            zone_id = zone.get("status", {}).get("zoneId")
+            zone_records = [r for r in records if r.get("zone_id") == zone_id]
+
+            return render_template("zone_detail.html",
+                                 zone=zone,
+                                 zone_name=zone.get("spec", {}).get("zoneName"),
+                                 zone_id=zone_id,
+                                 records=zone_records)
+        except ApiException as e:
+            if e.status == 404:
+                flash(f"Zone '{zone_name}' not found", "error")
+            else:
+                flash(f"Error: {e.reason}", "error")
+            return redirect(url_for("dns_dashboard"))
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+            return redirect(url_for("dns_dashboard"))
+
+
+    @app.route("/dns/zones/<zone_name>/records/create", methods=["POST"])
+    def create_record(zone_name):
+        """Create a DNS record"""
+        try:
+            zone = dns_provisioner.get_zone(zone_name)
+            zone_id = zone.get("status", {}).get("zoneId")
+            environment = zone.get("spec", {}).get("environment", "dev")
+
+            if not zone_id:
+                flash("Zone is not ready yet", "error")
+                return redirect(url_for("zone_detail", zone_name=zone_name))
+
+            record_name = request.form.get("record_name", "").strip()
+            record_type = request.form.get("record_type", "").strip()
+            ttl = int(request.form.get("ttl", 300))
+            values = request.form.get("values", "").strip()
+
+            if not record_name or not record_type:
+                flash("Record name and type are required", "error")
+                return redirect(url_for("zone_detail", zone_name=zone_name))
+
+            values_list = [v.strip() for v in values.split(",") if v.strip()]
+
+            dns_provisioner.create_record(
+                zone_id=zone_id,
+                record_name=record_name,
+                record_type=record_type,
+                environment=environment,
+                ttl=ttl,
+                values=values_list
+            )
+
+            flash(f"Record '{record_name}' created successfully", "success")
+        except ApiException as e:
+            flash(f"Kubernetes API error: {e.reason}", "error")
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+
+        return redirect(url_for("zone_detail", zone_name=zone_name))
+
+
+    @app.route("/dns/zones/<zone_name>/delete", methods=["POST"])
+    def delete_zone(zone_name):
+        """Delete a DNS zone"""
+        try:
+            dns_provisioner.delete_zone(zone_name)
+            flash(f"Zone '{zone_name}' deletion started", "success")
+        except ApiException as e:
+            if e.status == 404:
+                flash(f"Zone '{zone_name}' not found", "error")
+            else:
+                flash(f"Failed to delete: {e.reason}", "error")
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+
+        return redirect(url_for("dns_dashboard"))
+
+
+    @app.route("/dns/records/<record_name>/delete", methods=["POST"])
+    def delete_record(record_name):
+        """Delete a DNS record"""
+        zone_name = request.form.get("zone_name")
+
+        try:
+            dns_provisioner.delete_record(record_name)
+            flash(f"Record '{record_name}' deletion started", "success")
+        except ApiException as e:
+            if e.status == 404:
+                flash(f"Record '{record_name}' not found", "error")
+            else:
+                flash(f"Failed to delete: {e.reason}", "error")
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+
+        if zone_name:
+            return redirect(url_for("zone_detail", zone_name=zone_name))
+        return redirect(url_for("dns_dashboard"))
+
+
+    @app.route("/health")
+    def health():
+        return {"status": "ok"}
+
+
+    if __name__ == "__main__":
+        port = int(os.environ.get("PORT", 3000))
+        debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+        app.run(host="0.0.0.0", port=port, debug=debug)
+  dns_provisioner.py: |
+    from kubernetes import client, config
+    from kubernetes.client.rest import ApiException
+
+
+    class DNSProvisioner:
+        """Manages DNS zones and records via Crossplane XRDs"""
+
+        def __init__(self):
+            try:
+                config.load_incluster_config()
+            except config.ConfigException:
+                config.load_kube_config()
+
+            self.api = client.CustomObjectsApi()
+            self.zone_group = "dns.crossplane.poc"
+            self.version = "v1alpha1"
+            self.zone_plural = "dnszones"
+            self.record_plural = "dnsrecords"
+            self.default_namespace = "dns-system"
+
+        # Zone operations
+        def create_zone(self, zone_name, environment="dev", comment="", namespace=None):
+            """Create a Route53 hosted zone"""
+            namespace = namespace or self.default_namespace
+
+            manifest = {
+                "apiVersion": f"{self.zone_group}/{self.version}",
+                "kind": "DNSZone",
+                "metadata": {
+                    "name": self._sanitize_name(zone_name),
+                    "namespace": namespace
+                },
+                "spec": {
+                    "zoneName": zone_name,
+                    "environment": environment,
+                    "comment": comment or f"Managed zone for {zone_name}"
+                }
+            }
+
+            return self.api.create_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.zone_plural,
+                body=manifest
+            )
+
+        def get_zone(self, name, namespace=None):
+            """Get zone details"""
+            namespace = namespace or self.default_namespace
+
+            return self.api.get_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.zone_plural,
+                name=name
+            )
+
+        def list_zones(self, namespace=None):
+            """List all zones"""
+            namespace = namespace or self.default_namespace
+
+            response = self.api.list_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.zone_plural
+            )
+
+            zones = []
+            for item in response.get("items", []):
+                spec = item.get("spec", {})
+                status = item.get("status", {})
+
+                zones.append({
+                    "name": item["metadata"]["name"],
+                    "zone_name": spec.get("zoneName"),
+                    "comment": spec.get("comment"),
+                    "zone_id": status.get("zoneId"),
+                    "name_servers": status.get("nameServers", []),
+                    "ready": self._is_ready(status),
+                    "created_at": item["metadata"].get("creationTimestamp")
+                })
+
+            return zones
+
+        def delete_zone(self, name, namespace=None):
+            """Delete a zone"""
+            namespace = namespace or self.default_namespace
+
+            self.api.delete_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.zone_plural,
+                name=name
+            )
+
+        def zone_exists(self, name, namespace=None):
+            """Check if zone exists"""
+            namespace = namespace or self.default_namespace
+
+            try:
+                self.get_zone(name, namespace)
+                return True
+            except ApiException as e:
+                if e.status == 404:
+                    return False
+                raise
+
+        # Record operations
+        def create_record(self, zone_id, record_name, record_type, environment="dev",
+                          ttl=300, values=None, alias_target=None, weight=None,
+                          set_identifier=None, namespace=None):
+            """Create a DNS record"""
+            namespace = namespace or self.default_namespace
+
+            spec = {
+                "zoneId": zone_id,
+                "recordName": record_name,
+                "recordType": record_type,
+                "environment": environment,
+                "ttl": ttl
+            }
+
+            if values:
+                spec["values"] = values
+
+            if alias_target:
+                spec["aliasTarget"] = alias_target
+
+            if weight is not None:
+                spec["weight"] = weight
+
+            if set_identifier:
+                spec["setIdentifier"] = set_identifier
+
+            manifest = {
+                "apiVersion": f"{self.zone_group}/{self.version}",
+                "kind": "DNSRecord",
+                "metadata": {
+                    "name": self._sanitize_name(f"{record_name}-{record_type.lower()}"),
+                    "namespace": namespace
+                },
+                "spec": spec
+            }
+
+            return self.api.create_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.record_plural,
+                body=manifest
+            )
+
+        def get_record(self, name, namespace=None):
+            """Get record details"""
+            namespace = namespace or self.default_namespace
+
+            return self.api.get_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.record_plural,
+                name=name
+            )
+
+        def list_records(self, zone_name=None, namespace=None):
+            """List all records, optionally filtered by zone"""
+            namespace = namespace or self.default_namespace
+
+            response = self.api.list_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.record_plural
+            )
+
+            records = []
+            for item in response.get("items", []):
+                spec = item.get("spec", {})
+                status = item.get("status", {})
+
+                record = {
+                    "name": item["metadata"]["name"],
+                    "zone_id": spec.get("zoneId"),
+                    "record_name": spec.get("recordName"),
+                    "record_type": spec.get("recordType"),
+                    "ttl": spec.get("ttl"),
+                    "values": spec.get("values", []),
+                    "alias_target": spec.get("aliasTarget"),
+                    "weight": spec.get("weight"),
+                    "set_identifier": spec.get("setIdentifier"),
+                    "ready": self._is_ready(status),
+                    "created_at": item["metadata"].get("creationTimestamp")
+                }
+
+                records.append(record)
+
+            if zone_name:
+                records = [r for r in records if zone_name in r.get("record_name", "")]
+
+            return records
+
+        def delete_record(self, name, namespace=None):
+            """Delete a record"""
+            namespace = namespace or self.default_namespace
+
+            self.api.delete_namespaced_custom_object(
+                group=self.zone_group,
+                version=self.version,
+                namespace=namespace,
+                plural=self.record_plural,
+                name=name
+            )
+
+        # Helper methods
+        def _sanitize_name(self, name):
+            """Convert domain name to valid Kubernetes resource name"""
+            return name.replace(".", "-").replace("_", "-").lower()
+
+        def _is_ready(self, status):
+            """Check if resource is ready"""
+            conditions = status.get("conditions", [])
+            for condition in conditions:
+                if condition.get("type") == "Ready" and condition.get("status") == "True":
+                    return True
+            return False
+  provisioner.py: |
+    from kubernetes import client, config
+    from kubernetes.client.rest import ApiException
+
+
+    class Provisioner:
+        def __init__(self):
+            try:
+                config.load_incluster_config()
+            except config.ConfigException:
+                config.load_kube_config()
+
+            self.api = client.CustomObjectsApi()
+            self.group = "dns.platform.example"
+            self.version = "v1alpha1"
+            self.plural = "clickcounterapps"
+            self.namespace = "default"
+
+        def provision(self, project_name, domain, region="us-east-2"):
+            manifest = {
+                "apiVersion": f"{self.group}/{self.version}",
+                "kind": "ClickCounterApp",
+                "metadata": {
+                    "name": project_name,
+                    "namespace": self.namespace
+                },
+                "spec": {
+                    "projectName": project_name,
+                    "domain": domain,
+                    "region": region
+                }
+            }
+
+            response = self.api.create_namespaced_custom_object(
+                group=self.group,
+                version=self.version,
+                namespace=self.namespace,
+                plural=self.plural,
+                body=manifest
+            )
+
+            return {
+                "name": response["metadata"]["name"],
+                "namespace": response["metadata"]["namespace"],
+                "uid": response["metadata"]["uid"]
+            }
+
+        def get_status(self, name):
+            response = self.api.get_namespaced_custom_object(
+                group=self.group,
+                version=self.version,
+                namespace=self.namespace,
+                plural=self.plural,
+                name=name
+            )
+
+            status = response.get("status", {})
+            spec = response.get("spec", {})
+
+            return {
+                "ready": self._is_ready(status),
+                "api_endpoint": status.get("apiEndpoint"),
+                "dns_url": f"{spec.get('projectName')}.{spec.get('domain')}",
+                "stack_id": status.get("stackId")
+            }
+
+        def exists(self, name):
+            try:
+                self.api.get_namespaced_custom_object(
+                    group=self.group,
+                    version=self.version,
+                    namespace=self.namespace,
+                    plural=self.plural,
+                    name=name
+                )
+                return True
+            except ApiException as e:
+                if e.status == 404:
+                    return False
+                raise
+
+        def list_all(self):
+            response = self.api.list_namespaced_custom_object(
+                group=self.group,
+                version=self.version,
+                namespace=self.namespace,
+                plural=self.plural
+            )
+
+            resources = []
+            for item in response.get("items", []):
+                spec = item.get("spec", {})
+                status = item.get("status", {})
+
+                api_endpoint = status.get("apiEndpoint")
+                api_gateway_dns = None
+                if api_endpoint:
+                    parts = api_endpoint.replace("https://", "").replace("http://", "").split("/")
+                    api_gateway_dns = parts[0] if parts else None
+
+                resources.append({
+                    "name": item["metadata"]["name"],
+                    "project_name": spec.get("projectName"),
+                    "domain": spec.get("domain"),
+                    "dns_url": f"{spec.get('projectName')}.{spec.get('domain')}",
+                    "ready": self._is_ready(status),
+                    "api_endpoint": api_endpoint,
+                    "api_gateway_dns": api_gateway_dns,
+                    "created_at": item["metadata"].get("creationTimestamp")
+                })
+
+            return resources
+
+        def delete(self, name):
+            self.api.delete_namespaced_custom_object(
+                group=self.group,
+                version=self.version,
+                namespace=self.namespace,
+                plural=self.plural,
+                name=name
+            )
+
+        def _is_ready(self, status):
+            conditions = status.get("conditions", [])
+            for condition in conditions:
+                if condition.get("type") == "Ready" and condition.get("status") == "True":
+                    return True
+            return False
+  validator.py: |
+    import re
+
+
+    def validate_project_name(project_name):
+        if not project_name:
+            return False, "Project name is required"
+
+        if not isinstance(project_name, str):
+            return False, "Project name must be a string"
+
+        trimmed = project_name.strip()
+
+        if len(trimmed) < 3 or len(trimmed) > 63:
+            return False, "Project name must be 3-63 characters"
+
+        pattern = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")
+        if not pattern.match(trimmed):
+            return False, "Project name must contain only lowercase letters, numbers, and hyphens; must start and end with alphanumeric"
+
+        return True, None
+
+
+    def validate_domain(domain):
+        if not domain:
+            return False, "Domain is required"
+
+        if not isinstance(domain, str):
+            return False, "Domain must be a string"
+
+        trimmed = domain.strip()
+
+        if len(trimmed) < 3 or len(trimmed) > 253:
+            return False, "Domain must be 3-253 characters"
+
+        pattern = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$")
+        if not pattern.match(trimmed):
+            return False, "Invalid domain format"
+
+        return True, None
+kind: ConfigMap
+metadata:
+  name: dns-platform-code
+  namespace: dns-platform

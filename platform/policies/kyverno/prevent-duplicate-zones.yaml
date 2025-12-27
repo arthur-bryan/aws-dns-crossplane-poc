@@ -1,0 +1,81 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: prevent-duplicate-dns-zones
+  annotations:
+    policies.kyverno.io/title: Prevent Duplicate DNS Zones
+    policies.kyverno.io/category: Route53
+    policies.kyverno.io/severity: critical
+    policies.kyverno.io/subject: DNSZone
+    policies.kyverno.io/description: >
+      CRITICAL: Prevents creation of duplicate DNS zones with the same zoneName.
+      This policy validates that no other DNSZone resource exists with the same
+      spec.zoneName before allowing creation. Fixes bug that caused 500 duplicate
+      arthurbryan.dev.br zones costing $250/month.
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: prevent-duplicate-zone-names
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+              operations:
+                - CREATE
+      preconditions:
+        all:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: Equals
+            value: CREATE
+      context:
+        - name: existingZones
+          apiCall:
+            method: GET
+            urlPath: "/apis/dns.crossplane.poc/v1alpha1/namespaces/{{ request.namespace }}/dnszones"
+      validate:
+        message: >
+          CRITICAL: DNSZone with zoneName '{{ request.object.spec.zoneName }}'
+          already exists. Found existing zone: {{ existingZones.items[?spec.zoneName=='{{ request.object.spec.zoneName }}'] | [0].metadata.name }}.
+          Cannot create duplicate zones. Delete the existing zone first or use a different name.
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.zoneName }}"
+                operator: AnyIn
+                value: "{{ existingZones.items[].spec.zoneName }}"
+
+    - name: require-external-name-for-existing-zones
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+              operations:
+                - CREATE
+                - UPDATE
+      validate:
+        message: >
+          DNSZone creation must include crossplane.io/external-name annotation when
+          importing an existing Route53 zone. This prevents accidental duplicate zone
+          creation in AWS. Set: metadata.annotations["crossplane.io/external-name"] = "ZONE_ID"
+        pattern:
+          metadata:
+            annotations:
+              crossplane.io/external-name: "?*"
+
+    - name: validate-zone-name-format
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+      validate:
+        message: >
+          Invalid zoneName format. Must be a valid FQDN without trailing dot.
+          Valid: example.com, subdomain.example.com
+          Invalid: example.com., .example.com, example..com
+        pattern:
+          spec:
+            zoneName: "^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$"

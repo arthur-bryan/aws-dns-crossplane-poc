@@ -1,0 +1,26 @@
+apiVersion: dns.infra.dock.tech/v1alpha1
+kind: DNSRequest
+metadata:
+  name: req-example-weighted-routing
+  namespace: dns-system
+  labels:
+    env: prd
+    action: create_weighted_record
+    business-unit: banking
+spec:
+  requesterName: example.user@dock.tech
+  action: create_weighted_record
+  env: prd
+  hostedzone: myapp.dock.tech
+  businessUnit: banking
+  originTicket: https://jira.dock.tech/browse/REQUEST-12345
+  records:
+    - name: www
+      type: A
+      ttl: "60"
+      recordAValue: "10.0.1.100"
+      recordAWeight: 70
+      recordASetIdentifier: primary
+      recordBValue: "10.0.1.101"
+      recordBWeight: 30
+      recordBSetIdentifier: secondary

@@ -1,0 +1,146 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xdnszones.dns.crossplane.poc
+spec:
+  group: dns.crossplane.poc
+  names:
+    kind: XDNSZone
+    plural: xdnszones
+  claimNames:
+    kind: DNSZone
+    plural: dnszones
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                zoneName:
+                  type: string
+                  description: DNS zone name (FQDN)
+                  minLength: 4
+                  maxLength: 253
+                  pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+                comment:
+                  type: string
+                  description: Optional comment for the zone
+                  maxLength: 256
+                environment:
+                  type: string
+                  description: Target environment
+                  enum:
+                    - dev
+                    - hml
+                    - poc
+                    - prd
+                tags:
+                  type: object
+                  description: Optional AWS tags
+                  additionalProperties:
+                    type: string
+                records:
+                  type: array
+                  description: DNS records in this zone
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Record name (relative to zone or FQDN)
+                      type:
+                        type: string
+                        description: Record type
+                        enum: [A, CNAME, TXT, ALIAS]
+                      ttl:
+                        type: integer
+                        description: TTL in seconds
+                        minimum: 60
+                        maximum: 86400
+                      values:
+                        type: array
+                        description: Record values
+                        items:
+                          type: string
+                      aliasTarget:
+                        type: object
+                        description: ALIAS target (for ALIAS records)
+                        properties:
+                          dnsName:
+                            type: string
+                          hostedZoneId:
+                            type: string
+                          evaluateTargetHealth:
+                            type: boolean
+                            default: false
+                      setIdentifier:
+                        type: string
+                        description: Unique identifier for weighted/latency routing policies
+                      weight:
+                        type: integer
+                        description: Weight for weighted routing policy (0-255)
+                        minimum: 0
+                        maximum: 255
+                    required:
+                      - name
+                      - type
+              required:
+                - zoneName
+                - environment
+
+              # CRITICAL: Prevent duplicate zones
+              x-kubernetes-validations:
+                # CEL validation: Zone name must not have trailing dot
+                - rule: "!self.zoneName.endsWith('.')"
+                  message: "zoneName must not end with a dot"
+
+                # CEL validation: Zone name must not start with hyphen
+                - rule: "!self.zoneName.startsWith('-')"
+                  message: "zoneName must not start with hyphen"
+
+                # CEL validation: No consecutive dots
+                - rule: "!self.zoneName.contains('..')"
+                  message: "zoneName must not contain consecutive dots"
+
+            status:
+              type: object
+              properties:
+                zoneId:
+                  type: string
+                  description: Route53 hosted zone ID
+                nameServers:
+                  type: array
+                  description: NS records for zone delegation
+                  items:
+                    type: string
+                ready:
+                  type: boolean
+                  description: Zone is ready for use
+                message:
+                  type: string
+                  description: Human-readable status message
+                conditions:
+                  type: array
+                  description: Standard Kubernetes conditions
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                    required:
+                      - type
+                      - status

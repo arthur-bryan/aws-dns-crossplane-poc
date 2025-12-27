@@ -1,0 +1,19 @@
+apiVersion: dns.crossplane.poc/v1alpha1
+kind: DNSZone
+metadata:
+  name: infrahml-hml-dock-tech
+  namespace: dns-system
+  annotations:
+    crossplane.io/external-name: "Z07088012G012PYYZ2302"
+spec:
+  zoneName: infrahml.hml.dock.tech
+  environment: hml
+  compositionRef:
+    name: dnszones.aws.dns.crossplane.poc.observe
+  tags:
+    Account: hml
+    Environment: hml
+    ManagedBy: crossplane
+    Team: infrastructure-services
+    Tribe: cloud
+  comment: Homolog environment zone (observe-only)

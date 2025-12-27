@@ -1,0 +1,71 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xclickcounterapps.dns.platform.example
+spec:
+  group: dns.platform.example
+  names:
+    kind: XClickCounterApp
+    plural: xclickcounterapps
+  claimNames:
+    kind: ClickCounterApp
+    plural: clickcounterapps
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                projectName:
+                  type: string
+                  description: "Name of the project (alphanumeric + hyphens, 3-63 chars)"
+                domain:
+                  type: string
+                  description: "Base domain for the application (e.g., example.com)"
+                region:
+                  type: string
+                  description: "AWS region to deploy resources (default: us-east-2)"
+                  default: "us-east-2"
+                hostedZoneId:
+                  type: string
+                  description: "Route53 hosted zone ID for DNS record (optional, for reference only)"
+                certificateArn:
+                  type: string
+                  description: "ACM certificate ARN for HTTPS (optional, for future use)"
+              required:
+                - projectName
+                - domain
+                - region
+            status:
+              type: object
+              properties:
+                apiEndpoint:
+                  type: string
+                  description: "API Gateway endpoint URL"
+                lambdaArn:
+                  type: string
+                  description: "Lambda function ARN"
+                dynamoTableName:
+                  type: string
+                  description: "DynamoDB table name"
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string

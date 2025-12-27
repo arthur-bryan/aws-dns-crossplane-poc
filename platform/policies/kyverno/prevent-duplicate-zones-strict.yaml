@@ -1,0 +1,160 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: prevent-duplicate-dns-zones-strict
+  annotations:
+    policies.kyverno.io/title: Prevent Duplicate DNS Zones (Strict)
+    policies.kyverno.io/category: Route53
+    policies.kyverno.io/severity: critical
+    policies.kyverno.io/description: |
+      CRITICAL: Prevents duplicate DNS zones and enforces composition safety.
+      Fixes bug that caused 500 duplicate zones costing $250/month.
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    # Rule 1: Prevent duplicate zone names
+    - name: no-duplicate-zone-names
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+              operations:
+                - CREATE
+                - UPDATE
+      context:
+        - name: existingZones
+          apiCall:
+            urlPath: "/apis/dns.crossplane.poc/v1alpha1/dnszones"
+            jmesPath: "items[?metadata.name != '{{ request.object.metadata.name }}'].spec.zoneName"
+      validate:
+        message: |
+          Duplicate zoneName '{{ request.object.spec.zoneName }}' detected.
+          Existing zones with this name: {{ existingZones }}.
+          Each zoneName must be unique across the cluster.
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.zoneName }}"
+                operator: AnyIn
+                value: "{{ existingZones }}"
+
+    # Rule 2: Require external-name for manage-existing composition
+    - name: manage-existing-requires-external-name
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+              operations:
+                - CREATE
+                - UPDATE
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.compositionRef.name || '' }}"
+            operator: Equals
+            value: "dnszones.manage-existing"
+      validate:
+        message: |
+          Composition 'dnszones.manage-existing' requires external-name annotation.
+          This composition is for importing EXISTING zones only.
+          Add: metadata.annotations["crossplane.io/external-name"] = "<ZONE_ID>"
+        pattern:
+          metadata:
+            annotations:
+              crossplane.io/external-name: "?*"
+
+    # Rule 3: Forbid external-name with create compositions
+    - name: create-mode-forbids-external-name
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+              operations:
+                - CREATE
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.compositionRef.name || '' }}"
+            operator: AnyNotIn
+            value:
+              - "dnszones.manage-existing"
+              - "dnszones.aws.dns.crossplane.poc.observe"
+          - key: "{{ request.object.metadata.annotations['crossplane.io/external-name'] || '' }}"
+            operator: NotEquals
+            value: ""
+      validate:
+        message: |
+          Composition '{{ request.object.spec.compositionRef.name }}' is for CREATING zones.
+          Remove external-name annotation or use 'dnszones.manage-existing' composition.
+        deny:
+          conditions:
+            all:
+              - key: "{{ request.object.metadata.annotations['crossplane.io/external-name'] || '' }}"
+                operator: NotEquals
+                value: ""
+
+    # Rule 4: Validate zone name format
+    - name: valid-zone-name-format
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+      validate:
+        message: |
+          Invalid zoneName format. Must be valid FQDN without trailing dot.
+          Valid: example.com, subdomain.example.com
+          Invalid: example.com., .example.com, example..com
+        pattern:
+          spec:
+            zoneName: "^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$"
+
+    # Rule 5: Protect critical zones from deletion
+    - name: protect-infrastructure-zones
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+              operations:
+                - DELETE
+              names:
+                - infradev-hml-dock-tech
+                - infrahml-hml-dock-tech
+                - infraprd-hml-dock-tech
+      validate:
+        message: |
+          CRITICAL: Infrastructure zones (infradev, infrahml, infraprd) cannot be deleted.
+          These are production zones managed in observe-only mode.
+          Contact platform team if deletion is required.
+        deny:
+          conditions:
+            all:
+              - key: "{{ request.operation }}"
+                operator: Equals
+                value: "DELETE"
+
+    # Rule 6: Enforce observe-only for infra zones
+    - name: infra-zones-must-use-observe
+      match:
+        any:
+          - resources:
+              kinds:
+                - DNSZone
+              operations:
+                - CREATE
+                - UPDATE
+              names:
+                - infradev-hml-dock-tech
+                - infrahml-hml-dock-tech
+                - infraprd-hml-dock-tech
+      validate:
+        message: |
+          Infrastructure zones must use 'dnszones.aws.dns.crossplane.poc.observe' composition.
+          These zones are read-only and managed externally.
+        pattern:
+          spec:
+            compositionRef:
+              name: "dnszones.aws.dns.crossplane.poc.observe"

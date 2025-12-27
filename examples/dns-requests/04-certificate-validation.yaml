@@ -1,0 +1,21 @@
+apiVersion: dns.infra.dock.tech/v1alpha1
+kind: DNSRequest
+metadata:
+  name: req-example-cert-validation
+  namespace: dns-system
+  labels:
+    env: hml
+    action: create_record
+    business-unit: shared
+spec:
+  requesterName: example.user@dock.tech
+  action: create_record
+  env: hml
+  hostedzone: example.hml.dock.tech
+  businessUnit: shared
+  originTicket: https://jira.dock.tech/browse/REQUEST-12345
+  records:
+    - name: _acme-challenge.api
+      type: TXT
+      value: "rFC1BOUy6RClQP3FJhiD-YrjRmgpZ2aPQXWzLZT"
+      ttl: "60"

@@ -1,0 +1,54 @@
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: aws-dev
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-credentials
+      key: credentials
+  assumeRoleChain:
+    - roleARN: arn:aws:iam::DEV_ACCOUNT_ID:role/CrossplaneRoute53Role
+---
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: aws-hml
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-credentials
+      key: credentials
+  assumeRoleChain:
+    - roleARN: arn:aws:iam::HML_ACCOUNT_ID:role/CrossplaneRoute53Role
+---
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: aws-prd
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-credentials
+      key: credentials
+  assumeRoleChain:
+    - roleARN: arn:aws:iam::PRD_ACCOUNT_ID:role/CrossplaneRoute53Role
+---
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: aws-poc
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-credentials-poc
+      key: credentials
+

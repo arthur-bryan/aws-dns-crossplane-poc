@@ -1,0 +1,19 @@
+apiVersion: dns.crossplane.poc/v1alpha1
+kind: DNSZone
+metadata:
+  name: zone-arthurbryan-dev-br-batch-test
+  annotations:
+    # Import existing zone
+    crossplane.io/external-name: Z07417982B64O5OZWCW9Y
+spec:
+  zoneName: arthurbryan.dev.br
+  environment: poc
+  comment: "Deleting 50 test records via CloudFormation batch"
+  compositionRef:
+    name: dnszones.batch.cloudformation
+  tags:
+    ManagedBy: Crossplane
+    GitOps: "true"
+
+  # Empty records array - CloudFormation will DELETE all test records
+  records: []

@@ -1,0 +1,77 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: dnszones.aws.dns.crossplane.poc.observe
+  labels:
+    provider: aws
+    service: route53
+    mode: observe
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: dns.crossplane.poc/v1alpha1
+    kind: XDNSZone
+
+  resources:
+    - name: hostedzone
+      base:
+        apiVersion: route53.aws.crossplane.io/v1alpha1
+        kind: HostedZone
+        spec:
+          deletionPolicy: Orphan
+          managementPolicies:
+            - Observe
+          providerConfigRef:
+            name: aws-poc
+          forProvider:
+            config:
+              privateZone: false
+
+      patches:
+        # Zone name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.zoneName
+          toFieldPath: spec.forProvider.name
+
+        # Tags
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tags
+          toFieldPath: spec.forProvider.tags
+          policy:
+            fromFieldPath: Optional
+
+        # External name (for importing existing zones)
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.annotations[crossplane.io/external-name]
+          toFieldPath: metadata.annotations[crossplane.io/external-name]
+          policy:
+            fromFieldPath: Optional
+
+        # Provider config based on account tag
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.tags.Account
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: string
+              string:
+                type: Format
+                fmt: "aws-%s"
+
+        # Status fields
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.hostedZone.id
+          toFieldPath: status.zoneId
+
+        - type: ToCompositeFieldPath
+          fromFieldPath: status.atProvider.delegationSet.nameServers
+          toFieldPath: status.nameServers
+
+      connectionDetails:
+        - name: zone_id
+          fromFieldPath: status.atProvider.hostedZone.id
+
+      readinessChecks:
+        - type: MatchCondition
+          matchCondition:
+            type: Ready
+            status: "True"

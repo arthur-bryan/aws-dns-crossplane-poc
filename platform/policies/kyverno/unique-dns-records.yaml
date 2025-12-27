@@ -1,0 +1,143 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: unique-dns-records
+  annotations:
+    policies.kyverno.io/title: Unique DNS Records
+    policies.kyverno.io/category: DNS
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: DNSRecord
+    policies.kyverno.io/description: >-
+      Ensures DNS records are unique across the cluster by preventing duplicate
+      recordName + recordType + zoneId combinations. This prevents conflicts and
+      follows DNS protocol requirements.
+spec:
+  validationFailureAction: Audit
+  background: false
+  rules:
+  - name: unique-dns-record-name
+    match:
+      any:
+      - resources:
+          kinds:
+          - DNSRecord
+          operations:
+          - CREATE
+          - UPDATE
+    context:
+    - name: allRecords
+      apiCall:
+        urlPath: "/apis/dns.crossplane.poc/v1alpha1/dnsrecords"
+        jmesPath: >-
+          items[?
+            [metadata.namespace, metadata.name] !=
+            ['{{request.object.metadata.namespace}}', '{{request.object.metadata.name}}']
+          ].{
+            name: spec.recordName,
+            type: spec.recordType,
+            zone: spec.zoneId,
+            namespace: metadata.namespace,
+            resource: metadata.name
+          }
+    validate:
+      message: >-
+        DNS record '{{request.object.spec.recordName}}' of type
+        '{{request.object.spec.recordType}}' already exists in zone
+        '{{request.object.spec.zoneId}}'. Existing record found in
+        namespace '{{ allRecords[?name=='{{request.object.spec.recordName}}' &&
+        type=='{{request.object.spec.recordType}}' &&
+        zone=='{{request.object.spec.zoneId}}'].namespace | [0] }}',
+        resource '{{ allRecords[?name=='{{request.object.spec.recordName}}' &&
+        type=='{{request.object.spec.recordType}}' &&
+        zone=='{{request.object.spec.zoneId}}'].resource | [0] }}'.
+      deny:
+        conditions:
+          any:
+          - key: "{{ allRecords[?name=='{{request.object.spec.recordName}}' && type=='{{request.object.spec.recordType}}' && zone=='{{request.object.spec.zoneId}}'] | length(@) }}"
+            operator: GreaterThan
+            value: 0
+
+  - name: prevent-cname-with-other-types
+    match:
+      any:
+      - resources:
+          kinds:
+          - DNSRecord
+          operations:
+          - CREATE
+          - UPDATE
+    preconditions:
+      all:
+      - key: "{{request.object.spec.recordType}}"
+        operator: Equals
+        value: CNAME
+    context:
+    - name: conflictingRecords
+      apiCall:
+        urlPath: "/apis/dns.crossplane.poc/v1alpha1/dnsrecords"
+        jmesPath: >-
+          items[?
+            spec.recordName == '{{request.object.spec.recordName}}' &&
+            spec.zoneId == '{{request.object.spec.zoneId}}' &&
+            spec.recordType != 'CNAME' &&
+            [metadata.namespace, metadata.name] !=
+            ['{{request.object.metadata.namespace}}', '{{request.object.metadata.name}}']
+          ].{
+            type: spec.recordType,
+            namespace: metadata.namespace,
+            resource: metadata.name
+          }
+    validate:
+      message: >-
+        Cannot create CNAME record '{{request.object.spec.recordName}}' because
+        other record types exist with the same name (DNS protocol restriction).
+        Found {{request.object.spec.recordType}} record in namespace
+        '{{ conflictingRecords[0].namespace }}', resource '{{ conflictingRecords[0].resource }}'.
+      deny:
+        conditions:
+          any:
+          - key: "{{ conflictingRecords | length(@) }}"
+            operator: GreaterThan
+            value: 0
+
+  - name: prevent-other-types-with-cname
+    match:
+      any:
+      - resources:
+          kinds:
+          - DNSRecord
+          operations:
+          - CREATE
+          - UPDATE
+    preconditions:
+      all:
+      - key: "{{request.object.spec.recordType}}"
+        operator: NotEquals
+        value: CNAME
+    context:
+    - name: cnameRecords
+      apiCall:
+        urlPath: "/apis/dns.crossplane.poc/v1alpha1/dnsrecords"
+        jmesPath: >-
+          items[?
+            spec.recordName == '{{request.object.spec.recordName}}' &&
+            spec.zoneId == '{{request.object.spec.zoneId}}' &&
+            spec.recordType == 'CNAME' &&
+            [metadata.namespace, metadata.name] !=
+            ['{{request.object.metadata.namespace}}', '{{request.object.metadata.name}}']
+          ].{
+            namespace: metadata.namespace,
+            resource: metadata.name
+          }
+    validate:
+      message: >-
+        Cannot create {{request.object.spec.recordType}} record
+        '{{request.object.spec.recordName}}' because a CNAME record exists
+        with the same name (DNS protocol restriction). Found CNAME in namespace
+        '{{ cnameRecords[0].namespace }}', resource '{{ cnameRecords[0].resource }}'.
+      deny:
+        conditions:
+          any:
+          - key: "{{ cnameRecords | length(@) }}"
+            operator: GreaterThan
+            value: 0

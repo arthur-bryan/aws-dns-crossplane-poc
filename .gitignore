@@ -1,0 +1,52 @@
+# Environment
+.env
+config.env
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# User configuration
+.claude/
+knowledge-core.md
+
+# Internal documentation (not for public repo)
+CLAUDE.md
+COMPLETE_ANSWERS.md
+CRITICAL_ARCHITECTURE_ISSUE.md
+DOCUMENTATION_UPDATE_SUMMARY.md
+IDP_XRD_INTERACTION_FLOW.md
+REQUIREMENTS.md
+XRD_DEFINITIONS_LOCATION.md
+**/DEPLOYMENT_CLARIFICATION.md
+
+# Keep these public-facing docs (exceptions to *.md):
+# !README.md
+# !gitops/*.md
+# !docs/ARCHITECTURE.md
+# !platform/*/README.md
+
+# OS
+.DS_Store
+Thumbs.db
+route53-*
+
+# Documentation and summaries
+summary/
+*.md
+!README.md
+!docs/ARCHITECTURE.md

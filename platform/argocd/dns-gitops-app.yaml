@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dns-gitops
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  # Source: Git repository with DNS manifests
+  source:
+    repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
+    targetRevision: HEAD
+    path: gitops
+    directory:
+      recurse: true
+
+  # Destination: dns-system namespace in same cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dns-system
+
+  # Sync policy: Auto-sync on Git changes
+  syncPolicy:
+    automated:
+      prune: true          # Delete resources when removed from Git
+      selfHeal: false      # CRITICAL FIX: Disable selfHeal to prevent duplicate zone creation
+      allowEmpty: false    # Don't sync if directory is empty
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true  # FIX: Respect ignoreDifferences to prevent reconciliation loops
+    retry:
+      limit: 2             # CRITICAL FIX: Reduce retry limit from 5 to 2
+      backoff:
+        duration: 10s      # FIX: Increase initial backoff from 5s to 10s
+        factor: 2
+        maxDuration: 5m    # FIX: Increase max backoff from 3m to 5m
+
+  # Ignore differences in these fields (managed by Crossplane)
+  ignoreDifferences:
+    - group: dns.crossplane.poc
+      kind: DNSZone
+      jsonPointers:
+        - /status
+        - /metadata/finalizers
+        - /metadata/resourceVersion
+    - group: dns.crossplane.poc
+      kind: DNSRecord
+      jsonPointers:
+        - /status
+        - /metadata/finalizers
+        - /metadata/resourceVersion

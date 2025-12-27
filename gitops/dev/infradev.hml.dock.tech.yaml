@@ -1,0 +1,19 @@
+apiVersion: dns.crossplane.poc/v1alpha1
+kind: DNSZone
+metadata:
+  name: infradev-hml-dock-tech
+  namespace: dns-system
+  annotations:
+    crossplane.io/external-name: "Z042057136AZ7P05F0XOW"
+spec:
+  zoneName: infradev.hml.dock.tech
+  environment: dev
+  compositionRef:
+    name: dnszones.aws.dns.crossplane.poc.observe
+  tags:
+    Account: dev
+    Environment: dev
+    ManagedBy: crossplane
+    Team: infrastructure-services
+    Tribe: cloud
+  comment: Development environment zone (observe-only)

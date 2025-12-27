@@ -1,0 +1,61 @@
+apiVersion: dns.infra.dock.tech/v1alpha1
+kind: DNSRequest
+metadata:
+  name: req-batch-test-10
+  namespace: dns-system
+  labels:
+    env: dev
+    action: create_record
+    business-unit: banking
+    batch: "true"
+  annotations:
+    crossplane.io/composition-resource-name: dnsrequests.batch.aws.cloudformation
+spec:
+  requesterName: test.user@dock.tech
+  requesterId: U12345678
+  action: create_record
+  env: dev
+  hostedzone: myapp.dev.dock.tech
+  businessUnit: banking
+  originTicket: https://jira.dock.tech/browse/TEST-BATCH-10
+  records:
+    - name: test-api-01
+      type: A
+      value: "10.0.1.101"
+      ttl: "300"
+    - name: test-api-02
+      type: A
+      value: "10.0.1.102"
+      ttl: "300"
+    - name: test-api-03
+      type: A
+      value: "10.0.1.103"
+      ttl: "300"
+    - name: test-api-04
+      type: A
+      value: "10.0.1.104"
+      ttl: "300"
+    - name: test-api-05
+      type: A
+      value: "10.0.1.105"
+      ttl: "300"
+    - name: test-api-06
+      type: A
+      value: "10.0.1.106"
+      ttl: "300"
+    - name: test-api-07
+      type: A
+      value: "10.0.1.107"
+      ttl: "300"
+    - name: test-api-08
+      type: A
+      value: "10.0.1.108"
+      ttl: "300"
+    - name: test-api-09
+      type: A
+      value: "10.0.1.109"
+      ttl: "300"
+    - name: test-api-10
+      type: A
+      value: "10.0.1.110"
+      ttl: "300"
