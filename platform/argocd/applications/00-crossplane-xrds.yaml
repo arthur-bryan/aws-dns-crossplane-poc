@@ -1,28 +1,32 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: crossplane-apis
+  name: crossplane-xrds
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
+  
   source:
     repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
     targetRevision: main
-    path: platform/crossplane/apis
+    path: platform/crossplane/xrds
     directory:
       recurse: true
+  
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: crossplane-system
+  
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
+      - CreateNamespace=true
       - ServerSideApply=true
     retry:
       limit: 5
@@ -30,6 +34,7 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+  
   ignoreDifferences:
     - group: apiextensions.crossplane.io
       kind: CompositeResourceDefinition
