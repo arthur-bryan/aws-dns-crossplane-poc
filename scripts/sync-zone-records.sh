@@ -1,34 +1,138 @@
 #!/bin/bash
-# Sync Route53 records to GitOps YAML (for observe mode import)
+# Automatically sync Route53 records to GitOps YAML with drift detection
 
-ZONE_ID="$1"
-ZONE_NAME="$2"
-ENV="$3"
-OUTPUT_FILE="gitops/${ENV}/${ZONE_NAME}.yaml"
+set -e
 
-if [ -z "$ZONE_ID" ] || [ -z "$ZONE_NAME" ] || [ -z "$ENV" ]; then
-  echo "Usage: $0 <zone-id> <zone-name> <env>"
-  echo "Example: $0 Z042057136AZ7P05F0XOW infradev.hml.dock.tech dev"
+ZONE_NAME="$1"
+ENV="${2:-dev}"  # Default to dev if not specified
+
+if [ -z "$ZONE_NAME" ]; then
+  echo "Usage: $0 <zone-name> [env]"
+  echo ""
+  echo "Examples:"
+  echo "  $0 infradev.hml.dock.tech"
+  echo "  $0 infradev.hml.dock.tech dev"
+  echo "  $0 infrahml.hml.dock.tech hml"
+  echo ""
+  echo "This script will:"
+  echo "  1. Query Route53 for all records in the zone"
+  echo "  2. Compare with current GitOps YAML"
+  echo "  3. Show drift (added/deleted records)"
+  echo "  4. Update the YAML file with current Route53 state"
   exit 1
 fi
 
-echo "Fetching records from Route53 zone $ZONE_ID..."
+YAML_FILE="gitops/${ENV}/${ZONE_NAME}.yaml"
 
-# Query Route53 for all records
-aws route53 list-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --output json > /tmp/route53-records.json
-
-# Parse records and generate YAML (you'd implement actual parsing here)
-# For now, just show what's in Route53
+echo "🔍 Syncing zone: $ZONE_NAME (env: $ENV)"
 echo ""
-echo "Records found in Route53:"
-cat /tmp/route53-records.json | jq -r '.ResourceRecordSets[] | 
-  select(.Type != "NS" and .Type != "SOA") | 
-  "  - name: \"\(.Name | rtrimstr(".'$ZONE_NAME'.") | rtrimstr("."))\"\n    type: \(.Type)\n    ttl: \(.TTL // 300)\n    values:\n      - \"\(.ResourceRecords[0].Value)\""'
 
+# Step 1: Extract zone ID from existing YAML
+if [ ! -f "$YAML_FILE" ]; then
+  echo "❌ Error: GitOps YAML not found: $YAML_FILE"
+  echo "   Create the zone first or check the file path"
+  exit 1
+fi
+
+ZONE_ID=$(grep 'crossplane.io/external-name:' "$YAML_FILE" | awk '{print $2}' | tr -d '"')
+
+if [ -z "$ZONE_ID" ]; then
+  echo "❌ Error: Could not extract zone ID from $YAML_FILE"
+  echo "   Make sure the file has: crossplane.io/external-name annotation"
+  exit 1
+fi
+
+echo "✅ Found zone ID: $ZONE_ID"
 echo ""
+
+# Step 2: Query Route53 for current records
+echo "📡 Querying Route53 for current records..."
+aws route53 list-resource-record-sets --hosted-zone-id "$ZONE_ID" --output json > /tmp/route53-records-${ZONE_ID}.json
+
+# Count records (exclude NS and SOA)
+ROUTE53_COUNT=$(cat /tmp/route53-records-${ZONE_ID}.json | jq '[.ResourceRecordSets[] | select(.Type != "NS" and .Type != "SOA")] | length')
+echo "✅ Found $ROUTE53_COUNT records in Route53"
+echo ""
+
+# Step 3: Parse current GitOps YAML for record count
+YAML_COUNT=$(grep -c "^    - name:" "$YAML_FILE" || echo "0")
+echo "📄 Current GitOps YAML has $YAML_COUNT records"
+echo ""
+
+# Step 4: Show drift summary
+DRIFT=$((ROUTE53_COUNT - YAML_COUNT))
+if [ $DRIFT -gt 0 ]; then
+  echo "⚠️  DRIFT DETECTED: +$DRIFT records added in Route53"
+elif [ $DRIFT -lt 0 ]; then
+  echo "⚠️  DRIFT DETECTED: $DRIFT records deleted from Route53"
+else
+  echo "✅ No drift detected (same record count)"
+fi
+echo ""
+
+# Step 5: Backup current YAML
+BACKUP_FILE="${YAML_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
+cp "$YAML_FILE" "$BACKUP_FILE"
+echo "💾 Backed up current YAML to: $BACKUP_FILE"
+echo ""
+
+# Step 6: Extract YAML header (everything before records:)
+sed -n '1,/^  records:/p' "$YAML_FILE" | head -n -1 > /tmp/yaml-header-${ZONE_ID}.yaml
+
+# Step 7: Generate new records section from Route53
+echo "🔨 Generating new records section from Route53..."
+
+cat > /tmp/yaml-records-${ZONE_ID}.yaml << 'INNER_EOF'
+  records:
+INNER_EOF
+
+# Parse Route53 JSON and convert to YAML
+cat /tmp/route53-records-${ZONE_ID}.json | jq -r '
+  .ResourceRecordSets[] | 
+  select(.Type != "NS" and .Type != "SOA") |
+  
+  # Extract record name (remove zone suffix and trailing dot)
+  (.Name | rtrimstr(".") | split(".") | .[0]) as $shortName |
+  
+  # Build YAML for each record
+  if .AliasTarget then
+    # ALIAS record
+    "    - name: \"\($shortName)\"\n      type: \(.Type)\n      aliasTarget:\n        dnsName: \"\(.AliasTarget.DNSName)\"\n        hostedZoneId: \"\(.AliasTarget.HostedZoneId)\"\n        evaluateTargetHealth: \(.AliasTarget.EvaluateTargetHealth)"
+  elif .SetIdentifier then
+    # Weighted/latency routing
+    "    - name: \"\($shortName)\"\n      type: \(.Type)\n      ttl: \(.TTL)\n      values:\n        - \"\(.ResourceRecords[0].Value)\"\n      setIdentifier: \"\(.SetIdentifier)\"\n      weight: \(.Weight // 0)"
+  else
+    # Standard record
+    "    - name: \"\($shortName)\"\n      type: \(.Type)\n      ttl: \(.TTL)\n      values:\n" + (.ResourceRecords | map("        - \"\(.Value)\"") | join("\n"))
+  end
+' >> /tmp/yaml-records-${ZONE_ID}.yaml
+
+# Step 8: Combine header + new records
+cat /tmp/yaml-header-${ZONE_ID}.yaml > "$YAML_FILE"
+cat /tmp/yaml-records-${ZONE_ID}.yaml >> "$YAML_FILE"
+
+echo "✅ Updated $YAML_FILE with current Route53 state"
+echo ""
+
+# Step 9: Show what changed
+echo "📊 Drift report:"
+echo ""
+git diff --no-index --color=always "$BACKUP_FILE" "$YAML_FILE" || true
+echo ""
+
+# Step 10: Offer to commit
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Next steps:"
-echo "1. Copy the records above to $OUTPUT_FILE"
-echo "2. git add $OUTPUT_FILE"
-echo "3. git commit -m 'Sync records from Route53 for $ZONE_NAME'"
-echo "4. git push origin main"
+echo ""
+echo "1. Review changes above"
+echo "2. If correct, commit to Git:"
+echo ""
+echo "   git add $YAML_FILE"
+echo "   git commit -m \"Sync Route53 records for $ZONE_NAME (+$DRIFT drift)\""
+echo "   git push origin main"
+echo ""
+echo "3. If incorrect, restore backup:"
+echo ""
+echo "   mv $BACKUP_FILE $YAML_FILE"
+echo ""
+echo "Backup saved at: $BACKUP_FILE"
