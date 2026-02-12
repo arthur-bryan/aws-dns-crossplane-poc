@@ -55,8 +55,8 @@ spec:
                         description: Record name (relative to zone or FQDN)
                       type:
                         type: string
-                        description: Record type
-                        enum: [A, CNAME, TXT, ALIAS]
+                        description: Record type (AWS Route53 supported types)
+                        enum: [A, AAAA, CNAME, MX, NS, PTR, SOA, SRV, TXT, CAA, ALIAS]
                       ttl:
                         type: integer
                         description: TTL in seconds

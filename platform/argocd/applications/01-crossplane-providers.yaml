@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: crossplane-providerconfigs
+  name: crossplane-providers
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -9,13 +9,16 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
+
   source:
     repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
     targetRevision: main
-    path: platform/crossplane/providerconfigs
+    path: platform/crossplane/providers
+
   destination:
     server: https://kubernetes.default.svc
     namespace: crossplane-system
+
   syncPolicy:
     automated:
       prune: true

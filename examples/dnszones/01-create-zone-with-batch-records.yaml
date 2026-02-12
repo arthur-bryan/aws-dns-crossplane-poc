@@ -3,7 +3,6 @@ kind: DNSZone
 metadata:
   name: new-zone-with-batch-records
   annotations:
-    # Use CloudFormation batch composition
     crossplane.io/composition-resource-name: dnszones.batch.cloudformation
 spec:
   zoneName: newapp.dev.dock.tech
@@ -14,7 +13,6 @@ spec:
     Team: Platform
     CostCenter: Engineering
 
-  # Create zone + add all records in batch (1 API call)
   records:
     - name: api
       type: A
@@ -46,4 +44,3 @@ spec:
       values:
         - "10.0.2.14"
 
-    # Add up to 500 records - all created in ONE CloudFormation batch operation

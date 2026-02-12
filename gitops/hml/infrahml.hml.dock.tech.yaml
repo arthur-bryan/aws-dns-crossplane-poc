@@ -17,3 +17,1243 @@ spec:
     Team: infrastructure-services
     Tribe: cloud
   comment: Homolog environment zone (observe-only)
+  records:
+    - name: "aaa-000"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.10"
+    - name: "aaa-0000"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.10"
+    - name: "aaa-00000"
+      type: CNAME
+      ttl: 3600
+      values:
+        - "dock.tech"
+    - name: "aaa-0001"
+      type: A
+      ttl: 3600
+      values:
+        - "201.222.96.113"
+    - name: "aaa-0004"
+      type: CNAME
+      ttl: 3600
+      values:
+        - "dock.tech"
+    - name: "aaa-001"
+      type: A
+      ttl: 3600
+      values:
+        - "201.222.96.113"
+    - name: "alias-rollback-1765903294"
+      type: A
+      aliasTarget:
+        dnsName: "my-loadbalancer-1234567890.us-east-2.elb.amazonaws.com"
+        hostedZoneId: "Z3AADJGX6KTTL2"
+        evaluateTargetHealth: true
+    - name: "alias-update-rollback-1765909118"
+      type: A
+      aliasTarget:
+        dnsName: "my-loadbalancer-1234567890.us-east-2.elb.amazonaws.com"
+        hostedZoneId: "Z3AADJGX6KTTL2"
+        evaluateTargetHealth: true
+    - name: "alias-update-rollback-1765910281"
+      type: A
+      aliasTarget:
+        dnsName: "my-loadbalancer-1234567890.us-east-2.elb.amazonaws.com"
+        hostedZoneId: "Z3AADJGX6KTTL2"
+        evaluateTargetHealth: true
+    - name: "alias-update-rollback-1765911388"
+      type: A
+      aliasTarget:
+        dnsName: "my-loadbalancer-1234567890.us-east-2.elb.amazonaws.com"
+        hostedZoneId: "Z3AADJGX6KTTL2"
+        evaluateTargetHealth: true
+    - name: "alias-update-rollback-1765912871"
+      type: A
+      aliasTarget:
+        dnsName: "d111111abcdef8.cloudfront.net"
+        hostedZoneId: "Z2FDTNDATAQYW2"
+        evaluateTargetHealth: false
+    - name: "api-prd-1764738482"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.50"
+    - name: "api-prd-1764772111"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.50"
+    - name: "api-prd-1764780657"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.50"
+    - name: "api-prd-1765324732"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.50"
+    - name: "api-prd-1765377287"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.50"
+    - name: "api-prd-1765379711"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.50"
+    - name: "api-prd-1765380475"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.50"
+    - name: "cancel-deploy-1762889407"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "cancel-deploy-1762891809"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "cancel-deploy-1764184420"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "cancel-deploy-1764187493"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "cancel-deploy-1764201367"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "cancel-deploy"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "complete-workflow"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.100"
+    - name: "freeze-test-1762891780"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "freeze-test-1764184391"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "freeze-test-1764187464"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "hello-world"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.10"
+    - name: "hml-a-private-multiple-2"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.20"
+    - name: "hml-a-private-multiple"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.10"
+    - name: "hml-a-public-multiple-a"
+      type: A
+      ttl: 3600
+      values:
+        - "202.101.67.241"
+    - name: "hml-a-public-multiple-b"
+      type: A
+      ttl: 3600
+      values:
+        - "221.56.65.222"
+    - name: "hml-a-public-single"
+      type: A
+      ttl: 3600
+      values:
+        - "201.202.96.101"
+    - name: "hml-cname-public-multiple-a"
+      type: CNAME
+      ttl: 3600
+      values:
+        - "dock.tech"
+    - name: "hml-cname-public-multiple-b"
+      type: CNAME
+      ttl: 3600
+      values:
+        - "dock.tech"
+    - name: "hml-private-a-single"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.10"
+    - name: "hml2-cname-public-single"
+      type: CNAME
+      ttl: 3600
+      values:
+        - "dock.tech"
+    - name: "idempotent-test-1762824987"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1762825190"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1762883403"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1762887170"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1762888154"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1762889352"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1762891754"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1764184359"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1764187433"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test-1764201304"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "idempotent-test"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "internal-api-1762824537"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762826934"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762832443"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762834929"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762835619"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762836427"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762836810"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762837264"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762837970"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762838526"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762838902"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762839237"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762839853"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762840517"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762840716"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762883101"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762886868"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762887916"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762889294"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1762891698"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1764183698"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1764186767"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1764200637"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1764735545"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1764777182"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1764778944"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api-1764780657"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "internal-api"
+      type: A
+      ttl: 300
+      values:
+        - "10.10.1.50"
+    - name: "invalid-transition"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "multi-approve-1762887170"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-approve-1762888154"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-approve-1762889352"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-approve-1762891754"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-approve-1764184359"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-approve-1764187433"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-approve-1764201304"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-approve"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.60"
+    - name: "multi-rollback-1-1764636869"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.10"
+    - name: "multi-rollback-1-1764639481"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.10"
+    - name: "multi-rollback-2-1764636869"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.20"
+    - name: "multi-rollback-2-1764639481"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.20"
+    - name: "multi-rollback-3-1764636869"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.30"
+    - name: "multi-rollback-3-1764639481"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.30"
+    - name: "multi-update-1-1764640083"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.2.100"
+    - name: "multi-update-1-1764694358"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.2.100"
+    - name: "multi-update-1-1765404959"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.100"
+    - name: "multi-update-1-1765411272"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.100"
+    - name: "multi-update-2-1764640083"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.2.200"
+    - name: "multi-update-2-1764694358"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.2.200"
+    - name: "multi-update-2-1765404959"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.200"
+    - name: "multi-update-2-1765411272"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.1.200"
+    - name: "pending-cancel-1762887226"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.80"
+    - name: "pending-cancel-1762889407"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.80"
+    - name: "pending-cancel-1762891809"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.80"
+    - name: "pending-cancel-1764184420"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.80"
+    - name: "pending-cancel-1764187493"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.80"
+    - name: "pending-cancel-1764201367"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.80"
+    - name: "pending-cancel"
+      type: A
+      ttl: 300
+      values:
+        - "203.0.113.80"
+    - name: "record-a"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.20"
+    - name: "record-alias-external"
+      type: A
+      aliasTarget:
+        dnsName: "d111111abcdef8.cloudfront.net"
+        hostedZoneId: "Z2FDTNDATAQYW2"
+        evaluateTargetHealth: true
+    - name: "record-alias-internal"
+      type: A
+      aliasTarget:
+        dnsName: "record-alias-external.infrahml.hml.dock.tech"
+        hostedZoneId: "Z07088012G012PYYZ2302"
+        evaluateTargetHealth: true
+    - name: "record-cname"
+      type: CNAME
+      ttl: 300
+      values:
+        - "example.record.com"
+    - name: "record-txt"
+      type: TXT
+      ttl: 7200
+      values:
+        - '"BX15BBBBBBBBBBBBBBB"'
+    - name: "record-weighted-a"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.80"
+      setIdentifier: "record-weighted-a-a"
+      weight: 204
+    - name: "record-weighted-a"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.20"
+      setIdentifier: "record-weighted-a-b"
+      weight: 51
+    - name: "record-weighted-cname"
+      type: CNAME
+      ttl: 7200
+      values:
+        - "example-a.test.com"
+      setIdentifier: "record-weighted-cname-a"
+      weight: 255
+    - name: "record-weighted-cname"
+      type: CNAME
+      ttl: 7200
+      values:
+        - "example-b.test.com"
+      setIdentifier: "record-weighted-cname-b"
+      weight: 0
+    - name: "rollback-test-1764639181"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "rollback-test-1765326001"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "rollback-test-1765326610"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "rollback-test-1765381662"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "rollback-test-1765382672"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "_acme-challenge.test-api"
+      type: TXT
+      ttl: 300
+      values:
+        - '"sgcmcwaexyhkvqietjcbvlmp-drkoiqsubjos_g4fz8"'
+    - name: "_acme-challenge.test-auth"
+      type: TXT
+      ttl: 300
+      values:
+        - '"6mheqszptgxap_us4nnplch58f4dk_dlbki6r6omqzc"'
+    - name: "test-prd-api-1764738482"
+      type: A
+      ttl: 300
+      values:
+        - "52.85.151.23"
+    - name: "test-private-cname"
+      type: CNAME
+      ttl: 300
+      values:
+        - "record-a.infrahml.hml.dock.tech"
+    - name: "test-public-api-1762835278"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1762840716"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1762883101"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1762886868"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1762887916"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1762889294"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1762891698"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1764183698"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1764186767"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api-1764200637"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-api"
+      type: A
+      ttl: 300
+      values:
+        - "151.101.1.140"
+    - name: "test-public-cname-1762840716"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1762883101"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1762886868"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1762887916"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1762889294"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1762891698"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1764183698"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1764186767"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname-1764200637"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "test-public-cname"
+      type: CNAME
+      ttl: 300
+      values:
+        - "cdn.jsdelivr.net"
+    - name: "update-rollback-test-1762891850"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.0.200"
+    - name: "update-rollback-test-1764639782"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.0.200"
+    - name: "update-rollback-test-1765402248"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.200"
+    - name: "update-rollback-test-1765403644"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.200"
+    - name: "update-rollback-test-1765404378"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.100"
+    - name: "weighted-rollback-1765409499"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.10"
+      setIdentifier: "weighted-rollback-1765409499-a"
+      weight: 255
+    - name: "weighted-rollback-1765409499"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.20"
+      setIdentifier: "weighted-rollback-1765409499-b"
+      weight: 194
+    - name: "weighted-rollback-1765415699"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.10"
+      setIdentifier: "weighted-rollback-1765415699-a"
+      weight: 255
+    - name: "weighted-rollback-1765415699"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.20"
+      setIdentifier: "weighted-rollback-1765415699-b"
+      weight: 194
+    - name: "weighted-rollback-1765415971"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.10"
+      setIdentifier: "weighted-rollback-1765415971-a"
+      weight: 255
+    - name: "weighted-rollback-1765415971"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.20"
+      setIdentifier: "weighted-rollback-1765415971-b"
+      weight: 194
+    - name: "weighted-rollback-1765417278"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.10"
+      setIdentifier: "weighted-rollback-1765417278-a"
+      weight: 255
+    - name: "weighted-rollback-1765417278"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.20"
+      setIdentifier: "weighted-rollback-1765417278-b"
+      weight: 194
+    - name: "weighted-rollback-1765852738"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.10"
+      setIdentifier: "weighted-rollback-1765852738-a"
+      weight: 255
+    - name: "weighted-rollback-1765852738"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.20"
+      setIdentifier: "weighted-rollback-1765852738-b"
+      weight: 194
+    - name: "weighted-rollback-1765853521"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.10"
+      setIdentifier: "weighted-rollback-1765853521-a"
+      weight: 255
+    - name: "weighted-rollback-1765853521"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.3.20"
+      setIdentifier: "weighted-rollback-1765853521-b"
+      weight: 194
+    - name: "weighted-update-rollback-1765419625"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765419625-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765419625"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765419625-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765420081"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765420081-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765420081"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765420081-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765420746"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765420746-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765420746"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765420746-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765421183"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765421183-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765421183"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765421183-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765422359"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765422359-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765422359"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765422359-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765453417"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765453417-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765453417"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765453417-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765453667"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765453667-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765453667"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765453667-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765454090"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765454090-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765454090"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765454090-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765454583"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765454583-a"
+      weight: 127
+    - name: "weighted-update-rollback-1765454583"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765454583-b"
+      weight: 127
+    - name: "weighted-update-rollback-1765459359"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765459359-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765459359"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765459359-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765463017"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765463017-a"
+      weight: 127
+    - name: "weighted-update-rollback-1765463017"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765463017-b"
+      weight: 127
+    - name: "weighted-update-rollback-1765465776"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765465776-a"
+      weight: 127
+    - name: "weighted-update-rollback-1765465776"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765465776-b"
+      weight: 127
+    - name: "weighted-update-rollback-1765466819"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765466819-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765466819"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765466819-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765468391"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765468391-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765468391"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765468391-b"
+      weight: 255
+    - name: "weighted-update-rollback-1765856146"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765856146-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765856146"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765856146-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765857415"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765857415-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765857415"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765857415-b"
+      weight: 255
+    - name: "weighted-update-rollback-1765859001"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765859001-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765859001"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765859001-b"
+      weight: 255
+    - name: "weighted-update-rollback-1765860770"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765860770-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765860770"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765860770-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765861890"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765861890-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765861890"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765861890-b"
+      weight: 255
+    - name: "weighted-update-rollback-1765881471"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765881471-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765881471"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765881471-b"
+      weight: 255
+    - name: "weighted-update-rollback-1765893467"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765893467-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765893467"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765893467-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765894567"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765894567-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765894567"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765894567-b"
+      weight: 255
+    - name: "weighted-update-rollback-1765896427"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.100"
+      setIdentifier: "weighted-update-rollback-1765896427-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765896427"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.110"
+      setIdentifier: "weighted-update-rollback-1765896427-b"
+      weight: 255
+    - name: "weighted-update-rollback-1765898876"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765898876-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765898876"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765898876-b"
+      weight: 130
+    - name: "weighted-update-rollback-1765900333"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.200"
+      setIdentifier: "weighted-update-rollback-1765900333-a"
+      weight: 255
+    - name: "weighted-update-rollback-1765900333"
+      type: A
+      ttl: 600
+      values:
+        - "10.0.3.210"
+      setIdentifier: "weighted-update-rollback-1765900333-b"
+      weight: 255
+    - name: "window-hml"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "window-override"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "window-test-1762891780"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "window-test-1764184391"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "window-test-1764187464"
+      type: A
+      ttl: 300
+      values:
+        - "10.0.0.1"
+    - name: "zzzzz-00001"
+      type: CNAME
+      ttl: 3600
+      values:
+        - "dock.tech"
+    - name: "zzzzz-00002"
+      type: A
+      ttl: 3600
+      values:
+        - "10.0.0.10"

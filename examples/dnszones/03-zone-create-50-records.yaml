@@ -3,7 +3,6 @@ kind: DNSZone
 metadata:
   name: zone-arthurbryan-dev-br-batch-test
   annotations:
-    # Import existing zone
     crossplane.io/external-name: Z07417982B64O5OZWCW9Y
 spec:
   zoneName: arthurbryan.dev.br
@@ -16,7 +15,6 @@ spec:
     GitOps: "true"
     RecordCount: "50"
 
-  # All records created in ONE CloudFormation batch API call
   records:
     - name: test-batch-0001
       type: A
