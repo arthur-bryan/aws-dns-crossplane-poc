@@ -12,66 +12,76 @@ spec:
     apiVersion: dns.crossplane.poc/v1alpha1
     kind: XDNSZone
 
-  resources:
-    - name: hostedzone
-      base:
-        apiVersion: route53.aws.crossplane.io/v1alpha1
-        kind: HostedZone
-        spec:
-          deletionPolicy: Orphan
-          managementPolicies:
-            - Observe
-          providerConfigRef:
-            name: aws-poc
-          forProvider:
-            config:
-              privateZone: false
+  mode: Pipeline
 
-      patches:
-        # Zone name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.zoneName
-          toFieldPath: spec.forProvider.name
+  pipeline:
+    - step: observe-zone
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: zone
+            base:
+              apiVersion: route53.aws.upbound.io/v1beta1
+              kind: Zone
+              spec:
+                managementPolicies: ["Observe"]
+                deletionPolicy: Orphan
+                forProvider:
+                  region: us-east-1
+            patches:
+              # REQUIRED: Import via external-name annotation
+              - type: FromCompositeFieldPath
+                fromFieldPath: metadata.annotations[crossplane.io/external-name]
+                toFieldPath: metadata.annotations[crossplane.io/external-name]
 
-        # Tags
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.tags
-          toFieldPath: spec.forProvider.tags
-          policy:
-            fromFieldPath: Optional
+              # Zone name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.zoneName
+                toFieldPath: spec.forProvider.name
 
-        # External name (for importing existing zones)
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.annotations[crossplane.io/external-name]
-          toFieldPath: metadata.annotations[crossplane.io/external-name]
-          policy:
-            fromFieldPath: Optional
+              # Comment
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.comment
+                toFieldPath: spec.forProvider.comment
+                policy:
+                  fromFieldPath: Optional
 
-        # Provider config based on account tag
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.tags.Account
-          toFieldPath: spec.providerConfigRef.name
-          transforms:
-            - type: string
-              string:
-                type: Format
-                fmt: "aws-%s"
+              # Environment-based provider config
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.environment
+                toFieldPath: spec.providerConfigRef.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "aws-%s"
 
-        # Status fields
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.hostedZone.id
-          toFieldPath: status.zoneId
+              # Tags
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.environment
+                toFieldPath: spec.forProvider.tags.Environment
 
-        - type: ToCompositeFieldPath
-          fromFieldPath: status.atProvider.delegationSet.nameServers
-          toFieldPath: status.nameServers
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.tags
+                toFieldPath: spec.forProvider.tags
+                policy:
+                  fromFieldPath: Optional
 
-      connectionDetails:
-        - name: zone_id
-          fromFieldPath: status.atProvider.hostedZone.id
+              # Status fields - zone ID
+              - type: ToCompositeFieldPath
+                fromFieldPath: status.atProvider.id
+                toFieldPath: status.zoneId
 
-      readinessChecks:
-        - type: MatchCondition
-          matchCondition:
-            type: Ready
-            status: "True"
+              # Status fields - nameservers
+              - type: ToCompositeFieldPath
+                fromFieldPath: status.atProvider.nameServers
+                toFieldPath: status.nameservers
+
+            readinessChecks:
+              - type: MatchCondition
+                matchCondition:
+                  type: Ready
+                  status: "True"
