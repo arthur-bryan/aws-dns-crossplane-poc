@@ -93,17 +93,11 @@ spec:
                 - zoneName
                 - environment
 
-              # CRITICAL: Prevent duplicate zones
               x-kubernetes-validations:
-                # CEL validation: Zone name must not have trailing dot
                 - rule: "!self.zoneName.endsWith('.')"
                   message: "zoneName must not end with a dot"
-
-                # CEL validation: Zone name must not start with hyphen
                 - rule: "!self.zoneName.startsWith('-')"
                   message: "zoneName must not start with hyphen"
-
-                # CEL validation: No consecutive dots
                 - rule: "!self.zoneName.contains('..')"
                   message: "zoneName must not contain consecutive dots"
 
