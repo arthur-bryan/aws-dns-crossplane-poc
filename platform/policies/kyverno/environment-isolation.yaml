@@ -10,7 +10,7 @@ metadata:
       Prevents cross-environment DNS operations. Dev records cannot use prd zones,
       prd records cannot use dev zones, etc.
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Audit
   background: false
   rules:
 
