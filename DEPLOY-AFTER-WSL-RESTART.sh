@@ -42,7 +42,7 @@ if ! k3d version &> /dev/null; then
     exit 1
 fi
 
-log_success "✅ Go binaries functional (threading issue resolved)"
+log_success "Go binaries functional (threading issue resolved)"
 
 # Step 2: Create k3d cluster
 log_step "2/7 Creating k3d cluster 'crossplane-lab'..."
@@ -61,7 +61,7 @@ k3d cluster create crossplane-lab \
   --wait \
   --timeout 180s
 
-log_success "✅ k3d cluster created"
+log_success "k3d cluster created"
 
 # Step 3: Verify cluster access
 log_step "3/7 Verifying cluster access..."
@@ -77,7 +77,7 @@ if ! kubectl get nodes &> /dev/null; then
 fi
 
 NODES=$(kubectl get nodes --no-headers | wc -l)
-log_success "✅ Cluster accessible ($NODES node(s))"
+log_success "Cluster accessible ($NODES node(s))"
 
 # Step 4: Install ArgoCD
 log_step "4/7 Installing ArgoCD..."
@@ -94,7 +94,7 @@ else
     log_info "Waiting for ArgoCD to be ready..."
     kubectl wait --for=condition=Available --timeout=600s deployment/argocd-server -n argocd
 
-    log_success "✅ ArgoCD installed successfully"
+    log_success "ArgoCD installed successfully"
 fi
 
 # Step 5: Get ArgoCD credentials
@@ -103,7 +103,7 @@ log_step "5/7 Retrieving ArgoCD credentials..."
 ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 -d)
 
 if [ -n "$ARGOCD_PASSWORD" ]; then
-    log_success "✅ ArgoCD admin password retrieved"
+    log_success "ArgoCD admin password retrieved"
 else
     log_warn "Could not retrieve admin password"
 fi
@@ -119,7 +119,7 @@ else
     kubectl apply -f "$SCRIPT_DIR/platform/argocd/bootstrap/root-app.yaml"
 fi
 
-log_success "✅ root-app deployed"
+log_success "root-app deployed"
 
 # Step 7: Wait for applications to sync
 log_step "7/7 Waiting for applications to deploy (sync waves 0→1→2→3)..."
@@ -135,7 +135,7 @@ check_app() {
         local health=$(kubectl get application "$app_name" -n argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown")
 
         if [ "$status" = "Synced" ] && [ "$health" = "Healthy" ]; then
-            log_success "✅ $app_name: Synced and Healthy"
+            log_success "$app_name: Synced and Healthy"
             return 0
         fi
 
@@ -144,7 +144,7 @@ check_app() {
         elapsed=$((elapsed + 10))
     done
 
-    log_warn "⚠️  $app_name: Timeout (may still be syncing)"
+    log_warn "WARNING: $app_name: Timeout (may still be syncing)"
     return 1
 }
 
@@ -172,10 +172,10 @@ sleep 10
 ZONES=$(kubectl get dnszone -n dns-system --no-headers 2>/dev/null | wc -l)
 
 if [ "$ZONES" -eq 3 ]; then
-    log_success "✅ All 3 DNS zones deployed:"
+    log_success "All 3 DNS zones deployed:"
     kubectl get dnszone -n dns-system
 else
-    log_warn "⚠️  Expected 3 zones, found $ZONES"
+    log_warn "WARNING: Expected 3 zones, found $ZONES"
     kubectl get dnszone -n dns-system 2>/dev/null || log_error "No zones found"
 fi
 
@@ -203,7 +203,7 @@ echo "     URL: https://localhost:8080"
 echo "     Username: admin"
 echo "     Password: $ARGOCD_PASSWORD"
 echo ""
-echo "✅ Next Steps:"
+echo "Next Steps:"
 echo "  1. Access ArgoCD UI (see above)"
 echo "  2. View all applications:"
 echo "     kubectl get applications -n argocd"

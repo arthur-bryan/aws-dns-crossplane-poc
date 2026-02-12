@@ -4,7 +4,7 @@
 set -e
 
 ZONE_NAME="$1"
-ENV="${2:-dev}"  # Default to dev if not specified
+ENV="${2:-dev}"
 
 if [ -z "$ZONE_NAME" ]; then
   echo "Usage: $0 <zone-name> [env]"
@@ -24,104 +24,87 @@ fi
 
 YAML_FILE="gitops/${ENV}/${ZONE_NAME}.yaml"
 
-echo "🔍 Syncing zone: $ZONE_NAME (env: $ENV)"
+echo "Syncing zone: $ZONE_NAME (env: $ENV)"
 echo ""
 
-# Step 1: Extract zone ID from existing YAML
 if [ ! -f "$YAML_FILE" ]; then
-  echo "❌ Error: GitOps YAML not found: $YAML_FILE"
-  echo "   Create the zone first or check the file path"
+  echo "Error: GitOps YAML not found: $YAML_FILE"
+  echo "Create the zone first or check the file path"
   exit 1
 fi
 
 ZONE_ID=$(grep 'crossplane.io/external-name:' "$YAML_FILE" | awk '{print $2}' | tr -d '"')
 
 if [ -z "$ZONE_ID" ]; then
-  echo "❌ Error: Could not extract zone ID from $YAML_FILE"
-  echo "   Make sure the file has: crossplane.io/external-name annotation"
+  echo "Error: Could not extract zone ID from $YAML_FILE"
+  echo "Make sure the file has: crossplane.io/external-name annotation"
   exit 1
 fi
 
-echo "✅ Found zone ID: $ZONE_ID"
+echo "Found zone ID: $ZONE_ID"
 echo ""
 
-# Step 2: Query Route53 for current records
-echo "📡 Querying Route53 for current records..."
+echo "Querying Route53 for current records..."
 aws route53 list-resource-record-sets --hosted-zone-id "$ZONE_ID" --output json > /tmp/route53-records-${ZONE_ID}.json
 
-# Count records (exclude NS and SOA)
 ROUTE53_COUNT=$(cat /tmp/route53-records-${ZONE_ID}.json | jq '[.ResourceRecordSets[] | select(.Type != "NS" and .Type != "SOA")] | length')
-echo "✅ Found $ROUTE53_COUNT records in Route53"
+echo "Found $ROUTE53_COUNT records in Route53"
 echo ""
 
-# Step 3: Parse current GitOps YAML for record count
 YAML_COUNT=$(grep -c "^    - name:" "$YAML_FILE" || echo "0")
-echo "📄 Current GitOps YAML has $YAML_COUNT records"
+echo "Current GitOps YAML has $YAML_COUNT records"
 echo ""
 
-# Step 4: Show drift summary
 DRIFT=$((ROUTE53_COUNT - YAML_COUNT))
 if [ $DRIFT -gt 0 ]; then
-  echo "⚠️  DRIFT DETECTED: +$DRIFT records added in Route53"
+  echo "DRIFT DETECTED: +$DRIFT records added in Route53"
 elif [ $DRIFT -lt 0 ]; then
-  echo "⚠️  DRIFT DETECTED: $DRIFT records deleted from Route53"
+  echo "DRIFT DETECTED: $DRIFT records deleted from Route53"
 else
-  echo "✅ No drift detected (same record count)"
+  echo "No drift detected (same record count)"
 fi
 echo ""
 
-# Step 5: Backup current YAML
 BACKUP_FILE="${YAML_FILE}.backup-$(date +%Y%m%d-%H%M%S)"
 cp "$YAML_FILE" "$BACKUP_FILE"
-echo "💾 Backed up current YAML to: $BACKUP_FILE"
+echo "Backed up current YAML to: $BACKUP_FILE"
 echo ""
 
-# Step 6: Extract YAML header (everything before records:)
 sed -n '1,/^  records:/p' "$YAML_FILE" | head -n -1 > /tmp/yaml-header-${ZONE_ID}.yaml
 
-# Step 7: Generate new records section from Route53
-echo "🔨 Generating new records section from Route53..."
+echo "Generating new records section from Route53..."
 
 cat > /tmp/yaml-records-${ZONE_ID}.yaml << 'INNER_EOF'
   records:
 INNER_EOF
 
-# Parse Route53 JSON and convert to YAML
 cat /tmp/route53-records-${ZONE_ID}.json | jq -r '
-  .ResourceRecordSets[] | 
+  .ResourceRecordSets[] |
   select(.Type != "NS" and .Type != "SOA") |
-  
-  # Extract record name (remove zone suffix and trailing dot)
+
   (.Name | rtrimstr(".") | split(".") | .[0]) as $shortName |
-  
-  # Build YAML for each record
+
   if .AliasTarget then
-    # ALIAS record
     "    - name: \"\($shortName)\"\n      type: \(.Type)\n      aliasTarget:\n        dnsName: \"\(.AliasTarget.DNSName)\"\n        hostedZoneId: \"\(.AliasTarget.HostedZoneId)\"\n        evaluateTargetHealth: \(.AliasTarget.EvaluateTargetHealth)"
   elif .SetIdentifier then
-    # Weighted/latency routing
     "    - name: \"\($shortName)\"\n      type: \(.Type)\n      ttl: \(.TTL)\n      values:\n        - \"\(.ResourceRecords[0].Value)\"\n      setIdentifier: \"\(.SetIdentifier)\"\n      weight: \(.Weight // 0)"
   else
-    # Standard record
     "    - name: \"\($shortName)\"\n      type: \(.Type)\n      ttl: \(.TTL)\n      values:\n" + (.ResourceRecords | map("        - \"\(.Value)\"") | join("\n"))
   end
 ' >> /tmp/yaml-records-${ZONE_ID}.yaml
 
-# Step 8: Combine header + new records
 cat /tmp/yaml-header-${ZONE_ID}.yaml > "$YAML_FILE"
 cat /tmp/yaml-records-${ZONE_ID}.yaml >> "$YAML_FILE"
 
-echo "✅ Updated $YAML_FILE with current Route53 state"
+echo "Updated $YAML_FILE with current Route53 state"
 echo ""
 
-# Step 9: Show what changed
-echo "📊 Drift report:"
+echo "Drift report:"
 echo ""
 git diff --no-index --color=always "$BACKUP_FILE" "$YAML_FILE" || true
 echo ""
 
-# Step 10: Offer to commit
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "=================================================="
 echo "Next steps:"
 echo ""
 echo "1. Review changes above"

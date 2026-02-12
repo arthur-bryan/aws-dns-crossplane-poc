@@ -32,24 +32,20 @@ spec:
                 forProvider:
                   region: us-east-1
             patches:
-              # REQUIRED: Import via external-name annotation
               - type: FromCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
 
-              # Zone name
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.zoneName
                 toFieldPath: spec.forProvider.name
 
-              # Comment
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.comment
                 toFieldPath: spec.forProvider.comment
                 policy:
                   fromFieldPath: Optional
 
-              # Environment-based provider config
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.environment
                 toFieldPath: spec.providerConfigRef.name
@@ -59,7 +55,6 @@ spec:
                       type: Format
                       fmt: "aws-%s"
 
-              # Tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.environment
                 toFieldPath: spec.forProvider.tags.Environment
@@ -70,12 +65,10 @@ spec:
                 policy:
                   fromFieldPath: Optional
 
-              # Status fields - zone ID
               - type: ToCompositeFieldPath
                 fromFieldPath: status.atProvider.id
                 toFieldPath: status.zoneId
 
-              # Status fields - nameservers
               - type: ToCompositeFieldPath
                 fromFieldPath: status.atProvider.nameServers
                 toFieldPath: status.nameServers

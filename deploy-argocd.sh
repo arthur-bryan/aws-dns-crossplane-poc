@@ -31,7 +31,7 @@ if ! kubectl cluster-info &> /dev/null; then
     exit 1
 fi
 
-log_info "✅ kubectl and cluster accessible"
+log_info "kubectl and cluster accessible"
 
 # Install ArgoCD
 log_step "2/6 Installing ArgoCD..."
@@ -48,7 +48,7 @@ else
     log_info "Waiting for ArgoCD to be ready..."
     kubectl wait --for=condition=Available --timeout=600s deployment/argocd-server -n argocd
 
-    log_info "✅ ArgoCD installed successfully"
+    log_info "ArgoCD installed successfully"
 fi
 
 # Get ArgoCD admin password
@@ -57,7 +57,7 @@ log_step "3/6 Retrieving ArgoCD credentials..."
 ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 -d)
 
 if [ -n "$ARGOCD_PASSWORD" ]; then
-    log_info "✅ ArgoCD admin password retrieved"
+    log_info "ArgoCD admin password retrieved"
     echo ""
     echo "========================================="
     echo "ArgoCD Login Credentials:"
@@ -81,7 +81,7 @@ else
     kubectl apply -f "$SCRIPT_DIR/platform/argocd/bootstrap/root-app.yaml"
 fi
 
-log_info "✅ root-app deployed"
+log_info "root-app deployed"
 
 # Wait for applications to sync
 log_step "5/6 Waiting for applications to deploy (sync waves 0→1→2→3)..."
@@ -99,7 +99,7 @@ check_app() {
         local health=$(kubectl get application "$app_name" -n argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown")
 
         if [ "$status" = "Synced" ] && [ "$health" = "Healthy" ]; then
-            log_info "✅ $app_name: Synced and Healthy"
+            log_info "$app_name: Synced and Healthy"
             return 0
         fi
 
@@ -108,7 +108,7 @@ check_app() {
         elapsed=$((elapsed + 10))
     done
 
-    log_warn "⚠️  $app_name: Timeout (may still be syncing)"
+    log_warn "WARNING: $app_name: Timeout (may still be syncing)"
     return 1
 }
 
@@ -141,10 +141,10 @@ sleep 10
 ZONES=$(kubectl get dnszone -n dns-system --no-headers 2>/dev/null | wc -l)
 
 if [ "$ZONES" -eq 3 ]; then
-    log_info "✅ All 3 DNS zones deployed:"
+    log_info "All 3 DNS zones deployed:"
     kubectl get dnszone -n dns-system
 else
-    log_warn "⚠️  Expected 3 zones, found $ZONES"
+    log_warn "WARNING: Expected 3 zones, found $ZONES"
     kubectl get dnszone -n dns-system 2>/dev/null || log_error "No zones found"
 fi
 
