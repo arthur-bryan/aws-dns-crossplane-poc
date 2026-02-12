@@ -78,7 +78,7 @@ spec:
               # Status fields - nameservers
               - type: ToCompositeFieldPath
                 fromFieldPath: status.atProvider.nameServers
-                toFieldPath: status.nameservers
+                toFieldPath: status.nameServers
 
             readinessChecks:
               - type: MatchCondition
