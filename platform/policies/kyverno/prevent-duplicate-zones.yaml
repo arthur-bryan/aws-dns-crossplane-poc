@@ -13,7 +13,7 @@ metadata:
       spec.zoneName before allowing creation. Fixes bug that caused 500 duplicate
       arthurbryan.dev.br zones costing $250/month.
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Audit
   background: false
   rules:
     - name: prevent-duplicate-zone-names

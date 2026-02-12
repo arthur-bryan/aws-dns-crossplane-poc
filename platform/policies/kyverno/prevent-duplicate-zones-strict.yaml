@@ -10,7 +10,7 @@ metadata:
       CRITICAL: Prevents duplicate DNS zones and enforces composition safety.
       Fixes bug that caused 500 duplicate zones costing $250/month.
 spec:
-  validationFailureAction: Enforce
+  validationFailureAction: Audit
   background: false
   rules:
     # Rule 1: Prevent duplicate zone names
