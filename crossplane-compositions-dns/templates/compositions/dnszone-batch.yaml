@@ -26,6 +26,15 @@ spec:
                 mode: Single
                 matchLabels:
                   - type: FromCompositeFieldPath
+                    key: domain
+                    valueFromFieldPath: spec.domain
+                  - type: FromCompositeFieldPath
+                    key: subdomain
+                    valueFromFieldPath: spec.subdomain
+                  - type: FromCompositeFieldPath
+                    key: system
+                    valueFromFieldPath: spec.system
+                  - type: FromCompositeFieldPath
                     key: environment
                     valueFromFieldPath: spec.environment
 
@@ -44,8 +53,8 @@ spec:
             [[- $params := .observed.composite.resource.spec ]]
             [[- $envs := index .context "apiextensions.crossplane.io/environment" ]]
             [[- $zoneName := $params.zoneName ]]
-            [[- $accountName := default $params.aws.accountName $envs.aws.accountName ]]
-            [[- $region := default $params.aws.region $envs.aws.region ]]
+            [[- $accountName := $envs.aws.accountName ]]
+            [[- $region := default $envs.aws.region $params.aws.region ]]
             [[- $domain := $params.domain ]]
             [[- $subdomain := $params.subdomain ]]
             [[- $system := $params.system ]]
@@ -70,17 +79,16 @@ spec:
             kind: Zone
             metadata:
               name: [[ $zoneName | replace "." "-" ]]
+              namespace: [[ printf "%s-%s-%s" $system $domain $subdomain | lower ]]
               annotations:
                 crossplane.io/external-name: [[ $zoneName ]]
-                gotemplating.fn.crossplane.io/composition-resource-name: zone
+                [[ setResourceNameAnnotation "zone" ]]
             spec:
               providerConfigRef:
                 name: [[ $accountName ]]
+                kind: ClusterProviderConfig
               managementPolicies:
-                - Observe
-                - Create
-                - Update
-                - Delete
+{{- toYaml .Values.managementPolicies | nindent 16 }}
               deletionPolicy: Delete
               forProvider:
                 comment: [[ $comment ]]
@@ -101,17 +109,16 @@ spec:
             kind: Stack
             metadata:
               name: [[ printf "%s-records" ($zoneName | replace "." "-") ]]
+              namespace: [[ printf "%s-%s-%s" $system $domain $subdomain | lower ]]
               annotations:
                 crossplane.io/external-name: [[ printf "crossplane-%s-records" ($zoneName | replace "." "-") ]]
-                gotemplating.fn.crossplane.io/composition-resource-name: records-stack
+                [[ setResourceNameAnnotation "records-stack" ]]
             spec:
               providerConfigRef:
                 name: [[ $accountName ]]
+                kind: ClusterProviderConfig
               managementPolicies:
-                - Observe
-                - Create
-                - Update
-                - Delete
+{{- toYaml .Values.managementPolicies | nindent 16 }}
               deletionPolicy: Delete
               forProvider:
                 region: [[ $region ]]
