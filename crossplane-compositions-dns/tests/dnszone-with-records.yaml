@@ -4,28 +4,23 @@ metadata:
   name: test-zone-with-records-dev
   namespace: cross-cloud-dns-poc
 spec:
-  # Hierarchy (required)
   domain: cross
   subdomain: cloud
   system: dns-poc
   environment: dev
 
-  # AWS (required)
   aws:
     account: 123456789012
     accountName: dev-account
     region: us-east-2
 
-  # DNS (required)
   zoneName: testrecords.dev.dock.tech
   comment: "Test zone with multiple records"
 
-  # Optional: Additional tags
   tags:
     CostCenter: "Engineering"
     Owner: "APE Team"
 
-  # Optional: DNS records
   records:
     - name: api
       type: A

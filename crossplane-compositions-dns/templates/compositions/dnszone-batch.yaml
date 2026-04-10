@@ -13,7 +13,6 @@ spec:
   mode: Pipeline
 
   pipeline:
-    # Step 1: Load EnvironmentConfig (APE Platform Pattern)
     - step: environmentConfigs
       functionRef:
         name: crossplane-contrib-function-environment-configs
@@ -39,7 +38,6 @@ spec:
                     key: environment
                     valueFromFieldPath: spec.environment
 
-    # Step 2: Render Resources with Go-Templating
     - step: render-resources
       functionRef:
         name: crossplane-contrib-function-go-templating
@@ -83,7 +81,6 @@ spec:
                 comment: [[ $comment ]]
                 region: [[ $region ]]
                 tags:
-                  # Automatic hierarchy tagging (APE Platform Pattern)
                   createdBy: ape-platform
                   domain: [[ $domain ]]
                   subdomain: [[ $subdomain ]]
@@ -95,7 +92,6 @@ spec:
 
             [[- if gt (len $params.records) 0 ]]
             ---
-            # Batch record creation via CloudFormation
             apiVersion: cloudformation.aws.upbound.io/v1beta1
             kind: Stack
             metadata:
@@ -163,7 +159,6 @@ spec:
                     value: [[ $environment ]]
             [[- end ]]
 
-    # Step 3: Auto-ready
     - step: automatically-detect-ready-composed-resources
       functionRef:
         name: crossplane-contrib-function-auto-ready

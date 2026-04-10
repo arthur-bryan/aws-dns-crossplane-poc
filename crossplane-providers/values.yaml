@@ -2,7 +2,6 @@ providers:
   - name: upbound-provider-aws-route53
     package: xpkg.upbound.io/upbound/provider-aws-route53:v1.7.0
     runtimeConfig:
-      # IRSA annotation (to be filled with actual role ARN)
       annotations:
         eks.amazonaws.com/role-arn: "arn:aws:iam::PLACEHOLDER:role/crossplane-dns"
 

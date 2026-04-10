@@ -22,9 +22,6 @@ spec:
             spec:
               type: object
               properties:
-                # ========================================
-                # Hierarchy Fields (REQUIRED - APE Platform)
-                # ========================================
                 domain:
                   description: "The parent domain (e.g., cross, saas, bass)"
                   type: string
@@ -42,9 +39,6 @@ spec:
                   type: string
                   enum: [dev, hml, poc, prd]
 
-                # ========================================
-                # AWS Metadata (REQUIRED - APE Platform)
-                # ========================================
                 aws:
                   description: "AWS account metadata"
                   type: object
@@ -68,9 +62,6 @@ spec:
                       default: us-east-2
                       pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
 
-                # ========================================
-                # DNS Fields (Existing)
-                # ========================================
                 zoneName:
                   type: string
                   description: DNS zone name (FQDN without trailing dot)
@@ -137,14 +128,11 @@ spec:
                       - type
 
               required:
-                # Hierarchy fields (NEW)
                 - domain
                 - subdomain
                 - system
                 - environment
-                # AWS metadata (NEW)
                 - aws
-                # DNS fields (EXISTING)
                 - zoneName
 
               x-kubernetes-validations:
