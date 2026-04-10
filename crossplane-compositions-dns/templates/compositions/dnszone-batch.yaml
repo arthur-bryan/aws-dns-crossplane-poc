@@ -26,15 +26,6 @@ spec:
                 mode: Single
                 matchLabels:
                   - type: FromCompositeFieldPath
-                    key: domain
-                    valueFromFieldPath: spec.domain
-                  - type: FromCompositeFieldPath
-                    key: subdomain
-                    valueFromFieldPath: spec.subdomain
-                  - type: FromCompositeFieldPath
-                    key: system
-                    valueFromFieldPath: spec.system
-                  - type: FromCompositeFieldPath
                     key: environment
                     valueFromFieldPath: spec.environment
 
@@ -61,6 +52,19 @@ spec:
             [[- $environment := $params.environment ]]
             [[- $comment := default "Managed by APE Platform" $params.comment ]]
 
+            [[- $zoneId := "" ]]
+            [[- range .observed.resources ]]
+            [[- if eq .resource.kind "Zone" ]]
+            [[- if .resource.status ]]
+            [[- if .resource.status.atProvider ]]
+            [[- if .resource.status.atProvider.zoneId ]]
+            [[- $zoneId = .resource.status.atProvider.zoneId ]]
+            [[- end ]]
+            [[- end ]]
+            [[- end ]]
+            [[- end ]]
+            [[- end ]]
+
             ---
             apiVersion: route53.aws.upbound.io/v1beta1
             kind: Zone
@@ -68,6 +72,7 @@ spec:
               name: [[ $zoneName | replace "." "-" ]]
               annotations:
                 crossplane.io/external-name: [[ $zoneName ]]
+                gotemplating.fn.crossplane.io/composition-resource-name: zone
             spec:
               providerConfigRef:
                 name: [[ $accountName ]]
@@ -90,7 +95,7 @@ spec:
                   [[ $key ]]: [[ $value ]]
                   [[- end ]]
 
-            [[- if gt (len $params.records) 0 ]]
+            [[- if and (gt (len $params.records) 0) $zoneId ]]
             ---
             apiVersion: cloudformation.aws.upbound.io/v1beta1
             kind: Stack
@@ -98,6 +103,7 @@ spec:
               name: [[ printf "%s-records" ($zoneName | replace "." "-") ]]
               annotations:
                 crossplane.io/external-name: [[ printf "crossplane-%s-records" ($zoneName | replace "." "-") ]]
+                gotemplating.fn.crossplane.io/composition-resource-name: records-stack
             spec:
               providerConfigRef:
                 name: [[ $accountName ]]
@@ -147,7 +153,7 @@ spec:
                   }
                 parameters:
                   - parameterKey: ZoneId
-                    parameterValue: "PLACEHOLDER_ZONE_ID"
+                    parameterValue: "[[ $zoneId ]]"
                 tags:
                   - key: domain
                     value: [[ $domain ]]
