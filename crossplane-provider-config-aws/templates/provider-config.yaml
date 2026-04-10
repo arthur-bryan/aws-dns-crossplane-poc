@@ -1,0 +1,25 @@
+{{- range .Values.configs }}
+---
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: {{ .name }}
+spec:
+  credentials:
+    source: IRSA
+  {{- with .roleARN }}
+  assumeRoleChain:
+    - roleARN: {{ . }}
+  {{- end }}
+
+---
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: EnvironmentConfig
+metadata:
+  name: {{ .name }}
+  labels:
+    accountName: {{ .name }}
+data:
+  {{- .envs | toYaml | nindent 2 }}
+---
+{{- end }}

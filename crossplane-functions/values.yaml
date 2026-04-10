@@ -1,0 +1,9 @@
+functions:
+  - name: crossplane-contrib-function-go-templating
+    package: xpkg.upbound.io/crossplane-contrib/function-go-templating:v0.4.0
+
+  - name: crossplane-contrib-function-auto-ready
+    package: xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.2.1
+
+  - name: crossplane-contrib-function-environment-configs
+    package: xpkg.upbound.io/crossplane-contrib/function-environment-configs:v0.1.0

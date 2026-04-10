@@ -1,0 +1,169 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: dnszone-batch
+  labels:
+    app.kubernetes.io/name: crossplane-compositions-dns
+    composition.type: batch
+spec:
+  compositeTypeRef:
+    apiVersion: dock.tech/v1
+    kind: DNSZone
+
+  mode: Pipeline
+
+  pipeline:
+    # Step 1: Load EnvironmentConfig (APE Platform Pattern)
+    - step: environmentConfigs
+      functionRef:
+        name: crossplane-contrib-function-environment-configs
+      input:
+        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+        kind: Input
+        spec:
+          environmentConfigs:
+            - type: Selector
+              selector:
+                mode: Single
+                matchLabels:
+                  - type: FromCompositeFieldPath
+                    key: domain
+                    valueFromFieldPath: spec.domain
+                  - type: FromCompositeFieldPath
+                    key: subdomain
+                    valueFromFieldPath: spec.subdomain
+                  - type: FromCompositeFieldPath
+                    key: system
+                    valueFromFieldPath: spec.system
+                  - type: FromCompositeFieldPath
+                    key: environment
+                    valueFromFieldPath: spec.environment
+
+    # Step 2: Render Resources with Go-Templating
+    - step: render-resources
+      functionRef:
+        name: crossplane-contrib-function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        delims:
+          left: '[['
+          right: ']]'
+        source: Inline
+        inline:
+          template: |
+            [[- $params := .observed.composite.resource.spec ]]
+            [[- $envs := index .context "apiextensions.crossplane.io/environment" ]]
+            [[- $zoneName := $params.zoneName ]]
+            [[- $accountName := default $params.aws.accountName $envs.aws.accountName ]]
+            [[- $region := default $params.aws.region $envs.aws.region ]]
+            [[- $domain := $params.domain ]]
+            [[- $subdomain := $params.subdomain ]]
+            [[- $system := $params.system ]]
+            [[- $environment := $params.environment ]]
+            [[- $comment := default "Managed by APE Platform" $params.comment ]]
+
+            ---
+            apiVersion: route53.aws.upbound.io/v1beta1
+            kind: Zone
+            metadata:
+              name: [[ $zoneName | replace "." "-" ]]
+              annotations:
+                crossplane.io/external-name: [[ $zoneName ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+              managementPolicies:
+                - Observe
+                - Create
+                - Update
+                - Delete
+              deletionPolicy: Delete
+              forProvider:
+                comment: [[ $comment ]]
+                region: [[ $region ]]
+                tags:
+                  # Automatic hierarchy tagging (APE Platform Pattern)
+                  createdBy: ape-platform
+                  domain: [[ $domain ]]
+                  subdomain: [[ $subdomain ]]
+                  system: [[ $system ]]
+                  environment: [[ $environment ]]
+                  [[- range $key, $value := $params.tags ]]
+                  [[ $key ]]: [[ $value ]]
+                  [[- end ]]
+
+            [[- if gt (len $params.records) 0 ]]
+            ---
+            # Batch record creation via CloudFormation
+            apiVersion: cloudformation.aws.upbound.io/v1beta1
+            kind: Stack
+            metadata:
+              name: [[ printf "%s-records" ($zoneName | replace "." "-") ]]
+              annotations:
+                crossplane.io/external-name: [[ printf "crossplane-%s-records" ($zoneName | replace "." "-") ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+              managementPolicies:
+                - Observe
+                - Create
+                - Update
+                - Delete
+              deletionPolicy: Delete
+              forProvider:
+                region: [[ $region ]]
+                templateBody: |
+                  {
+                    "AWSTemplateFormatVersion": "2010-09-09",
+                    "Description": "DNS records for [[ $zoneName ]]",
+                    "Parameters": {
+                      "ZoneId": {
+                        "Type": "String",
+                        "Description": "Route53 Hosted Zone ID"
+                      }
+                    },
+                    "Resources": {
+                      [[- $recordCount := len $params.records ]]
+                      [[- range $idx, $record := $params.records ]]
+                      "Record[[ add1 $idx ]]": {
+                        "Type": "AWS::Route53::RecordSet",
+                        "Properties": {
+                          "HostedZoneId": { "Ref": "ZoneId" },
+                          "Name": "[[ printf "%s.%s" $record.name $zoneName ]]",
+                          "Type": "[[ $record.type ]]",
+                          [[- if $record.ttl ]]
+                          "TTL": "[[ $record.ttl ]]",
+                          [[- else ]]
+                          "TTL": "300",
+                          [[- end ]]
+                          [[- if $record.values ]]
+                          "ResourceRecords": [[ $record.values | toJson ]]
+                          [[- end ]]
+                          [[- if $record.weight ]]
+                          ,"Weight": [[ $record.weight ]],
+                          "SetIdentifier": "[[ $record.setIdentifier ]]"
+                          [[- end ]]
+                        }
+                      }[[- if ne $idx (sub $recordCount 1) ]],[[- end ]]
+                      [[- end ]]
+                    }
+                  }
+                parameters:
+                  - parameterKey: ZoneId
+                    parameterValue: "PLACEHOLDER_ZONE_ID"
+                tags:
+                  - key: domain
+                    value: [[ $domain ]]
+                  - key: subdomain
+                    value: [[ $subdomain ]]
+                  - key: system
+                    value: [[ $system ]]
+                  - key: environment
+                    value: [[ $environment ]]
+            [[- end ]]
+
+    # Step 3: Auto-ready
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: crossplane-contrib-function-auto-ready

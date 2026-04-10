@@ -1,0 +1,71 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: dnszone-observe
+  labels:
+    app.kubernetes.io/name: crossplane-compositions-dns
+    composition.type: observe
+spec:
+  compositeTypeRef:
+    apiVersion: dock.tech/v1
+    kind: DNSZone
+
+  mode: Pipeline
+
+  pipeline:
+    # Step 1: Load EnvironmentConfig
+    - step: environmentConfigs
+      functionRef:
+        name: crossplane-contrib-function-environment-configs
+      input:
+        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+        kind: Input
+        spec:
+          environmentConfigs:
+            - type: Selector
+              selector:
+                mode: Single
+                matchLabels:
+                  - type: FromCompositeFieldPath
+                    key: environment
+                    valueFromFieldPath: spec.environment
+
+    # Step 2: Render Resources
+    - step: render-resources
+      functionRef:
+        name: crossplane-contrib-function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        delims:
+          left: '[['
+          right: ']]'
+        source: Inline
+        inline:
+          template: |
+            [[- $params := .observed.composite.resource.spec ]]
+            [[- $envs := index .context "apiextensions.crossplane.io/environment" ]]
+            [[- $zoneName := $params.zoneName ]]
+            [[- $accountName := default $params.aws.accountName $envs.aws.accountName ]]
+            [[- $region := default $params.aws.region $envs.aws.region ]]
+
+            ---
+            apiVersion: route53.aws.upbound.io/v1beta1
+            kind: Zone
+            metadata:
+              name: [[ $zoneName | replace "." "-" ]]
+              annotations:
+                crossplane.io/external-name: [[ $zoneName ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+              managementPolicies:
+                - Observe
+              deletionPolicy: Orphan
+              forProvider:
+                region: [[ $region ]]
+
+    # Step 3: Auto-ready
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: crossplane-contrib-function-auto-ready
