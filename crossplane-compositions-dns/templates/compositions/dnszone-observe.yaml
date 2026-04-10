@@ -26,6 +26,15 @@ spec:
                 mode: Single
                 matchLabels:
                   - type: FromCompositeFieldPath
+                    key: domain
+                    valueFromFieldPath: spec.domain
+                  - type: FromCompositeFieldPath
+                    key: subdomain
+                    valueFromFieldPath: spec.subdomain
+                  - type: FromCompositeFieldPath
+                    key: system
+                    valueFromFieldPath: spec.system
+                  - type: FromCompositeFieldPath
                     key: environment
                     valueFromFieldPath: spec.environment
 
@@ -44,19 +53,25 @@ spec:
             [[- $params := .observed.composite.resource.spec ]]
             [[- $envs := index .context "apiextensions.crossplane.io/environment" ]]
             [[- $zoneName := $params.zoneName ]]
-            [[- $accountName := default $params.aws.accountName $envs.aws.accountName ]]
-            [[- $region := default $params.aws.region $envs.aws.region ]]
+            [[- $accountName := $envs.aws.accountName ]]
+            [[- $region := default $envs.aws.region $params.aws.region ]]
+            [[- $domain := $params.domain ]]
+            [[- $subdomain := $params.subdomain ]]
+            [[- $system := $params.system ]]
 
             ---
             apiVersion: route53.aws.upbound.io/v1beta1
             kind: Zone
             metadata:
               name: [[ $zoneName | replace "." "-" ]]
+              namespace: [[ printf "%s-%s-%s" $system $domain $subdomain | lower ]]
               annotations:
                 crossplane.io/external-name: [[ $zoneName ]]
+                [[ setResourceNameAnnotation "zone" ]]
             spec:
               providerConfigRef:
                 name: [[ $accountName ]]
+                kind: ClusterProviderConfig
               managementPolicies:
                 - Observe
               deletionPolicy: Orphan
