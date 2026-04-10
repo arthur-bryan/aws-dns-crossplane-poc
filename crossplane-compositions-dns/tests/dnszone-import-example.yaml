@@ -1,0 +1,34 @@
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: example-com
+  namespace: cross-cloud-imported
+  annotations:
+    crossplane.io/composition-name: dnszone-import
+spec:
+  domain: cross
+  subdomain: cloud
+  system: imported
+  environment: dev
+  aws:
+    account: 123456789012
+    accountName: dev-account
+    region: us-east-2
+  zoneName: example.com
+  comment: "Imported existing zone"
+  records:
+    - name: www
+      type: A
+      ttl: 300
+      values:
+        - "192.0.2.1"
+    - name: api
+      type: A
+      ttl: 300
+      values:
+        - "192.0.2.2"
+    - name: mail
+      type: MX
+      ttl: 3600
+      values:
+        - "10 mail.example.com"

@@ -14,4 +14,4 @@ dns:
 compositions:
   batch: true
   observe: true
-  manage: true
+  import: true
