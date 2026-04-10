@@ -1,0 +1,21 @@
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: test-zone-dev
+  namespace: cross-cloud-dns-poc
+spec:
+  # Hierarchy (required)
+  domain: cross
+  subdomain: cloud
+  system: dns-poc
+  environment: dev
+
+  # AWS (required)
+  aws:
+    account: 123456789012
+    accountName: dev-account
+    region: us-east-2
+
+  # DNS (required)
+  zoneName: test.dev.dock.tech
+  comment: "Minimal test zone for APE platform alignment validation"
