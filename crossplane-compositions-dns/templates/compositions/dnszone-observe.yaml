@@ -13,7 +13,6 @@ spec:
   mode: Pipeline
 
   pipeline:
-    # Step 1: Load EnvironmentConfig
     - step: environmentConfigs
       functionRef:
         name: crossplane-contrib-function-environment-configs
@@ -30,7 +29,6 @@ spec:
                     key: environment
                     valueFromFieldPath: spec.environment
 
-    # Step 2: Render Resources
     - step: render-resources
       functionRef:
         name: crossplane-contrib-function-go-templating
@@ -65,7 +63,6 @@ spec:
               forProvider:
                 region: [[ $region ]]
 
-    # Step 3: Auto-ready
     - step: automatically-detect-ready-composed-resources
       functionRef:
         name: crossplane-contrib-function-auto-ready

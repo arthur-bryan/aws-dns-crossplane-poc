@@ -1,20 +1,16 @@
-# Cluster reference for ArgoCD
 cluster:
   name: in-cluster
 
-# Crossplane management policies
 managementPolicies:
   - Observe
   - Create
   - Update
   - Delete
 
-# DNS-specific defaults
 dns:
   defaultRegion: us-east-2
   defaultTTL: 300
 
-# Enable/disable specific compositions
 compositions:
   batch: true
   observe: true
