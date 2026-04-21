@@ -3,10 +3,10 @@ providers:
     package: xpkg.upbound.io/upbound/provider-aws-route53:v1.7.0
     runtimeConfig:
       annotations:
-        eks.amazonaws.com/role-arn: "arn:aws:iam::PLACEHOLDER:role/crossplane-dns"
+        eks.amazonaws.com/role-arn: "arn:aws:iam::PLACEHOLDER:role/crossplane-route53"
 
   - name: upbound-provider-aws-cloudformation
     package: xpkg.upbound.io/upbound/provider-aws-cloudformation:v1.7.0
     runtimeConfig:
       annotations:
-        eks.amazonaws.com/role-arn: "arn:aws:iam::PLACEHOLDER:role/crossplane-dns"
+        eks.amazonaws.com/role-arn: "arn:aws:iam::PLACEHOLDER:role/crossplane-route53"

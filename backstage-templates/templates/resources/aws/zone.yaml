@@ -1,0 +1,138 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aws-dns-zone
+  title: AWS Route53 DNS Zone Template
+  description: A template for creating an AWS Route53 hosted zone
+  labels:
+    category: resources
+    visibility: "public"
+    ape: "true"
+    sre: "true"
+    techlead: "true"
+    developer: "false"
+  tags:
+    - resource
+    - aws
+    - dns
+    - route53
+spec:
+  owner: group:dock-tech/application-platform-engineering
+  type: resource
+
+  parameters:
+    - title: DNS Zone Information
+      required:
+        - name
+        - system
+        - zoneName
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the DNS zone resource
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+        system:
+          title: System
+          type: string
+          description: System of Resource
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: System
+        kind:
+          title: Kind
+          type: string
+          default: Zone
+          ui:widget: hidden
+
+        zoneName:
+          title: Zone Name
+          type: string
+          description: DNS zone name (FQDN without trailing dot, e.g., test.dev.dock.tech)
+          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+          ui:help: "Example: test.dev.dock.tech (no trailing dot)"
+
+        comment:
+          title: Comment
+          type: string
+          description: Optional comment for the zone (max 256 characters)
+          maxLength: 256
+
+    - title: Additional Tags (Optional)
+      properties:
+        tags:
+          title: Tags
+          type: object
+          description: Additional AWS tags (hierarchy tags are added automatically)
+          ui:field: KeyValuePairInput
+          ui:help: "Add custom tags for cost tracking or organization"
+
+  steps:
+    - $yaml: ../../../shared/entities/clone.yaml
+    - $yaml: ../../../shared/entities/fetch-system.yaml
+    - $yaml: ../../../shared/entities/fetch-system-domain.yaml
+
+    - id: getDetails
+      name: Get Path Of the System
+      action: hierarchy:details:get
+      input:
+        entityRef: ${{ parameters.system }}
+
+    - id: checkIffileAlreadyExists
+      name: Check If File Already Exists
+      action: fs:file:exists
+      input:
+        filepath: ./entities/${{ steps.getDetails.output.path }}/resources/dev/zone-${{ parameters.name }}-dev.yaml
+
+    - id: launchErrorIfFileExists
+      name: Launch Error If File Exists
+      if: ${{ steps.checkIffileAlreadyExists.output.exists }}
+      action: error:launch
+      input:
+        message: A resource file for this DNS zone already exists. Please choose a different name.
+
+    - id: writeFile
+      name: Create Resource File
+      action: roadiehq:utils:fs:write
+      input:
+        path: ./entities/${{ steps.getDetails.output.path }}/resources/dev/zone-${{ parameters.name }}-dev.yaml
+        content: |
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
+          metadata:
+            name: ${{ parameters.name }}
+            namespace: ${{ steps.getDetails.output.namespace }}
+            description: AWS Route53 DNS Zone created by template
+          spec:
+            type: Zone
+            cloud: aws
+            owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            system: ${{ parameters.system }}
+            zoneName: ${{ parameters.zoneName }}
+            {%- if parameters.comment %}
+            comment: ${{ parameters.comment }}
+            {%- endif %}
+            {%- if parameters.tags %}
+            tags:
+            {%- for key, value in parameters.tags %}
+              {{ key }}: {{ value }}
+            {%- endfor %}
+            {%- endif %}
+
+    - $yaml: ../../../shared/entities/commit.yaml
+    - $yaml: ../../../shared/entities/push.yaml
+
+    - id: publish-activity-log
+      action: activity-log:publish
+      input:
+        action: created
+        entityRef: resource:${{ steps.getDetails.output.namespace }}/${{ parameters.name }}
+        payload: ${{ parameters }}
+
+    - $yaml: ../../../shared/entities/refresh-entities.yaml
+    - $yaml: ../../../shared/notify.yaml
+
+  output: {}

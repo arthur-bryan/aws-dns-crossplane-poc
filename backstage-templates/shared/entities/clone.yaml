@@ -1,0 +1,7 @@
+id: clone
+name: Clone Repository
+action: github:extras:clone
+input:
+  url: https://github.com/dock-tech/ape-platform-entities.git
+  branch: master
+  folder: entities

@@ -1,0 +1,242 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: record
+  labels:
+    app.kubernetes.io/name: crossplane-compositions-dns
+spec:
+  compositeTypeRef:
+    apiVersion: dock.tech/v1
+    kind: Record
+
+  mode: Pipeline
+
+  pipeline:
+    - step: render-resources
+      functionRef:
+        name: crossplane-contrib-function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        delims:
+          left: '[['
+          right: ']]'
+        source: Inline
+        inline:
+          template: |
+            [[- $params        := .observed.composite.resource.spec ]]
+            [[- $name          := $params.name ]]
+            [[- $namespace     := .observed.composite.resource.metadata.namespace ]]
+            [[- $accountName   := $params.aws.accountName ]]
+            [[- $region        := $params.aws.region ]]
+            [[- $recordName    := $params.recordName ]]
+            [[- $type          := $params.type ]]
+            [[- $ttl           := default 3600 $params.ttl ]]
+            [[- $values        := $params.values ]]
+            [[- $aliasTarget   := $params.aliasTarget ]]
+            [[- $setIdentifier := $params.setIdentifier ]]
+            [[- $weight        := $params.weight ]]
+
+            [[- $zoneId := "" ]]
+            [[- if $params.zoneId ]]
+            [[- $zoneId = $params.zoneId ]]
+            [[- end ]]
+
+            [[- $zoneName := "" ]]
+            [[- if $params.zoneName ]]
+            [[- $zoneName = $params.zoneName ]]
+            [[- end ]]
+
+            [[- $fqdn := printf "%s.%s" $recordName $zoneName ]]
+
+            [[- $record := getComposedResource . $name ]]
+
+            [[- $resolvedAliasZoneId := "" ]]
+            [[- if and (eq $type "ALIAS") $aliasTarget ]]
+            [[- $serviceType := $aliasTarget.serviceType ]]
+            [[- if eq $serviceType "CloudFront" ]]
+            [[- $resolvedAliasZoneId = "Z2FDTNDATAQYW2" ]]
+            [[- else if eq $serviceType "GlobalAccelerator" ]]
+            [[- $resolvedAliasZoneId = "Z2BJ6XQ5FK7U4H" ]]
+            [[- else if eq $serviceType "ALB" ]]
+            [[- if eq $region "us-east-1" ]][[- $resolvedAliasZoneId = "Z35SXDOTRQ7X7K" ]]
+            [[- else if eq $region "us-east-2" ]][[- $resolvedAliasZoneId = "Z3AADJGX6KTTL2" ]]
+            [[- else if eq $region "us-west-1" ]][[- $resolvedAliasZoneId = "Z368ELLRRE2KJ0" ]]
+            [[- else if eq $region "us-west-2" ]][[- $resolvedAliasZoneId = "Z1H1FL5HABSF5" ]]
+            [[- else if eq $region "ca-central-1" ]][[- $resolvedAliasZoneId = "ZQSVJUPU6J1EY" ]]
+            [[- else if eq $region "eu-west-1" ]][[- $resolvedAliasZoneId = "Z32O12XQLNTSW2" ]]
+            [[- else if eq $region "eu-west-2" ]][[- $resolvedAliasZoneId = "ZHURV8PSTC4K8" ]]
+            [[- else if eq $region "eu-west-3" ]][[- $resolvedAliasZoneId = "Z3Q77PNBQS71R4" ]]
+            [[- else if eq $region "eu-central-1" ]][[- $resolvedAliasZoneId = "Z215JYRZR1TBD5" ]]
+            [[- else if eq $region "ap-northeast-1" ]][[- $resolvedAliasZoneId = "Z14GRHDCWA56QT" ]]
+            [[- else if eq $region "ap-northeast-2" ]][[- $resolvedAliasZoneId = "ZWKZPGTI48KDX" ]]
+            [[- else if eq $region "ap-southeast-1" ]][[- $resolvedAliasZoneId = "Z1LMS91P8CMLE5" ]]
+            [[- else if eq $region "ap-southeast-2" ]][[- $resolvedAliasZoneId = "Z1GM3OXH4ZPM65" ]]
+            [[- else if eq $region "sa-east-1" ]][[- $resolvedAliasZoneId = "Z2P70J7HTTTPLU" ]]
+            [[- end ]]
+            [[- else if eq $serviceType "NLB" ]]
+            [[- if eq $region "us-east-1" ]][[- $resolvedAliasZoneId = "Z26RNL4JYFTOTI" ]]
+            [[- else if eq $region "us-east-2" ]][[- $resolvedAliasZoneId = "ZLMOA37VPKANP" ]]
+            [[- else if eq $region "us-west-1" ]][[- $resolvedAliasZoneId = "Z24FKFUX50B4VW" ]]
+            [[- else if eq $region "us-west-2" ]][[- $resolvedAliasZoneId = "Z18D5FSROUN65G" ]]
+            [[- else if eq $region "ca-central-1" ]][[- $resolvedAliasZoneId = "Z2EPGBW3API2WT" ]]
+            [[- else if eq $region "eu-west-1" ]][[- $resolvedAliasZoneId = "Z2IFOLAFXWLO4F" ]]
+            [[- else if eq $region "eu-west-2" ]][[- $resolvedAliasZoneId = "ZD4D7Y8KGAS4G" ]]
+            [[- else if eq $region "eu-west-3" ]][[- $resolvedAliasZoneId = "Z1CMS0P5QUZ6D5" ]]
+            [[- else if eq $region "eu-central-1" ]][[- $resolvedAliasZoneId = "Z3F1Z3NF5XQBAZ" ]]
+            [[- else if eq $region "ap-northeast-1" ]][[- $resolvedAliasZoneId = "Z31USIVHYNEOWT" ]]
+            [[- else if eq $region "ap-northeast-2" ]][[- $resolvedAliasZoneId = "ZIBE1TIR4HY56" ]]
+            [[- else if eq $region "ap-southeast-1" ]][[- $resolvedAliasZoneId = "ZKVM4W9LS7TM" ]]
+            [[- else if eq $region "ap-southeast-2" ]][[- $resolvedAliasZoneId = "ZCT6FZBF4DROD" ]]
+            [[- else if eq $region "sa-east-1" ]][[- $resolvedAliasZoneId = "ZTK26PT1VY4CU" ]]
+            [[- end ]]
+            [[- else if eq $serviceType "S3Website" ]]
+            [[- if eq $region "us-east-1" ]][[- $resolvedAliasZoneId = "Z3AQBSTGFYJSTF" ]]
+            [[- else if eq $region "us-east-2" ]][[- $resolvedAliasZoneId = "Z2O1EMRO9K5GLX" ]]
+            [[- else if eq $region "us-west-1" ]][[- $resolvedAliasZoneId = "Z2F56UZL2M1ACD" ]]
+            [[- else if eq $region "us-west-2" ]][[- $resolvedAliasZoneId = "Z3BJ6K6RIION7M" ]]
+            [[- else if eq $region "ca-central-1" ]][[- $resolvedAliasZoneId = "Z1QDHH18159H29" ]]
+            [[- else if eq $region "eu-west-1" ]][[- $resolvedAliasZoneId = "Z1BKCTXD74EZPE" ]]
+            [[- else if eq $region "eu-west-2" ]][[- $resolvedAliasZoneId = "Z3GKZC51ZF0DB4" ]]
+            [[- else if eq $region "eu-west-3" ]][[- $resolvedAliasZoneId = "Z3R1K369G5AVDG" ]]
+            [[- else if eq $region "eu-central-1" ]][[- $resolvedAliasZoneId = "Z21DNDUVLTQW6Q" ]]
+            [[- else if eq $region "ap-northeast-1" ]][[- $resolvedAliasZoneId = "Z2M4EHUR26P7ZW" ]]
+            [[- else if eq $region "ap-northeast-2" ]][[- $resolvedAliasZoneId = "Z3W03O7B5YMIYP" ]]
+            [[- else if eq $region "ap-southeast-1" ]][[- $resolvedAliasZoneId = "Z3O0J2DXBE1FTB" ]]
+            [[- else if eq $region "ap-southeast-2" ]][[- $resolvedAliasZoneId = "Z1WCIGYICN2BYD" ]]
+            [[- else if eq $region "sa-east-1" ]][[- $resolvedAliasZoneId = "Z7KQH4QJS55SO" ]]
+            [[- end ]]
+            [[- else if eq $serviceType "APIGateway" ]]
+            [[- if eq $region "us-east-1" ]][[- $resolvedAliasZoneId = "Z1UJRXOUMOOFQ8" ]]
+            [[- else if eq $region "us-east-2" ]][[- $resolvedAliasZoneId = "ZOJJZC49E0EPZ" ]]
+            [[- else if eq $region "us-west-1" ]][[- $resolvedAliasZoneId = "Z2MUQ32089INYE" ]]
+            [[- else if eq $region "us-west-2" ]][[- $resolvedAliasZoneId = "Z2OJLYMUO9EFXC" ]]
+            [[- else if eq $region "ca-central-1" ]][[- $resolvedAliasZoneId = "Z19DQILCV0OWEC" ]]
+            [[- else if eq $region "eu-west-1" ]][[- $resolvedAliasZoneId = "ZLY8HYME6SFDD" ]]
+            [[- else if eq $region "eu-west-2" ]][[- $resolvedAliasZoneId = "ZJ5UAJN8Y3Z2Q" ]]
+            [[- else if eq $region "eu-west-3" ]][[- $resolvedAliasZoneId = "Z3KY65QIEKYHQQ" ]]
+            [[- else if eq $region "eu-central-1" ]][[- $resolvedAliasZoneId = "Z1U9ULNL0V5AJ3" ]]
+            [[- else if eq $region "ap-northeast-1" ]][[- $resolvedAliasZoneId = "Z1YSHQZHG15GKL" ]]
+            [[- else if eq $region "ap-northeast-2" ]][[- $resolvedAliasZoneId = "Z20JF4UZKIW1U8" ]]
+            [[- else if eq $region "ap-southeast-1" ]][[- $resolvedAliasZoneId = "ZL327KTPIQFUL" ]]
+            [[- else if eq $region "ap-southeast-2" ]][[- $resolvedAliasZoneId = "Z2RPCDW04V8134" ]]
+            [[- else if eq $region "sa-east-1" ]][[- $resolvedAliasZoneId = "ZCMLWB8V5SYIT" ]]
+            [[- end ]]
+            [[- else if eq $serviceType "Custom" ]]
+            [[- $resolvedAliasZoneId = $aliasTarget.hostedZoneId ]]
+            [[- end ]]
+            [[- end ]]
+
+            ---
+            [[- if $zoneId ]]
+            # Using provided zoneId
+            apiVersion: route53.aws.upbound.io/v1beta1
+            kind: Record
+            metadata:
+              annotations:
+                crossplane.io/external-name: [[ $fqdn ]]
+                [[ setResourceNameAnnotation $name ]]
+              name: [[ $name ]]
+              namespace: [[ $namespace ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+                kind: ClusterProviderConfig
+              managementPolicies:
+                {{- toYaml .Values.managementPolicies | nindent 16 }}
+              forProvider:
+                name: [[ $fqdn ]]
+                type: [[ $type ]]
+                zoneId: [[ $zoneId ]]
+                region: [[ $region ]]
+                [[- if $setIdentifier ]]
+                setIdentifier: [[ $setIdentifier ]]
+                weightedRoutingPolicy:
+                  - weight: [[ $weight ]]
+                [[- end ]]
+                [[- if ne $type "ALIAS" ]]
+                ttl: [[ $ttl ]]
+                records: [[ $values | toJson ]]
+                [[- end ]]
+                [[- if eq $type "ALIAS" ]]
+                alias:
+                  - name: [[ $aliasTarget.dnsName ]]
+                    zoneId: [[ $resolvedAliasZoneId ]]
+                    evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
+                [[- end ]]
+
+            [[- else if $zoneName ]]
+            # Need to look up zone by name first
+            apiVersion: route53.aws.upbound.io/v1beta2
+            kind: Zone
+            metadata:
+              annotations:
+                crossplane.io/external-name: [[ $zoneName ]]
+                [[ setResourceNameAnnotation "zone-lookup" ]]
+              name: [[ printf "%s-zone-lookup" $name ]]
+              namespace: [[ $namespace ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+                kind: ClusterProviderConfig
+              managementPolicies:
+                - Observe
+              forProvider:
+                region: [[ $region ]]
+
+            ---
+            [[- $zoneLookup := getComposedResource . "zone-lookup" ]]
+            [[- if $zoneLookup.status.atProvider.zoneId ]]
+            [[- $resolvedZoneId := $zoneLookup.status.atProvider.zoneId ]]
+
+            apiVersion: route53.aws.upbound.io/v1beta1
+            kind: Record
+            metadata:
+              annotations:
+                crossplane.io/external-name: [[ $fqdn ]]
+                [[ setResourceNameAnnotation $name ]]
+              name: [[ $name ]]
+              namespace: [[ $namespace ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+                kind: ClusterProviderConfig
+              managementPolicies:
+                {{- toYaml .Values.managementPolicies | nindent 16 }}
+              forProvider:
+                name: [[ $fqdn ]]
+                type: [[ $type ]]
+                zoneId: [[ $resolvedZoneId ]]
+                region: [[ $region ]]
+                [[- if $setIdentifier ]]
+                setIdentifier: [[ $setIdentifier ]]
+                weightedRoutingPolicy:
+                  - weight: [[ $weight ]]
+                [[- end ]]
+                [[- if ne $type "ALIAS" ]]
+                ttl: [[ $ttl ]]
+                records: [[ $values | toJson ]]
+                [[- end ]]
+                [[- if eq $type "ALIAS" ]]
+                alias:
+                  - name: [[ $aliasTarget.dnsName ]]
+                    zoneId: [[ $resolvedAliasZoneId ]]
+                    evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
+                [[- end ]]
+            [[- end ]]
+            [[- end ]]
+
+            ---
+            [[- if $record.status.atProvider ]]
+            apiVersion: dock.tech/v1
+            kind: Record
+            status:
+              fqdn: [[ $fqdn ]]
+              recordId: [[ $record.status.atProvider.id ]]
+              ready: true
+              message: "Record is ready"
+            [[- end ]]
+
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: crossplane-contrib-function-auto-ready

@@ -1,0 +1,81 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: zone
+  labels:
+    app.kubernetes.io/name: crossplane-compositions-dns
+spec:
+  compositeTypeRef:
+    apiVersion: dock.tech/v1
+    kind: Zone
+
+  mode: Pipeline
+
+  pipeline:
+    - step: render-resources
+      functionRef:
+        name: crossplane-contrib-function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        delims:
+          left: '[['
+          right: ']]'
+        source: Inline
+        inline:
+          template: |
+            [[- $params        := .observed.composite.resource.spec ]]
+            [[- $name          := $params.name ]]
+            [[- $namespace     := .observed.composite.resource.metadata.namespace ]]
+            [[- $accountName   := $params.aws.accountName ]]
+            [[- $zoneName      := $params.zoneName ]]
+            [[- $comment       := default "Managed by APE Platform" $params.comment ]]
+            [[- $domain        := $params.domain ]]
+            [[- $subdomain     := $params.subdomain ]]
+            [[- $system        := $params.system ]]
+            [[- $environment   := $params.environment ]]
+            [[- $tags          := $params.tags ]]
+
+            [[- $zone := getComposedResource . $name ]]
+
+            ---
+            apiVersion: route53.aws.upbound.io/v1beta1
+            kind: Zone
+            metadata:
+              annotations:
+                crossplane.io/external-name: [[ $zoneName ]]
+                [[ setResourceNameAnnotation $name ]]
+              name: [[ $name ]]
+              namespace: [[ $namespace ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+                kind: ClusterProviderConfig
+              managementPolicies:
+                {{- toYaml .Values.managementPolicies | nindent 16 }}
+              forProvider:
+                comment: [[ $comment ]]
+                tags:
+                  createdBy: ape-platform
+                  domain: [[ $domain ]]
+                  subdomain: [[ $subdomain ]]
+                  system: [[ $system ]]
+                  environment: [[ $environment ]]
+                  [[- range $key, $value := $tags ]]
+                  [[ $key ]]: [[ $value ]]
+                  [[- end ]]
+
+            ---
+            [[- if $zone.status.atProvider ]]
+            apiVersion: dock.tech/v1
+            kind: Zone
+            status:
+              zoneId: [[ $zone.status.atProvider.zoneId ]]
+              nameServers: [[ $zone.status.atProvider.nameServers | toJson ]]
+              ready: true
+              message: "Zone is ready"
+            [[- end ]]
+
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: crossplane-contrib-function-auto-ready

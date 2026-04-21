@@ -1,0 +1,6 @@
+id: fetchSystem
+name: Fetch System Entity
+action: catalog:fetch
+input:
+  entityRef: ${{ parameters.system }}
+  defaultKind: System

@@ -1,0 +1,6 @@
+id: push
+name: Push changes
+action: github:extras:push
+input:
+  folder: entities
+  branch: master

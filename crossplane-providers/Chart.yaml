@@ -1,6 +1,6 @@
 apiVersion: v2
 name: crossplane-providers
-description: Crossplane AWS providers for DNS management
+description: Crossplane AWS providers
 type: application
 version: 0.1.0
-appVersion: "1.0.0"
+appVersion: "1.16.0"

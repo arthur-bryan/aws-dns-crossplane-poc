@@ -22,6 +22,7 @@ env/
 
 # User configuration
 .claude/
+.local/
 knowledge-core.md
 
 # Internal documentation (not for public repo)
