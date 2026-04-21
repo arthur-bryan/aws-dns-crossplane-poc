@@ -1,0 +1,117 @@
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: zones.dock.tech
+spec:
+  scope: Namespaced
+  group: dock.tech
+  names:
+    kind: Zone
+    plural: zones
+  claimNames:
+    kind: Zone
+    plural: zones
+  versions:
+    - name: v1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                name:
+                  description: "Resource name"
+                  type: string
+                  minLength: 1
+                domain:
+                  description: "The parent domain (e.g., cross, saas, bass)"
+                  type: string
+                  minLength: 1
+                subdomain:
+                  description: "The parent subdomain (e.g., cloud, payments, identity)"
+                  type: string
+                  minLength: 1
+                system:
+                  description: "The parent system (e.g., ape, api-gateway, user-service)"
+                  type: string
+                  minLength: 1
+                environment:
+                  description: "Target environment"
+                  type: string
+                  enum: [dev, hml, poc, prd]
+
+                aws:
+                  description: "AWS account metadata"
+                  type: object
+                  required:
+                    - account
+                    - accountName
+                  properties:
+                    account:
+                      description: "AWS account ID (12 digits)"
+                      type: number
+                      minimum: 100000000000
+                      maximum: 999999999999
+                    accountName:
+                      description: "AWS account name (matches ClusterProviderConfig)"
+                      type: string
+                      minLength: 1
+
+                zoneName:
+                  type: string
+                  description: "DNS zone name (FQDN without trailing dot)"
+                  minLength: 4
+                  maxLength: 253
+                  pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+                  x-kubernetes-validations:
+                    - rule: "self == oldSelf"
+                      message: "zoneName is immutable"
+
+                comment:
+                  type: string
+                  description: "Optional comment for the zone"
+                  maxLength: 256
+
+                tags:
+                  type: object
+                  description: "Additional AWS tags (hierarchy tags added automatically)"
+                  additionalProperties:
+                    type: string
+
+              required:
+                - name
+                - domain
+                - subdomain
+                - system
+                - environment
+                - aws
+                - zoneName
+
+              x-kubernetes-validations:
+                - rule: "!self.zoneName.endsWith('.')"
+                  message: "zoneName must not end with a dot"
+                - rule: "!self.zoneName.startsWith('-')"
+                  message: "zoneName must not start with hyphen"
+                - rule: "!self.zoneName.contains('..')"
+                  message: "zoneName must not contain consecutive dots"
+
+            status:
+              type: object
+              properties:
+                zoneId:
+                  type: string
+                  description: "Route53 hosted zone ID"
+                nameServers:
+                  type: array
+                  description: "NS records for zone delegation"
+                  items:
+                    type: string
+                ready:
+                  type: boolean
+                  description: "Zone is ready for use"
+                message:
+                  type: string
+                  description: "Human-readable status message"

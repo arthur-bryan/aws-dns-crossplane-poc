@@ -1,0 +1,10 @@
+id: notify
+name: Notify
+action: notification:send
+input:
+  recipients: entity
+  entityRefs:
+    - ${{ user.ref }}
+  title: "Template of ${{ parameters.kind }} executed"
+  info: "Your ${{ parameters.kind }} with name ${{ parameters.name }} template has been executed"
+  severity: "normal"

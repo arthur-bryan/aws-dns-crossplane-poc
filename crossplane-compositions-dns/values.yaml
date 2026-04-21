@@ -1,17 +1,5 @@
-cluster:
-  name: in-cluster
-
 managementPolicies:
   - Observe
   - Create
   - Update
   - Delete
-
-dns:
-  defaultRegion: us-east-2
-  defaultTTL: 300
-
-compositions:
-  batch: true
-  observe: true
-  import: true

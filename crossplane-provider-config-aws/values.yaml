@@ -1,6 +1,6 @@
 configs:
   - name: dev-account
-    roleARN: arn:aws:iam::PLACEHOLDER_DEV_ACCOUNT:role/crossplane-dns
+    roleARN: arn:aws:iam::PLACEHOLDER_DEV_ACCOUNT:role/crossplane-route53
     envs:
       aws:
         account: 123456789012
@@ -8,7 +8,7 @@ configs:
         region: us-east-2
 
   - name: hml-account
-    roleARN: arn:aws:iam::PLACEHOLDER_HML_ACCOUNT:role/crossplane-dns
+    roleARN: arn:aws:iam::PLACEHOLDER_HML_ACCOUNT:role/crossplane-route53
     envs:
       aws:
         account: 234567890123
@@ -16,9 +16,9 @@ configs:
         region: us-east-2
 
   - name: prd-account
-    roleARN: arn:aws:iam::PLACEHOLDER_PRD_ACCOUNT:role/crossplane-dns
+    roleARN: arn:aws:iam::PLACEHOLDER_PRD_ACCOUNT:role/crossplane-route53
     envs:
       aws:
         account: 345678901234
         accountName: prd-account
-        region: us-east-1
+        region: sa-east-1

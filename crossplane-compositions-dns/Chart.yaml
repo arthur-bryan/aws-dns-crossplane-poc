@@ -1,17 +1,6 @@
 apiVersion: v2
 name: crossplane-compositions-dns
-description: Crossplane compositions for AWS Route53 DNS management
+description: Crossplane compositions for DNS zones
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
-maintainers:
-  - name: APE Platform Team
-    email: platform@dock.tech
-keywords:
-  - crossplane
-  - dns
-  - route53
-  - aws
-home: https://github.com/dock-tech/aws-dns-crossplane-poc
-sources:
-  - https://github.com/dock-tech/aws-dns-crossplane-poc

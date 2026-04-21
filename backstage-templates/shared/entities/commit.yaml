@@ -1,0 +1,8 @@
+id: commit
+name: Commit changes
+action: github:extras:commit
+input:
+  folder: entities
+  message: "add ${{ parameters.kind }} with name ${{ parameters.name }}"
+  gitAuthorName: ${{ user.entity.spec.profile.displayName }}
+  gitAuthorEmail: ${{ user.entity.spec.profile.email }}
