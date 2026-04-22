@@ -28,7 +28,6 @@ spec:
             [[- $name          := $params.name ]]
             [[- $namespace     := .observed.composite.resource.metadata.namespace ]]
             [[- $accountName   := $params.aws.accountName ]]
-            [[- $region        := $params.aws.region ]]
             [[- $recordName    := $params.recordName ]]
             [[- $type          := $params.type ]]
             [[- $ttl           := default 3600 $params.ttl ]]
@@ -79,6 +78,9 @@ spec:
             [[- $resolvedAliasZoneId := "" ]]
             [[- if and (eq $type "ALIAS") $aliasTarget ]]
             [[- $serviceType := $aliasTarget.serviceType ]]
+            # Region of the TARGET resource (ALB, NLB, etc.) — NOT the DNS account's
+            # region. Falls back to spec.aws.region for backward compatibility.
+            [[- $region := default $params.aws.region $aliasTarget.region ]]
             [[- if eq $serviceType "CloudFront" ]]
             [[- $resolvedAliasZoneId = "Z2FDTNDATAQYW2" ]]
             [[- else if eq $serviceType "GlobalAccelerator" ]]

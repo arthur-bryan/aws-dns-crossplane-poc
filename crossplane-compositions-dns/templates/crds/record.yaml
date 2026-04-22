@@ -125,6 +125,10 @@ spec:
                       x-kubernetes-validations:
                         - rule: "self == oldSelf"
                           message: "serviceType is immutable"
+                    region:
+                      type: string
+                      description: "Region of the TARGET resource (required for ALB/NLB/S3Website/APIGateway; ignored for CloudFront/GlobalAccelerator/Custom). In cross-account DNS patterns this is the region where the ALB/NLB lives, NOT the DNS account's region."
+                      pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
                     hostedZoneId:
                       type: string
                       description: "Target hosted zone ID (required only for Custom serviceType)"
