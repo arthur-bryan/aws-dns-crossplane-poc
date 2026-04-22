@@ -1,0 +1,19 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-arthurbryan.com
+  namespace: system-infrastructure-dev
+spec:
+  name: zone-arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+  zoneName: arthurbryan.com
+  import:
+    existing: true
+    zoneId: Z03010981ALJFZB4QLU8W

@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-cdn.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-cdn.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: cdn
+  type: ALIAS
+  aliasTarget:
+    serviceType: CloudFront
+    dnsName: d1234567890abcd.cloudfront.net
+    evaluateTargetHealth: false

@@ -29,12 +29,18 @@ spec:
             [[- $namespace     := .observed.composite.resource.metadata.namespace ]]
             [[- $accountName   := $params.aws.accountName ]]
             [[- $zoneName      := $params.zoneName ]]
-            [[- $comment       := default "Managed by APE Platform" $params.comment ]]
+            [[- $comment       := $params.comment ]]
             [[- $domain        := $params.domain ]]
             [[- $subdomain     := $params.subdomain ]]
             [[- $system        := $params.system ]]
             [[- $environment   := $params.environment ]]
             [[- $tags          := $params.tags ]]
+            [[- $import        := $params.import ]]
+            [[- $importing     := and $import $import.existing ]]
+            [[- $externalName  := $zoneName ]]
+            [[- if $importing ]]
+            [[- $externalName = $import.zoneId ]]
+            [[- end ]]
 
             [[- $zone := getComposedResource . $name ]]
 
@@ -43,7 +49,7 @@ spec:
             kind: Zone
             metadata:
               annotations:
-                crossplane.io/external-name: [[ $zoneName ]]
+                crossplane.io/external-name: [[ $externalName ]]
                 [[ setResourceNameAnnotation $name ]]
               name: [[ $name ]]
               namespace: [[ $namespace ]]
@@ -51,17 +57,32 @@ spec:
               providerConfigRef:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig
+              [[- if $importing ]]
+              # Adopt existing zone — observe + allow updates to comment/tags;
+              # deletion of this XR does NOT delete the AWS zone.
+              managementPolicies:
+                - Observe
+                - Update
+              [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
+              [[- end ]]
               forProvider:
                 name: [[ $zoneName ]]
+                [[- if $comment ]]
                 comment: [[ $comment ]]
+                [[- else if not $importing ]]
+                comment: "Managed by APE Platform"
+                [[- end ]]
                 tags:
                   createdBy: ape-platform
                   domain: [[ $domain ]]
                   subdomain: [[ $subdomain ]]
                   system: [[ $system ]]
                   environment: [[ $environment ]]
+                  [[- if $importing ]]
+                  imported: "true"
+                  [[- end ]]
                   [[- range $key, $value := $tags ]]
                   [[ $key ]]: [[ $value ]]
                   [[- end ]]
@@ -74,7 +95,7 @@ spec:
               zoneId: [[ $zone.status.atProvider.zoneId ]]
               nameServers: [[ $zone.status.atProvider.nameServers | toJson ]]
               ready: true
-              message: "Zone is ready"
+              message: [[ if $importing ]]"Zone imported and observed"[[ else ]]"Zone is ready"[[ end ]]
             [[- end ]]
 
     - step: automatically-detect-ready-composed-resources
