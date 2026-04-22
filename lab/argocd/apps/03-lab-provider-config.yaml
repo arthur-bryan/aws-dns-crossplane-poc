@@ -17,8 +17,6 @@ spec:
     repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc
     targetRevision: feature/ape-platform-alignment
     path: lab/provider-config
-    directory:
-      recurse: false
   destination:
     server: https://kubernetes.default.svc
     namespace: crossplane-system
