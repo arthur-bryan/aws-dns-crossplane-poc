@@ -1,0 +1,17 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: zone-example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+  zoneName: example.com
+  comment: Corporate website DNS zone

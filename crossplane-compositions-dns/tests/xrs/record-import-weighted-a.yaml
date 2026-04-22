@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-api.example.com-green
+  namespace: system-infrastructure-dev
+spec:
+  name: record-api.example.com-green
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneName: example.com
+  recordName: api
+  type: A
+  values:
+    - 192.0.2.30
+  ttl: 60
+  setIdentifier: green-deployment
+  weight: 30
+  import:
+    existing: true
+    zoneId: Z1234567890ABC
