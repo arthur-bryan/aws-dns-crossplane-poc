@@ -3,7 +3,7 @@
 #
 # Phase-scoped targets are provided so you can re-run individual steps.
 
-SHELL := /usr/bin/env bash
+SHELL := /usr/bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 .ONESHELL:
 
@@ -15,7 +15,9 @@ REPO_BRANCH  := feature/ape-platform-alignment
 help:
 	@echo "targets:"
 	@echo "  up              — full bring-up (phases 1→5)"
-	@echo "  down            — delete kind cluster"
+	@echo "  pause           — docker stop the kind node (state preserved)"
+	@echo "  resume          — docker start the kind node (~30s back up)"
+	@echo "  down            — DELETE the kind cluster (destructive; ~5m rebuild next time)"
 	@echo "  status          — cluster + argo + crossplane status"
 	@echo ""
 	@echo "  phase1-kind     — create kind cluster + ingress-nginx"
@@ -36,8 +38,27 @@ up: phase1-kind phase2-xplane phase3-argocd phase5-apps
 	@echo ""
 	@echo "Next: 'make aws-creds' (after you create ~/.aws/credentials for the target account)"
 
+.PHONY: pause
+pause:
+	@echo ">>> pausing kind node (state preserved)"
+	docker stop $(CLUSTER_NAME)-control-plane
+	@pgrep -f "backstage-cli repo start" >/dev/null 2>&1 && pkill -f "backstage-cli repo start" || true
+	@echo ">>> paused. 'make -C lab resume' to bring it back (~30s)"
+
+.PHONY: resume
+resume:
+	@echo ">>> resuming kind node"
+	docker start $(CLUSTER_NAME)-control-plane
+	@echo ">>> waiting for API server"
+	@until kubectl --context kind-$(CLUSTER_NAME) get nodes >/dev/null 2>&1; do sleep 2; done
+	kubectl --context kind-$(CLUSTER_NAME) wait --for=condition=Ready nodes --all --timeout=120s
+	@echo ">>> ready. Backstage (if needed): cd lab/backstage/ape-lab && GITHUB_TOKEN=... yarn start"
+
 .PHONY: down
 down:
+	@echo ">>> DELETING kind cluster '$(CLUSTER_NAME)' (destructive — state lost)"
+	@echo ">>> use 'make -C lab pause' instead for a fast-resumable stop"
+	@echo ""
 	kind delete cluster --name $(CLUSTER_NAME)
 
 .PHONY: status
