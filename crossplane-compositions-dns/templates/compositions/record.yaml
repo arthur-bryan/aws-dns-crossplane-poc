@@ -39,17 +39,15 @@ spec:
 
             [[- $import    := $params.import ]]
             [[- $importing := and $import $import.existing ]]
+            [[- $zoneId    := $params.zoneId ]]
+            [[- $zoneName  := $params.zoneName ]]
 
-            [[- $zoneId := "" ]]
+            [[- $importExtName := "" ]]
             [[- if $importing ]]
-            [[- $zoneId = $import.zoneId ]]
-            [[- else if $params.zoneId ]]
-            [[- $zoneId = $params.zoneId ]]
+            [[- $importExtName = printf "%s_%s_%s" $zoneId (printf "%s.%s" $params.recordName $zoneName) $params.type ]]
+            [[- if $params.setIdentifier ]]
+            [[- $importExtName = printf "%s_%s" $importExtName $params.setIdentifier ]]
             [[- end ]]
-
-            [[- $zoneName := "" ]]
-            [[- if $params.zoneName ]]
-            [[- $zoneName = $params.zoneName ]]
             [[- end ]]
 
             [[- $fqdn := printf "%s.%s" $recordName $zoneName ]]
@@ -133,19 +131,21 @@ spec:
             [[- end ]]
 
             ---
-            [[- if $importing ]]
-            # Importing an existing Route53 record (adopt without recreating).
-            # external-name must match Terraform's import ID:
-            #   {zoneId}_{fqdn}_{type}[_{setIdentifier}]
-            [[- $importExtName := printf "%s_%s_%s" $zoneId $fqdn $type ]]
-            [[- if $setIdentifier ]]
-            [[- $importExtName = printf "%s_%s" $importExtName $setIdentifier ]]
-            [[- end ]]
+            [[- if $zoneId ]]
+            # On import the external-name must match Terraform's import ID:
+            #   {zoneId}_{fqdn}_{type}[_{setIdentifier}]  — precomputed above.
+            # On create we omit external-name entirely; the provider assigns
+            # it after the Route53 API call.
             apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: Record
             metadata:
               annotations:
+                # On import, external-name must be the Terraform import ID so
+                # the initial observe succeeds. On create we intentionally omit
+                # it — the provider generates the ID after create.
+                [[- if $importing ]]
                 crossplane.io/external-name: [[ $importExtName ]]
+                [[- end ]]
                 [[ setResourceNameAnnotation $name ]]
               name: [[ $name ]]
               namespace: [[ $namespace ]]
@@ -153,11 +153,16 @@ spec:
               providerConfigRef:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig
-              # Adopt — observe + allow updates; removing the XR does NOT delete
-              # the AWS record.
+              [[- if $importing ]]
+              # Adopt — observe + allow updates; removing the XR does NOT
+              # delete the AWS record.
               managementPolicies:
                 - Observe
                 - Update
+              [[- else ]]
+              managementPolicies:
+                {{- toYaml .Values.managementPolicies | nindent 16 }}
+              [[- end ]]
               forProvider:
                 name: [[ $fqdn ]]
                 type: [[ $type ]]
@@ -177,101 +182,6 @@ spec:
                   zoneId: [[ $resolvedAliasZoneId ]]
                   evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
                 [[- end ]]
-
-            [[- else if $zoneId ]]
-            # Using provided zoneId
-            apiVersion: route53.aws.m.upbound.io/v1beta1
-            kind: Record
-            metadata:
-              annotations:
-                crossplane.io/external-name: [[ $fqdn ]]
-                [[ setResourceNameAnnotation $name ]]
-              name: [[ $name ]]
-              namespace: [[ $namespace ]]
-            spec:
-              providerConfigRef:
-                name: [[ $accountName ]]
-                kind: ClusterProviderConfig
-              managementPolicies:
-                {{- toYaml .Values.managementPolicies | nindent 16 }}
-              forProvider:
-                name: [[ $fqdn ]]
-                type: [[ $type ]]
-                zoneId: [[ $zoneId ]]
-                [[- if $setIdentifier ]]
-                setIdentifier: [[ $setIdentifier ]]
-                weightedRoutingPolicy:
-                  weight: [[ $weight ]]
-                [[- end ]]
-                [[- if ne $type "ALIAS" ]]
-                ttl: [[ $ttl ]]
-                records: [[ $values | toJson ]]
-                [[- end ]]
-                [[- if eq $type "ALIAS" ]]
-                alias:
-                  name: [[ $aliasTarget.dnsName ]]
-                  zoneId: [[ $resolvedAliasZoneId ]]
-                  evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
-                [[- end ]]
-
-            [[- else if $zoneName ]]
-            # Need to look up zone by name first
-            apiVersion: route53.aws.m.upbound.io/v1beta1
-            kind: Zone
-            metadata:
-              annotations:
-                crossplane.io/external-name: [[ $zoneName ]]
-                [[ setResourceNameAnnotation "zone-lookup" ]]
-              name: [[ printf "%s-zone-lookup" $name ]]
-              namespace: [[ $namespace ]]
-            spec:
-              providerConfigRef:
-                name: [[ $accountName ]]
-                kind: ClusterProviderConfig
-              managementPolicies:
-                - Observe
-              forProvider:
-                name: [[ $zoneName ]]
-
-            ---
-            [[- $zoneLookup := getComposedResource . "zone-lookup" ]]
-            [[- if $zoneLookup.status.atProvider.zoneId ]]
-            [[- $resolvedZoneId := $zoneLookup.status.atProvider.zoneId ]]
-
-            apiVersion: route53.aws.m.upbound.io/v1beta1
-            kind: Record
-            metadata:
-              annotations:
-                crossplane.io/external-name: [[ $fqdn ]]
-                [[ setResourceNameAnnotation $name ]]
-              name: [[ $name ]]
-              namespace: [[ $namespace ]]
-            spec:
-              providerConfigRef:
-                name: [[ $accountName ]]
-                kind: ClusterProviderConfig
-              managementPolicies:
-                {{- toYaml .Values.managementPolicies | nindent 16 }}
-              forProvider:
-                name: [[ $fqdn ]]
-                type: [[ $type ]]
-                zoneId: [[ $resolvedZoneId ]]
-                [[- if $setIdentifier ]]
-                setIdentifier: [[ $setIdentifier ]]
-                weightedRoutingPolicy:
-                  weight: [[ $weight ]]
-                [[- end ]]
-                [[- if ne $type "ALIAS" ]]
-                ttl: [[ $ttl ]]
-                records: [[ $values | toJson ]]
-                [[- end ]]
-                [[- if eq $type "ALIAS" ]]
-                alias:
-                  name: [[ $aliasTarget.dnsName ]]
-                  zoneId: [[ $resolvedAliasZoneId ]]
-                  evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
-                [[- end ]]
-            [[- end ]]
             [[- end ]]
 
             ---

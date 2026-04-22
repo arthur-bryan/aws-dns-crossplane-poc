@@ -156,16 +156,7 @@ spec:
                     existing:
                       type: boolean
                       default: false
-                      description: "True to adopt an existing AWS Route53 record"
-                    zoneId:
-                      type: string
-                      description: "AWS Route53 Zone ID (e.g. Z03010981ALJFZB4QLU8W). Required when existing=true."
-                      pattern: '^Z[A-Z0-9]+$'
-                  x-kubernetes-validations:
-                    - rule: "!self.existing || has(self.zoneId)"
-                      message: "spec.import.zoneId is required when spec.import.existing is true"
-                    - rule: "!has(self.zoneId) || self.existing"
-                      message: "spec.import.zoneId is only valid when spec.import.existing is true"
+                      description: "True to adopt an existing AWS Route53 record. zoneId (top-level) must point at the existing zone."
 
               required:
                 - name
@@ -174,13 +165,12 @@ spec:
                 - system
                 - environment
                 - aws
+                - zoneId
+                - zoneName
                 - recordName
                 - type
 
-              # Validation: Either zoneId or zoneName must be provided
               x-kubernetes-validations:
-                - rule: "has(self.zoneId) || has(self.zoneName)"
-                  message: "Either zoneId or zoneName must be provided"
                 - rule: "self.type != 'ALIAS' || has(self.aliasTarget)"
                   message: "aliasTarget is required for ALIAS records"
                 - rule: "self.type == 'ALIAS' || has(self.values)"

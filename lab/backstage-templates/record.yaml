@@ -26,6 +26,7 @@ spec:
         - system
         - environment
         - zoneName
+        - zoneId
         - recordName
         - type
       properties:
@@ -49,6 +50,12 @@ spec:
           description: Existing hosted zone FQDN (no trailing dot)
           ui:autofocus: true
           ui:help: "Example: example.com"
+        zoneId:
+          title: Parent Zone ID
+          type: string
+          pattern: '^Z[A-Z0-9]+$'
+          description: AWS Route53 Zone ID of the parent zone
+          ui:help: "Find via AWS Console → Hosted Zones, or `aws route53 list-hosted-zones`. Example: Z03010981ALJFZB4QLU8W"
         recordName:
           title: Record Name
           type: string
@@ -233,6 +240,7 @@ spec:
               account: ${{ parameters.awsAccountId }}
               accountName: ${{ parameters.awsAccountName }}
               region: ${{ parameters.awsRegion }}
+            zoneId: ${{ parameters.zoneId }}
             zoneName: ${{ parameters.zoneName }}
             recordName: ${{ parameters.recordName }}
             type: ${{ parameters.type }}

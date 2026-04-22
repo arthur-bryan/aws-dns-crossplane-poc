@@ -1,6 +1,3 @@
-# Functions referenced by the compositions.
-# `crossplane render` uses these to know which container images to run.
----
 apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:

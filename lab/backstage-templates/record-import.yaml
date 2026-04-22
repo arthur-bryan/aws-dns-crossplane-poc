@@ -224,6 +224,7 @@ spec:
               account: ${{ parameters.awsAccountId }}
               accountName: ${{ parameters.awsAccountName }}
               region: ${{ parameters.awsRegion }}
+            zoneId: ${{ parameters.zoneId }}
             zoneName: ${{ parameters.zoneName }}
             recordName: ${{ parameters.recordName }}
             type: ${{ parameters.type }}
@@ -248,7 +249,6 @@ spec:
             {%- endif %}
             import:
               existing: true
-              zoneId: ${{ parameters.zoneId }}
 
     - id: openPR
       name: Open PR with record import
