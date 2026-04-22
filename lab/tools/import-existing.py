@@ -163,6 +163,8 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
             dock.tech/environment: {ctx['environment']}
             dock.tech/aws-account-id: "{ctx['aws_account_id']}"
             dock.tech/managed-by: batch-import
+            # "View Source" icon in the header → raw XR YAML on GitHub.
+            backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:
             - aws
             - dns
@@ -174,9 +176,6 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
             - title: View in AWS Console
               url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/{zone_id}
               icon: cloud
-            - title: View XR file on GitHub
-              url: {REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}
-              icon: github
             - title: Delete zone (opens GitHub delete UI)
               url: {REPO_URL}/delete/{REPO_BRANCH}/{xr_relpath}
               icon: delete
@@ -272,18 +271,17 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             dock.tech/system: {ctx['system']}
             dock.tech/environment: {ctx['environment']}
             dock.tech/managed-by: batch-import
+            # Pencil icon in the entity header (top-right). Launches the
+            # scaffolder form pre-filled with this record's identity.
+            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2F{ctx['system']}%22%2C%22environment%22%3A%22{ctx['environment']}%22%2C%22zoneName%22%3A%22{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D"
+            # "View Source" icon in the header → raw XR YAML on GitHub.
+            backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:
         """) + "\n".join(f"    - {t}" for t in tags) + dedent(f"""
           links:
-            - title: Edit record
-              url: {BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2F{ctx['system']}%22%2C%22environment%22%3A%22{ctx['environment']}%22%2C%22zoneName%22%3A%22{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D
-              icon: edit
             - title: View in AWS Console
               url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/{rec['zone_id']}
               icon: cloud
-            - title: View XR file on GitHub
-              url: {REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}
-              icon: github
             - title: Delete record (opens GitHub delete UI)
               url: {REPO_URL}/delete/{REPO_BRANCH}/{xr_relpath}
               icon: delete

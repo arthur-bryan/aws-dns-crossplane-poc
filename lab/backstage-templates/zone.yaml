@@ -155,6 +155,7 @@ spec:
               dock.tech/environment: ${{ parameters.environment }}
               dock.tech/aws-account-id: "${{ parameters.awsAccountId }}"
               dock.tech/managed-by: scaffolder
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml"
             tags:
               - aws
               - dns
@@ -165,9 +166,6 @@ spec:
               - title: View in AWS Console
                 url: https://console.aws.amazon.com/route53/v2/hostedzones
                 icon: cloud
-              - title: View XR file on GitHub
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml
-                icon: github
               - title: Delete zone (opens GitHub delete UI)
                 url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml
                 icon: delete
