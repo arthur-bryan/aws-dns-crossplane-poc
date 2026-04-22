@@ -200,9 +200,11 @@ Find the lab host's LAN IPv4 from `ape-lab-portproxy.ps1` output (or on the lab 
 |---|---|
 | Backstage | `http://<WIN_LAN_IP>:3000` |
 | Backstage API | `http://<WIN_LAN_IP>:7007` |
-| ArgoCD | `http://argocd.localtest.me/` — add `<WIN_LAN_IP>  argocd.localtest.me` to `C:\Windows\System32\drivers\etc\hosts` (edit via Notepad "Run as administrator") |
+| ArgoCD | `http://<WIN_LAN_IP>/` — no hosts-file entry needed (a catch-all Ingress routes any hostname on :80 to `argocd-server`) |
 
-No PowerShell or firewall work on the client PC — it just makes outbound connections.
+No PowerShell, firewall, or hosts-file work on the client PC — it just makes outbound connections.
+
+> If you ever need to run a second HTTP service behind port 80, drop `lab/argocd/ingress-ip-catchall.yaml` and re-introduce a hosts-file entry, otherwise the catch-all rule will hijack it.
 
 ## Known limitations
 
