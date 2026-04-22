@@ -13,7 +13,5 @@ metadata:
 spec:
   targets:
     - ./zone.yaml
-    - ./zone-import.yaml
     - ./record.yaml
     - ./record-edit.yaml
-    - ./record-import.yaml

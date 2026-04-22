@@ -38,11 +38,22 @@ catalog:
       rules:
         - allow: [Domain, System, Resource, Group]
 
-    # 2. The three DNS scaffolder templates (zone, record, record-edit).
+    # 2. The DNS scaffolder templates.
     - type: file
       target: ../../../../backstage-templates/catalog-info.yaml
       rules:
         - allow: [Location, Template]
+
+    # 3. Zone + Record Resource entities produced by the scaffolder (and by the
+    #    batch import tool). Glob discovers every zone/record as it's merged.
+    - type: file
+      target: ../../../../../entities/catalog/zones/*.yaml
+      rules:
+        - allow: [Resource]
+    - type: file
+      target: ../../../../../entities/catalog/records/*.yaml
+      rules:
+        - allow: [Resource]
 
 scaffolder:
   defaultAuthor:

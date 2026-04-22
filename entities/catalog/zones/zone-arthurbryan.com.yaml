@@ -1,0 +1,40 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: zone-arthurbryan.com
+  namespace: system-infrastructure-dev
+  title: arthurbryan.com
+  description: "Route53 Hosted Zone arthurbryan.com (dev) — imported"
+  annotations:
+    dock.tech/xr-kind: Zone
+    dock.tech/xr-name: zone-arthurbryan.com
+    dock.tech/zone-name: arthurbryan.com
+    dock.tech/zone-id: Z03010981ALJFZB4QLU8W
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: dev
+    dock.tech/aws-account-id: "597230762851"
+    dock.tech/managed-by: batch-import
+  tags:
+    - aws
+    - dns
+    - route53
+    - zone
+    - imported
+    - dev
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z03010981ALJFZB4QLU8W
+      icon: cloud
+    - title: View XR file on GitHub
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-arthurbryan.com.yaml
+      icon: github
+    - title: Delete zone (opens GitHub delete UI)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-arthurbryan.com.yaml
+      icon: delete
+spec:
+  type: aws-dns-zone
+  owner: group:application-platform-engineering
+  system: infrastructure
