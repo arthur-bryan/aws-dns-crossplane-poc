@@ -5,7 +5,7 @@ metadata:
   name: record-test.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: {"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"test","type":"A","ttl":3600,"values":["10.0.0.10"],"routingPolicy":"simple"}
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"test","type":"A","ttl":3600,"values":["10.0.0.10"],"routingPolicy":"simple"}'
 spec:
   name: record-test.arthurbryan.com
   domain: cross

@@ -148,7 +148,7 @@ spec:
             name: zone-${{ parameters.zoneName }}
             namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
             annotations:
-              dock.tech/scaffolder-parameters: ${{ parameters | dump }}
+              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
           spec:
             name: zone-${{ parameters.zoneName }}
             domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
