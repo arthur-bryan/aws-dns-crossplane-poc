@@ -94,10 +94,36 @@ kubectl get compositions
 > them. All Zone/Record lifecycle flows through the Backstage scaffolder →
 > PR → ArgoCD path.
 
-## Tearing down
+## Pausing / resuming (preserves state across PC reboots)
 
 ```bash
-make -C lab down               # kind delete cluster
+# End of day — stops Backstage + pauses the kind container (state preserved on disk)
+make -C lab pause
+
+# Next day — brings kind back and relaunches Backstage (~8–90s total)
+make -C lab resume
+
+# Optional: kind auto-starts whenever Docker daemon starts (i.e. after PC boot)
+make -C lab autostart-on        # default is off; enabling skips the `docker start` step
+```
+
+`resume` is idempotent — runs cleanly whether the container is stopped or
+already running. After a PC reboot, a single `make -C lab resume` brings
+everything back: kind cluster, ArgoCD state, Crossplane providers, XRs,
+AWS creds Secret, Backstage. No helm re-installs, no image re-pulls.
+
+Backstage runs detached (pid + log at `lab/backstage/backstage.{pid,log}`):
+
+```bash
+make -C lab backstage-up        # start (reads GITHUB_TOKEN or gh auth token)
+make -C lab backstage-down      # stop
+make -C lab backstage-log       # tail -f the log
+```
+
+## Tearing down (destructive)
+
+```bash
+make -C lab down               # kind delete cluster — wipes all cluster state
 ```
 
 The three production chart directories (`crossplane-compositions-dns/`,
