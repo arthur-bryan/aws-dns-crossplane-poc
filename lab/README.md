@@ -122,66 +122,101 @@ make -C lab backstage-log       # tail -f the log
 
 ## LAN access (reach Backstage + Argo from another PC on your network)
 
-The lab runs on WSL2 with NAT networking. Reaching the UIs from another device requires port forwarding + firewall + Backstage base-URL changes.
+**Setup uses WSL2 mirrored networking + systemd auto-start + one-time Windows firewall rules.** After initial setup, the lab comes back cleanly after `wsl --shutdown`, PC reboot, etc. — no manual intervention required beyond opening a browser.
 
-### 1. On Windows (elevated PowerShell)
+### One-time WSL-side setup (already done for this lab)
 
-```powershell
-# Replace 172.27.107.49 with your current WSL2 IP (run `ip addr show eth0` inside WSL to confirm).
-# The WSL2 IP changes on every WSL restart — re-run these after reboots.
+These steps have already been executed on this checkout:
 
-netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=80    connectaddress=172.27.107.49 connectport=80
-netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=443   connectaddress=172.27.107.49 connectport=443
-netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=3000  connectaddress=172.27.107.49 connectport=3000
-netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=7007  connectaddress=172.27.107.49 connectport=7007
+1. `%USERPROFILE%\.wslconfig` written with `networkingMode=mirrored` (WSL2 shares Windows' network — no NAT, no portproxy, no IP rotation).
+2. `docker update --restart unless-stopped ape-dns-lab-control-plane` — kind container auto-starts when Docker daemon starts.
+3. `make -C lab install-service` — installs `~/.config/systemd/user/ape-backstage.service` + enables lingering, so Backstage auto-starts when systemd-user starts (on WSL boot).
 
-New-NetFirewallRule -DisplayName "WSL2 lab HTTP"   -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80
-New-NetFirewallRule -DisplayName "WSL2 lab HTTPS"  -Direction Inbound -Action Allow -Protocol TCP -LocalPort 443
-New-NetFirewallRule -DisplayName "WSL2 lab BS-UI"  -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000
-New-NetFirewallRule -DisplayName "WSL2 lab BS-API" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 7007
-```
-
-Find your Windows LAN IP with `ipconfig | findstr IPv4`.
-
-### 2. Backstage baseUrls
-
-Edit `lab/backstage/app-config.lan.yaml` — replace `192.168.1.100` with your Windows IPv4. Then start Backstage with it layered:
+To re-run any of these on a fresh clone:
 
 ```bash
-cd lab/backstage/ape-lab
-yarn start --config ../../app-config.example.yaml --config ../../app-config.lan.yaml
-# (app-config.yaml is loaded by default first; the two --config files override)
+# 1. mirrored mode (needs Windows-side edit; see .wslconfig in your Windows %USERPROFILE%)
+# 2. kind autostart
+make -C lab autostart-on
+# 3. Backstage autostart
+make -C lab install-service
 ```
 
-`app.listen.host: 0.0.0.0` is already in `app-config.example.yaml`, so the dev servers bind to all interfaces.
+### One-time Windows-side setup
 
-### 3. ArgoCD from another PC
+After `.wslconfig` exists, restart WSL from an elevated Windows PowerShell:
 
-The ingress routes by Host header `argocd.localtest.me`, which resolves to 127.0.0.1 on the internet (won't reach the lab from another machine). Fix on the client PC:
-
-**Linux/macOS:** add to `/etc/hosts`:
-
-```
-<WIN_LAN_IP>  argocd.localtest.me
+```powershell
+wsl --shutdown
 ```
 
-**Windows client:** edit `C:\Windows\System32\drivers\etc\hosts` with the same entry (needs Administrator).
+Wait ~10 seconds, then open a new WSL terminal (starts WSL back up with mirrored networking).
 
-Then browse to `http://argocd.localtest.me/` from the other PC.
+Then, still in elevated Windows PowerShell, open the four ports in the firewall:
 
-### 4. Access URLs from the other PC
+```powershell
+New-NetFirewallRule -DisplayName "APE lab — HTTP"       -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80
+New-NetFirewallRule -DisplayName "APE lab — HTTPS"      -Direction Inbound -Action Allow -Protocol TCP -LocalPort 443
+New-NetFirewallRule -DisplayName "APE lab — Backstage"  -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000
+New-NetFirewallRule -DisplayName "APE lab — Backstage API" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 7007
+```
+
+One-time. Does not need re-running after reboots.
+
+### Backstage baseUrl (one-time per install)
+
+Backstage's frontend bundle embeds `app.baseUrl` / `backend.baseUrl` as absolute URLs so the browser knows where to call the API. If those say `http://localhost:*`, a LAN client browser tries to hit *its own* localhost. Fix: point baseUrl at the lab host's LAN IP.
+
+Edit `lab/backstage/ape-lab/app-config.local.yaml` (gitignored personal config), replace `localhost` with your Windows LAN IPv4:
+
+```yaml
+app:
+  baseUrl: http://192.168.1.100:3000   # <-- your Windows LAN IP
+  listen: { host: 0.0.0.0, port: 3000 }
+backend:
+  baseUrl: http://192.168.1.100:7007   # <-- your Windows LAN IP
+  listen: { host: 0.0.0.0, port: 7007 }
+```
+
+Restart the Backstage service to pick up the change:
+
+```bash
+systemctl --user restart ape-backstage
+```
+
+The lab host can still reach the same URL (loopback via its own LAN IP works), so you don't need a separate dev-vs-LAN config.
+
+### On the client PC (the other Windows)
+
+Find the lab host's LAN IPv4 (on the lab host):
+
+```powershell
+ipconfig | findstr IPv4
+```
+
+On the client:
 
 | Service | URL |
 |---|---|
-| Backstage | `http://<WIN_LAN_IP>:3000` |
+| Backstage | `http://<WIN_LAN_IP>:3000` — works immediately, no config needed |
 | Backstage API | `http://<WIN_LAN_IP>:7007` |
-| ArgoCD | `http://argocd.localtest.me/` (with hosts entry above) |
+| ArgoCD | `http://argocd.localtest.me/` — add `<WIN_LAN_IP>  argocd.localtest.me` to `C:\Windows\System32\drivers\etc\hosts` (edit via Notepad "Run as administrator") |
 
-### Gotchas
+No PowerShell or firewall work needed on the client PC — the client just makes outbound connections.
 
-- **WSL2 IP rotates on restart.** After `wsl --shutdown` or a Windows reboot, re-run the `netsh interface portproxy add` commands with the new WSL2 IP. Or: remove all with `netsh interface portproxy reset` and re-add. Scripting it: on WSL startup put the current IP in `/mnt/c/Users/<you>/update-portproxy.ps1` and run the script from an elevated shell.
-- **Mirrored networking mode** (`wsl.conf` `[wsl2] networkingMode=mirrored`) makes WSL2 and Windows share the same network, eliminating the portproxy dance. Available in Windows 11 + recent WSL builds. Add `[wsl2] networkingMode=mirrored` to `%USERPROFILE%\.wslconfig` and `wsl --shutdown`.
-- **CORS from the LAN origin**: the `app-config.lan.yaml` overlay sets `backend.cors.origin` to the LAN URL. If you use a different hostname (e.g. a custom DNS entry), update that value.
+### What survives a WSL restart
+
+With the setup above:
+
+| Component | Auto-restarts? | How |
+|---|---|---|
+| kind cluster | ✅ | Docker daemon starts with WSL; container has `restart=unless-stopped` |
+| Crossplane + Argo + Backstage catalog | ✅ | All inside the kind cluster — come up with kind |
+| Backstage (UI + API) | ✅ | systemd user service (`ape-backstage.service`); lingering enabled |
+| Windows port exposure | ✅ | Mirrored mode eliminates WSL2 NAT; ports on Windows LAN IP match WSL2 ports |
+| Windows firewall rules | ✅ | Persistent once created |
+
+Nothing to re-run after WSL or PC restart. Just open the URL.
 
 ## Known limitations
 

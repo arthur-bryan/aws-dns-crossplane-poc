@@ -26,6 +26,7 @@ help:
 	@echo ""
 	@echo "  autostart-on      — kind node auto-starts on Docker daemon start (after PC boot)"
 	@echo "  autostart-off     — kind node stays stopped on PC boot (default)"
+	@echo "  install-service   — install systemd user service so Backstage auto-starts on WSL boot"
 	@echo ""
 	@echo "  phase1-kind       — create kind cluster + ingress-nginx"
 	@echo "  phase2-xplane     — install Crossplane + Functions"
@@ -90,6 +91,11 @@ backstage-down:
 backstage-log:
 	@test -f backstage/backstage.log || { echo "no log yet (backstage never started)"; exit 1; }
 	tail -f backstage/backstage.log
+
+.PHONY: install-service
+install-service:
+	@echo ">>> installing ape-backstage systemd user service (auto-start on WSL/PC boot)"
+	bash bootstrap/install-systemd-service.sh
 
 .PHONY: autostart-on
 autostart-on:
