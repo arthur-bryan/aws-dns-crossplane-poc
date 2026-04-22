@@ -9,7 +9,7 @@ metadata:
     ape: "true"
     sre: "true"
     techlead: "true"
-    developer: "true"
+    developer: "false"
   tags:
     - resource
     - aws
