@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-api-geoprox-brazil.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-api-geoprox-brazil.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: api
+  type: A
+  values:
+    - 192.0.2.40
+  ttl: 60
+  setIdentifier: geoprox-brazil
+  geoproximityRoutingPolicy:
+    awsRegion: sa-east-1
+    bias: 25

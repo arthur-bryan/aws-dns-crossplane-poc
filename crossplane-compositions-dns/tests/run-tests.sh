@@ -86,6 +86,13 @@ assert_not_contains "$OUT" 'imported: "true"' "not tagged as imported"
 assert_not_contains "$OUT" '^[[:space:]]+vpc:$' "public zone has no vpc block"
 
 echo
+echo "=== zone-create-protected (deletionProtection=true) ==="
+OUT="$OUT_DIR/zone-protected.out"
+render "$XRS_DIR/zone-create-protected.yaml" "$ZONE_COMP" "$OUT"
+assert_contains "$OUT" 'deletionPolicy: Orphan' "deletionPolicy=Orphan emitted"
+assert_not_contains "$OUT" 'deletionPolicy: Delete' "default Delete policy NOT set"
+
+echo
 echo "=== zone-private (two VPC associations) ==="
 OUT="$OUT_DIR/zone-private.out"
 render "$XRS_DIR/zone-private.yaml" "$ZONE_COMP" "$OUT"
@@ -137,6 +144,12 @@ assert_contains "$OUT" 'zoneId: Z35SXDOTRQ7X7K' "ALB us-east-1 hosted zone ID re
 assert_contains "$OUT" 'evaluateTargetHealth: true' "evaluateTargetHealth propagated"
 
 echo
+echo "=== record-ALIAS ElasticBeanstalk us-west-2 ==="
+OUT="$OUT_DIR/record-alias-eb.out"
+render "$XRS_DIR/record-alias-elasticbeanstalk.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'zoneId: Z38NKT9BP95V3O' "Elastic Beanstalk us-west-2 hosted zone resolved"
+
+echo
 echo "=== record-ALIAS cross-region (DNS in us-east-1, ALB in eu-west-2) ==="
 OUT="$OUT_DIR/record-alias-alb-xregion.out"
 render "$XRS_DIR/record-alias-alb-cross-region.yaml" "$RECORD_COMP" "$OUT"
@@ -173,6 +186,14 @@ OUT="$OUT_DIR/record-geo.out"
 render "$XRS_DIR/record-geolocation.yaml" "$RECORD_COMP" "$OUT"
 assert_contains "$OUT" 'geolocationRoutingPolicy:' "geolocationRoutingPolicy block present"
 assert_contains "$OUT" 'continent: EU' "continent = EU"
+
+echo
+echo "=== record-geoproximity (awsRegion + bias) ==="
+OUT="$OUT_DIR/record-geoprox.out"
+render "$XRS_DIR/record-geoproximity.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'geoproximityRoutingPolicy:' "geoproximity block present"
+assert_contains "$OUT" 'awsRegion: sa-east-1' "awsRegion propagated"
+assert_contains "$OUT" 'bias: 25' "bias propagated"
 
 echo
 echo "=== record-multivalue ==="

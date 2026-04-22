@@ -120,6 +120,10 @@ make -C lab backstage-down      # stop
 make -C lab backstage-log       # tail -f the log
 ```
 
+## Known limitations
+
+- **`Edit AWS Route53 DNS Record` appears in `/create`.** It shouldn't — edits are meant to be reached via the pencil icon on a record's catalog entity page, which pre-fills the form with the record's identity. Hiding tag-filtered templates from `/create` requires a `PageBlueprint` override in Backstage's new frontend system (~1h of TypeScript plugin work + tests). The template's title is prefixed with ⚠️ and its description strongly nudges users toward the pencil-icon flow. Track in [todo].
+
 ## Tearing down (destructive)
 
 ```bash

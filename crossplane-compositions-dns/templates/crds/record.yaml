@@ -121,7 +121,7 @@ spec:
                     serviceType:
                       type: string
                       description: "AWS service type (auto-fills hostedZoneId)"
-                      enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom]
+                      enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, ElasticBeanstalk, Custom]
                       x-kubernetes-validations:
                         - rule: "self == oldSelf"
                           message: "serviceType is immutable"
@@ -187,6 +187,30 @@ spec:
                       type: string
                       description: "US state code (only when country=US)"
 
+                geoproximityRoutingPolicy:
+                  type: object
+                  description: "Geoproximity routing based on an AWS region or arbitrary lat/long coordinates; `bias` shrinks or expands the geographic region used for matching"
+                  properties:
+                    awsRegion:
+                      type: string
+                      pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+                      description: "Route traffic near an AWS region (omit if coordinates/localZoneGroup is used)"
+                    coordinates:
+                      type: object
+                      description: "Route traffic near these coordinates (omit if awsRegion/localZoneGroup is used)"
+                      properties:
+                        latitude: { type: string }
+                        longitude: { type: string }
+                      required: [latitude, longitude]
+                    localZoneGroup:
+                      type: string
+                      description: "AWS local zone group (e.g. us-phx-1)"
+                    bias:
+                      type: integer
+                      minimum: -90
+                      maximum: 90
+                      description: "Shrink (-) or expand (+) the matching area; default 0"
+
                 multivalueAnswerRoutingPolicy:
                   type: boolean
                   default: false
@@ -233,11 +257,13 @@ spec:
                   message: "setIdentifier is required for latency routing"
                 - rule: "!has(self.geolocationRoutingPolicy) || has(self.setIdentifier)"
                   message: "setIdentifier is required for geolocation routing"
+                - rule: "!has(self.geoproximityRoutingPolicy) || has(self.setIdentifier)"
+                  message: "setIdentifier is required for geoproximity routing"
                 - rule: "!self.multivalueAnswerRoutingPolicy || has(self.setIdentifier)"
                   message: "setIdentifier is required for multivalue-answer routing"
                 # Only one routing policy at a time.
-                - rule: "(has(self.weight) ? 1 : 0) + (has(self.failoverRoutingPolicy) ? 1 : 0) + (has(self.latencyRoutingPolicy) ? 1 : 0) + (has(self.geolocationRoutingPolicy) ? 1 : 0) + (self.multivalueAnswerRoutingPolicy ? 1 : 0) <= 1"
-                  message: "At most one routing policy may be specified (weight / failover / latency / geolocation / multivalue)"
+                - rule: "(has(self.weight) ? 1 : 0) + (has(self.failoverRoutingPolicy) ? 1 : 0) + (has(self.latencyRoutingPolicy) ? 1 : 0) + (has(self.geolocationRoutingPolicy) ? 1 : 0) + (has(self.geoproximityRoutingPolicy) ? 1 : 0) + (self.multivalueAnswerRoutingPolicy ? 1 : 0) <= 1"
+                  message: "At most one routing policy may be specified (weight / failover / latency / geolocation / geoproximity / multivalue)"
 
             status:
               type: object

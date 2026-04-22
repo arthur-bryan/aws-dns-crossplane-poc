@@ -87,6 +87,11 @@ spec:
                     - rule: "self == oldSelf"
                       message: "visibility is immutable after creation"
 
+                deletionProtection:
+                  type: boolean
+                  default: false
+                  description: "When true, removing this XR orphans the Route53 zone in AWS instead of deleting it. Recommended for production zones to guard against accidental PR merges. Toggleable."
+
                 vpcs:
                   type: array
                   description: "VPC associations (required when visibility=private)"
