@@ -130,7 +130,7 @@ spec:
             ---
             [[- if $zoneId ]]
             # Using provided zoneId
-            apiVersion: route53.aws.upbound.io/v1beta1
+            apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: Record
             metadata:
               annotations:
@@ -148,11 +148,10 @@ spec:
                 name: [[ $fqdn ]]
                 type: [[ $type ]]
                 zoneId: [[ $zoneId ]]
-                region: [[ $region ]]
                 [[- if $setIdentifier ]]
                 setIdentifier: [[ $setIdentifier ]]
                 weightedRoutingPolicy:
-                  - weight: [[ $weight ]]
+                  weight: [[ $weight ]]
                 [[- end ]]
                 [[- if ne $type "ALIAS" ]]
                 ttl: [[ $ttl ]]
@@ -160,14 +159,14 @@ spec:
                 [[- end ]]
                 [[- if eq $type "ALIAS" ]]
                 alias:
-                  - name: [[ $aliasTarget.dnsName ]]
-                    zoneId: [[ $resolvedAliasZoneId ]]
-                    evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
+                  name: [[ $aliasTarget.dnsName ]]
+                  zoneId: [[ $resolvedAliasZoneId ]]
+                  evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
                 [[- end ]]
 
             [[- else if $zoneName ]]
             # Need to look up zone by name first
-            apiVersion: route53.aws.upbound.io/v1beta2
+            apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: Zone
             metadata:
               annotations:
@@ -182,14 +181,14 @@ spec:
               managementPolicies:
                 - Observe
               forProvider:
-                region: [[ $region ]]
+                name: [[ $zoneName ]]
 
             ---
             [[- $zoneLookup := getComposedResource . "zone-lookup" ]]
             [[- if $zoneLookup.status.atProvider.zoneId ]]
             [[- $resolvedZoneId := $zoneLookup.status.atProvider.zoneId ]]
 
-            apiVersion: route53.aws.upbound.io/v1beta1
+            apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: Record
             metadata:
               annotations:
@@ -207,11 +206,10 @@ spec:
                 name: [[ $fqdn ]]
                 type: [[ $type ]]
                 zoneId: [[ $resolvedZoneId ]]
-                region: [[ $region ]]
                 [[- if $setIdentifier ]]
                 setIdentifier: [[ $setIdentifier ]]
                 weightedRoutingPolicy:
-                  - weight: [[ $weight ]]
+                  weight: [[ $weight ]]
                 [[- end ]]
                 [[- if ne $type "ALIAS" ]]
                 ttl: [[ $ttl ]]
@@ -219,9 +217,9 @@ spec:
                 [[- end ]]
                 [[- if eq $type "ALIAS" ]]
                 alias:
-                  - name: [[ $aliasTarget.dnsName ]]
-                    zoneId: [[ $resolvedAliasZoneId ]]
-                    evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
+                  name: [[ $aliasTarget.dnsName ]]
+                  zoneId: [[ $resolvedAliasZoneId ]]
+                  evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
                 [[- end ]]
             [[- end ]]
             [[- end ]]

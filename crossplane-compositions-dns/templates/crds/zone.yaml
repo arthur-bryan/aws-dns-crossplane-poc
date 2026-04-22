@@ -8,9 +8,6 @@ spec:
   names:
     kind: Zone
     plural: zones
-  claimNames:
-    kind: Zone
-    plural: zones
   versions:
     - name: v1
       served: true
