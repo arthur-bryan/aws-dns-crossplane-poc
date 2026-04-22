@@ -63,7 +63,7 @@ spec:
         type:
           title: Record Type
           type: string
-          enum: [A, AAAA, CNAME, TXT, ALIAS]
+          enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
 
       dependencies:
         type:
@@ -126,6 +126,92 @@ spec:
                   minItems: 1
               required: [values]
             - properties:
+                type: { const: MX }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: MX records
+                  type: array
+                  description: Each value is "<priority> <mail-server-fqdn>"
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+\S+\s*$'
+                  minItems: 1
+                  ui:help: 'Example: "10 mail.example.com" (lower priority wins)'
+              required: [values]
+            - properties:
+                type: { const: SRV }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: SRV records
+                  type: array
+                  description: Each value is "<priority> <weight> <port> <target-fqdn>"
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$'
+                  minItems: 1
+                  ui:help: 'Example: "10 60 5060 sipserver.example.com"'
+              required: [values]
+            - properties:
+                type: { const: NS }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 172800
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: Nameservers
+                  type: array
+                  description: Fully-qualified nameserver hostnames
+                  items: { type: string }
+                  minItems: 1
+                  ui:help: 'Route53 auto-manages apex NS — use this for sub-delegation (e.g. staging.example.com → different NS set).'
+              required: [values]
+            - properties:
+                type: { const: CAA }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: CAA records
+                  type: array
+                  description: Each value is "<flags> <tag> \"<value>\""
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$'
+                  minItems: 1
+                  ui:help: 'Example: 0 issue "letsencrypt.org" — restricts which CAs can issue certs.'
+              required: [values]
+            - properties:
+                type: { const: PTR }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: Target hostname
+                  type: array
+                  description: Hostname this IP reverse-resolves to
+                  items: { type: string }
+                  minItems: 1
+                  maxItems: 1
+              required: [values]
+            - properties:
                 type: { const: ALIAS }
                 serviceType:
                   title: AWS Service Type
@@ -172,20 +258,25 @@ spec:
           default: us-east-1
           pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
 
-    - title: Weighted Routing (Optional)
-      description: Enable weighted routing to distribute traffic across records
+    - title: Routing Policy (Optional)
+      description: |
+        Simple = single record, single value. Anything else requires a
+        setIdentifier so multiple records with the same name+type can
+        coexist. Matches AWS Console: Weighted / Failover / Latency /
+        Geolocation / Multivalue answer.
       properties:
-        enableWeightedRouting:
-          title: Enable Weighted Routing
-          type: boolean
-          default: false
+        routingPolicy:
+          title: Routing Policy
+          type: string
+          enum: [simple, weighted, failover, latency, geolocation, multivalue]
+          default: simple
       dependencies:
-        enableWeightedRouting:
+        routingPolicy:
           oneOf:
             - properties:
-                enableWeightedRouting: { const: false }
+                routingPolicy: { const: simple }
             - properties:
-                enableWeightedRouting: { const: true }
+                routingPolicy: { const: weighted }
                 setIdentifier:
                   title: Set Identifier
                   type: string
@@ -198,6 +289,68 @@ spec:
                   maximum: 255
                   default: 100
               required: [setIdentifier, weight]
+            - properties:
+                routingPolicy: { const: failover }
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                failoverType:
+                  title: Failover Role
+                  type: string
+                  enum: [PRIMARY, SECONDARY]
+                healthCheckId:
+                  title: Health Check ID (required for PRIMARY)
+                  type: string
+                  pattern: '^[a-f0-9-]+$'
+                  description: "Existing Route53 health check ID"
+              required: [setIdentifier, failoverType]
+            - properties:
+                routingPolicy: { const: latency }
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                latencyRegion:
+                  title: AWS region for this record
+                  type: string
+                  pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+                  description: "Route53 routes latency-sensitive clients from this region to this record"
+              required: [setIdentifier, latencyRegion]
+            - properties:
+                routingPolicy: { const: geolocation }
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                geoContinent:
+                  title: Continent (optional)
+                  type: string
+                  enum: ["", "*", AF, AN, AS, EU, OC, NA, SA]
+                  default: ""
+                geoCountry:
+                  title: Country code (optional)
+                  type: string
+                  description: ISO 3166-1 alpha-2 (e.g. BR, DE). Use '*' for default.
+                geoSubdivision:
+                  title: US state code (optional, only when country=US)
+                  type: string
+              required: [setIdentifier]
+            - properties:
+                routingPolicy: { const: multivalue }
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                healthCheckId:
+                  title: Health Check ID (optional)
+                  type: string
+                  pattern: '^[a-f0-9-]+$'
+              required: [setIdentifier]
 
   steps:
     - id: fetchSystem
@@ -274,9 +427,38 @@ spec:
               hostedZoneId: ${{ parameters.customZoneId }}
               {%- endif %}
             {%- endif %}
-            {%- if parameters.enableWeightedRouting %}
+            {%- if parameters.routingPolicy == 'weighted' %}
             setIdentifier: ${{ parameters.setIdentifier }}
             weight: ${{ parameters.weight }}
+            {%- elif parameters.routingPolicy == 'failover' %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            failoverRoutingPolicy:
+              type: ${{ parameters.failoverType }}
+              {%- if parameters.healthCheckId %}
+            healthCheckId: ${{ parameters.healthCheckId }}
+              {%- endif %}
+            {%- elif parameters.routingPolicy == 'latency' %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            latencyRoutingPolicy:
+              region: ${{ parameters.latencyRegion }}
+            {%- elif parameters.routingPolicy == 'geolocation' %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            geolocationRoutingPolicy:
+              {%- if parameters.geoContinent %}
+              continent: ${{ parameters.geoContinent }}
+              {%- endif %}
+              {%- if parameters.geoCountry %}
+              country: ${{ parameters.geoCountry }}
+              {%- endif %}
+              {%- if parameters.geoSubdivision %}
+              subdivision: ${{ parameters.geoSubdivision }}
+              {%- endif %}
+            {%- elif parameters.routingPolicy == 'multivalue' %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            multivalueAnswerRoutingPolicy: true
+              {%- if parameters.healthCheckId %}
+            healthCheckId: ${{ parameters.healthCheckId }}
+              {%- endif %}
             {%- endif %}
 
     - id: writeCatalogEntity

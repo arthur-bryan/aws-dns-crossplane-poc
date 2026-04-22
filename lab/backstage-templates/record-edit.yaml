@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record-edit
-  title: Edit AWS Route53 DNS Record
-  description: Edit an existing AWS Route53 DNS record
+  title: "⚠️ Edit AWS Route53 DNS Record — use the pencil icon on a record, not this form"
+  description: "DO NOT launch from /create. Open an existing Record entity in the catalog and click the pencil icon in the header — this template is auto-invoked with pre-filled identity fields. Opening it here means you have to retype everything."
   labels:
     category: resources
     ape: "true"
@@ -16,6 +16,7 @@ metadata:
     - dns
     - route53
     - hidden
+    - internal
 spec:
   owner: group:application-platform-engineering
   type: resource
@@ -63,7 +64,7 @@ spec:
           title: Record Type
           type: string
           description: Record type (immutable)
-          enum: [A, AAAA, CNAME, TXT, ALIAS]
+          enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
 
       dependencies:
         type:
@@ -111,6 +112,53 @@ spec:
                   minItems: 1
               required: [values]
             - properties:
+                type: { const: MX }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                values:
+                  title: MX records
+                  type: array
+                  description: Each value is "<priority> <mail-server-fqdn>"
+                  items: { type: string, pattern: '^\s*[0-9]+\s+\S+\s*$' }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: SRV }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                values:
+                  title: SRV records
+                  type: array
+                  items: { type: string, pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$' }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: NS }
+                ttl: { title: TTL (seconds), type: integer, default: 172800, minimum: 60, maximum: 86400 }
+                values:
+                  title: Nameservers
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: CAA }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                values:
+                  title: CAA records
+                  type: array
+                  items: { type: string, pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$' }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: PTR }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                values:
+                  title: Target hostname
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+                  maxItems: 1
+              required: [values]
+            - properties:
                 type: { const: ALIAS }
                 serviceType:
                   title: AWS Service Type
@@ -126,30 +174,11 @@ spec:
                   default: false
               required: [serviceType, dnsName]
 
-    - title: Weighted Routing (Optional)
-      properties:
-        enableWeightedRouting:
-          title: Enable Weighted Routing
-          type: boolean
-          default: false
-      dependencies:
-        enableWeightedRouting:
-          oneOf:
-            - properties:
-                enableWeightedRouting: { const: false }
-            - properties:
-                enableWeightedRouting: { const: true }
-                setIdentifier:
-                  title: Set Identifier
-                  type: string
-                  minLength: 1
-                  maxLength: 128
-                weight:
-                  title: Weight (0-255)
-                  type: integer
-                  minimum: 0
-                  maximum: 255
-              required: [setIdentifier, weight]
+    # Routing policy fields (setIdentifier / weight / failover / latency /
+    # geolocation / multivalue / healthCheckId) intentionally NOT editable
+    # through this template. The merge preserves whatever the XR already had.
+    # To change a record's routing policy, you must delete + recreate it
+    # (same constraint as the AWS Console).
 
   steps:
     - id: fetchSystem
@@ -224,10 +253,7 @@ spec:
               dnsName: ${{ parameters.dnsName }}
               evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
             {%- endif %}
-            {%- if parameters.enableWeightedRouting %}
-            setIdentifier: ${{ parameters.setIdentifier }}
-            weight: ${{ parameters.weight }}
-            {%- endif %}
+            # Routing policy fields preserved via deep merge — not touched here.
 
     - id: openPR
       name: Open PR with edited record

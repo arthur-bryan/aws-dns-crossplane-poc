@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-api-latency-us-east-1.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-api-latency-us-east-1.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: api
+  type: A
+  values:
+    - 192.0.2.10
+  ttl: 60
+  setIdentifier: us-east-1
+  latencyRoutingPolicy:
+    region: us-east-1
