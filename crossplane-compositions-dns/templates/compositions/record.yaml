@@ -49,15 +49,25 @@ spec:
             [[- $mrType = "A" ]]
             [[- end ]]
 
+            # Apex (zone root) records: recordName is empty. The Upbound provider
+            # expects forProvider.name="" for apex, and the Terraform import ID
+            # becomes {zoneId}__{type} (double underscore for the empty segment).
+            # $fqdn = FQDN that the provider stores (empty for apex, full name
+            # otherwise). $displayFqdn = human-readable form used for status.
+            [[- $fqdn := "" ]]
+            [[- $displayFqdn := $zoneName ]]
+            [[- if $recordName ]]
+            [[- $fqdn = printf "%s.%s" $recordName $zoneName ]]
+            [[- $displayFqdn = $fqdn ]]
+            [[- end ]]
+
             [[- $importExtName := "" ]]
             [[- if $importing ]]
-            [[- $importExtName = printf "%s_%s_%s" $zoneId (printf "%s.%s" $params.recordName $zoneName) $mrType ]]
+            [[- $importExtName = printf "%s_%s_%s" $zoneId $fqdn $mrType ]]
             [[- if $params.setIdentifier ]]
             [[- $importExtName = printf "%s_%s" $importExtName $params.setIdentifier ]]
             [[- end ]]
             [[- end ]]
-
-            [[- $fqdn := printf "%s.%s" $recordName $zoneName ]]
 
             [[- $record := getComposedResource . $name ]]
 
@@ -171,7 +181,8 @@ spec:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
               [[- end ]]
               forProvider:
-                name: [[ $fqdn ]]
+                # Quote to force empty string ("" instead of null) for apex records.
+                name: "[[ $fqdn ]]"
                 type: [[ $mrType ]]
                 zoneId: [[ $zoneId ]]
                 [[- if $setIdentifier ]]
@@ -196,7 +207,7 @@ spec:
             apiVersion: dock.tech/v1
             kind: Record
             status:
-              fqdn: [[ $fqdn ]]
+              fqdn: [[ $displayFqdn ]]
               recordId: [[ $record.status.atProvider.id ]]
               ready: true
               message: [[ if $importing ]]"Record imported and observed"[[ else ]]"Record is ready"[[ end ]]

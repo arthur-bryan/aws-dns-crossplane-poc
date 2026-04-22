@@ -35,6 +35,8 @@ spec:
             [[- $system        := $params.system ]]
             [[- $environment   := $params.environment ]]
             [[- $tags          := $params.tags ]]
+            [[- $visibility    := default "public" $params.visibility ]]
+            [[- $vpcs          := $params.vpcs ]]
             [[- $import        := $params.import ]]
             [[- $importing     := and $import $import.existing ]]
 
@@ -84,12 +86,20 @@ spec:
                   subdomain: [[ $subdomain ]]
                   system: [[ $system ]]
                   environment: [[ $environment ]]
+                  visibility: [[ $visibility ]]
                   [[- if $importing ]]
                   imported: "true"
                   [[- end ]]
                   [[- range $key, $value := $tags ]]
                   [[ $key ]]: [[ $value ]]
                   [[- end ]]
+                [[- if eq $visibility "private" ]]
+                vpc:
+                [[- range $vpc := $vpcs ]]
+                  - vpcId: [[ $vpc.vpcId ]]
+                    vpcRegion: [[ $vpc.vpcRegion ]]
+                [[- end ]]
+                [[- end ]]
 
             ---
             [[- if $zone.status.atProvider ]]

@@ -78,6 +78,31 @@ spec:
                   additionalProperties:
                     type: string
 
+                visibility:
+                  type: string
+                  enum: [public, private]
+                  default: public
+                  description: "Public zone (default, internet-resolvable) or Private zone (VPC-only)"
+                  x-kubernetes-validations:
+                    - rule: "self == oldSelf"
+                      message: "visibility is immutable after creation"
+
+                vpcs:
+                  type: array
+                  description: "VPC associations (required when visibility=private)"
+                  items:
+                    type: object
+                    required: [vpcId, vpcRegion]
+                    properties:
+                      vpcId:
+                        type: string
+                        pattern: '^vpc-[a-f0-9]+$'
+                        description: "VPC ID, e.g. vpc-0123456789abcdef0"
+                      vpcRegion:
+                        type: string
+                        pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+                        description: "AWS region where the VPC lives, e.g. us-east-1"
+
                 import:
                   type: object
                   description: "Import an existing Route53 zone instead of creating a new one"
@@ -112,6 +137,8 @@ spec:
                   message: "zoneName must not start with hyphen"
                 - rule: "!self.zoneName.contains('..')"
                   message: "zoneName must not contain consecutive dots"
+                - rule: "!has(self.visibility) || self.visibility != 'private' || (has(self.vpcs) && size(self.vpcs) >= 1)"
+                  message: "visibility=private requires at least one vpcs entry"
 
             status:
               type: object

@@ -25,8 +25,7 @@ spec:
       required:
         - system
         - environment
-        - zoneName
-        - zoneId
+        - zone
         - recordName
         - type
       properties:
@@ -43,26 +42,24 @@ spec:
           type: string
           enum: [dev, hml, prd]
           default: dev
-        zoneName:
+        zone:
           title: Parent Zone
           type: string
-          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
-          description: Existing hosted zone FQDN (no trailing dot)
+          description: Hosted zone to add this record to. Only zones already managed by the platform (created via this template or batch-imported) are listed.
+          ui:field: EntityPicker
           ui:autofocus: true
-          ui:help: "Example: example.com"
-        zoneId:
-          title: Parent Zone ID
-          type: string
-          pattern: '^Z[A-Z0-9]+$'
-          description: AWS Route53 Zone ID of the parent zone
-          ui:help: "Find via AWS Console → Hosted Zones, or `aws route53 list-hosted-zones`. Example: Z03010981ALJFZB4QLU8W"
+          ui:options:
+            catalogFilter:
+              - kind: Resource
+                spec.type: aws-dns-zone
+            defaultKind: Resource
         recordName:
           title: Record Name
           type: string
-          minLength: 1
+          minLength: 0
           maxLength: 253
-          description: Short name; joined with the parent zone to form the FQDN
-          ui:help: "Example: api-test → api-test.example.com"
+          description: Short name; joined with the parent zone to form the FQDN. Leave empty for apex (zone root).
+          ui:help: "Example: api-test → api-test.example.com. Leave empty for apex / zone root records (e.g. MX, apex ALIAS)."
         type:
           title: Record Type
           type: string
@@ -209,6 +206,24 @@ spec:
       input:
         entityRef: ${{ parameters.system }}
 
+    - id: fetchZone
+      name: Fetch parent Zone entity
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.zone }}
+
+    # Compute the resource identity once — non-apex is just <recordName>, apex
+    # is apex-<type-lowercase>. That becomes the XR metadata.name prefix and
+    # the filename stem, so subsequent steps can reference it uniformly.
+    - id: computeKey
+      name: Derive resource key
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          recordName: ${{ parameters.recordName }}
+          type: ${{ parameters.type }}
+        expression: 'recordName ? recordName : "apex-" & $lowercase(type)'
+
     - id: writeXR
       name: Write Record XR manifest
       action: roadiehq:utils:fs:write
@@ -220,18 +235,18 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
         content: |
           ---
           apiVersion: dock.tech/v1
           kind: Record
           metadata:
-            name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
+            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
             namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
             annotations:
               dock.tech/scaffolder-parameters: ${{ parameters | dump }}
           spec:
-            name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
+            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
             domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
             subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
             system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
@@ -240,8 +255,8 @@ spec:
               account: ${{ parameters.awsAccountId }}
               accountName: ${{ parameters.awsAccountName }}
               region: ${{ parameters.awsRegion }}
-            zoneId: ${{ parameters.zoneId }}
-            zoneName: ${{ parameters.zoneName }}
+            zoneId: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
+            zoneName: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
             recordName: ${{ parameters.recordName }}
             type: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}
@@ -268,31 +283,31 @@ spec:
       name: Write Backstage Resource entity
       action: roadiehq:utils:fs:write
       input:
-        path: entities/catalog/records/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+        path: entities/catalog/records/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
         content: |
           ---
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
+            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
             namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
-            title: ${{ parameters.recordName }}.${{ parameters.zoneName }}
-            description: "DNS ${{ parameters.type }} record ${{ parameters.recordName }}.${{ parameters.zoneName }} (${{ parameters.environment }})"
+            title: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+            description: "DNS ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }} (${{ parameters.environment }})"
             annotations:
               dock.tech/xr-kind: Record
-              dock.tech/xr-name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
-              dock.tech/zone-name: ${{ parameters.zoneName }}
-              dock.tech/zone-id: ${{ parameters.zoneId }}
+              dock.tech/xr-name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+              dock.tech/zone-name: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+              dock.tech/zone-id: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
               dock.tech/record-name: ${{ parameters.recordName }}
               dock.tech/record-type: ${{ parameters.type }}
-              dock.tech/record-fqdn: ${{ parameters.recordName }}.${{ parameters.zoneName }}
+              dock.tech/record-fqdn: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
               dock.tech/domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
               dock.tech/subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
               dock.tech/system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
               dock.tech/environment: ${{ parameters.environment }}
               dock.tech/managed-by: scaffolder
-              backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=${{ {"system": parameters.system, "environment": parameters.environment, "zoneName": parameters.zoneName, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
-              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml"
+              backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=${{ {"system": parameters.system, "environment": parameters.environment, "zone": parameters.zone, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml"
             tags:
               - aws
               - dns
@@ -302,33 +317,33 @@ spec:
               - ${{ parameters.environment }}
             links:
               - title: View in AWS Console
-                url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ parameters.zoneId }}
+                url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
                 icon: cloud
               - title: Delete record (opens GitHub delete UI)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
                 icon: delete
           spec:
             type: aws-dns-record
             owner: group:application-platform-engineering
             system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
             dependsOn:
-              - resource:default/zone-${{ parameters.zoneName }}
+              - resource:default/zone-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
     - id: openPR
       name: Open PR with new record manifest
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-${{ parameters.recordName }}-${{ parameters.zoneName }}-${{ parameters.environment }}
+        branchName: scaffolder/record-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ parameters.environment }}
         targetBranchName: feature/ape-platform-alignment
-        title: "feat(dns): create record ${{ parameters.recordName }}.${{ parameters.zoneName }}"
+        title: "feat(dns): create ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else ('at apex of ' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) }}"
         description: |
           Scaffolder-generated Record XR.
 
           System: ${{ parameters.system }}
           Environment: ${{ parameters.environment }}
-          Zone: ${{ parameters.zoneName }}
-          Record: ${{ parameters.recordName }}.${{ parameters.zoneName }} (${{ parameters.type }})
+          Zone: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+          Record: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else (steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] + ' (apex)') }} (${{ parameters.type }})
 
   output:
     links:

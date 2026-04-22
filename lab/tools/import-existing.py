@@ -192,7 +192,7 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
 def record_xr_yaml(ctx: dict, rec: dict) -> str:
     """Generate a Record XR YAML that exactly matches the live AWS record so
     the first reconcile is a no-op."""
-    # Lines that always apply
+    record_name_line = f'recordName: "{rec["record_short"]}"' if not rec["record_short"] else f"recordName: {rec['record_short']}"
     head = dedent(f"""\
         ---
         # Managed by batch import.
@@ -217,7 +217,7 @@ def record_xr_yaml(ctx: dict, rec: dict) -> str:
             region: {ctx['aws_region']}
           zoneId: {rec['zone_id']}
           zoneName: {rec['zone_name']}
-          recordName: {rec['record_short']}
+          {record_name_line}
           type: {rec['type']}
         """)
 
@@ -246,9 +246,12 @@ def record_xr_yaml(ctx: dict, rec: dict) -> str:
 
 
 def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
-    fqdn = f"{rec['record_short']}.{rec['zone_name']}"
+    fqdn = rec["display_fqdn"]
+    apex_suffix = " (apex)" if not rec["record_short"] else ""
     tags = ["aws", "dns", "route53", "record", rec["type"].lower(), "imported", ctx["environment"]]
-    title = fqdn + (f" ({rec['set_identifier']})" if rec.get("set_identifier") else "")
+    if not rec["record_short"]:
+        tags.append("apex")
+    title = fqdn + apex_suffix + (f" ({rec['set_identifier']})" if rec.get("set_identifier") else "")
     return dedent(f"""\
         ---
         apiVersion: backstage.io/v1alpha1
@@ -273,7 +276,9 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             dock.tech/managed-by: batch-import
             # Pencil icon in the entity header (top-right). Launches the
             # scaffolder form pre-filled with this record's identity.
-            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2F{ctx['system']}%22%2C%22environment%22%3A%22{ctx['environment']}%22%2C%22zoneName%22%3A%22{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D"
+            # The zone is passed as a Backstage entityRef (record-edit uses
+            # an EntityPicker, not a free-text zone name).
+            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2F{ctx['system']}%22%2C%22environment%22%3A%22{ctx['environment']}%22%2C%22zone%22%3A%22resource%3Asystem-{ctx['system']}-{ctx['environment']}%2Fzone-{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D"
             # "View Source" icon in the header → raw XR YAML on GitHub.
             backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:
@@ -307,8 +312,9 @@ def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
         return None
 
     # Figure out the short name (recordName) relative to zone.
+    # Empty string = apex (zone-root record).
     if name == zone_name:
-        record_short = "@"  # apex; we don't really support apex via our template yet
+        record_short = ""
     elif name.endswith("." + zone_name):
         record_short = name[: -(len(zone_name) + 1)]
     else:
@@ -350,11 +356,6 @@ def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
         # Weighted policy?
         if "Weight" in rrset:
             base["weight"] = rrset["Weight"]
-
-    # Skip apex records — our templates assume non-apex for now.
-    if base["record_short"] == "@":
-        print(f"  ! skipping apex {rtype} in {zone_name} — apex records not yet supported", file=sys.stderr)
-        return None
 
     return base
 
@@ -440,12 +441,19 @@ def main() -> int:
             rec = parse_record(rrset, zone_name, zone_id)
             if not rec:
                 continue
-            fqdn = f"{rec['record_short']}.{rec['zone_name']}"
-            # Weighted records share fqdn — disambiguate by setIdentifier.
-            suffix = ""
+            # Resource key mirrors the scaffolder template: recordName for
+            # subdomain records, apex-<type-lower> for apex records.
+            if rec["record_short"]:
+                key = rec["record_short"]
+                display_fqdn = f"{rec['record_short']}.{rec['zone_name']}"
+            else:
+                key = f"apex-{rec['type'].lower()}"
+                display_fqdn = rec["zone_name"]
+            # Weighted records share recordName — disambiguate by setIdentifier.
             if rec.get("set_identifier"):
-                suffix = f"-{rec['set_identifier']}"
-            rec["xr_name"] = f"record-{fqdn}{suffix}"
+                key = f"{key}-{rec['set_identifier']}"
+            rec["xr_name"] = f"record-{key}.{rec['zone_name']}"
+            rec["display_fqdn"] = display_fqdn
             rec_xr_path = env_dir / f"{rec['xr_name']}.yaml"
             rec_xr_rel = str(rec_xr_path.relative_to(REPO_ROOT))
             writer.handle(rec_xr_path, record_xr_yaml(ctx, rec), f"record XR [{rec['type']}]")

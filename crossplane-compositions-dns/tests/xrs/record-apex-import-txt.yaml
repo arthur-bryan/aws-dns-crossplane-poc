@@ -1,0 +1,27 @@
+---
+# Apex TXT record import (e.g., domain verification). External-name must be
+# {zoneId}__TXT (double-underscore since the middle segment is empty).
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-apex.example.com-TXT
+  namespace: system-infrastructure-dev
+spec:
+  name: record-apex.example.com-TXT
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: ""
+  type: TXT
+  values:
+    - "v=spf1 -all"
+  ttl: 300
+  import:
+    existing: true

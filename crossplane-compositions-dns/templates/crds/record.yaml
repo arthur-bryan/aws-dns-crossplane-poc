@@ -82,8 +82,8 @@ spec:
 
                 recordName:
                   type: string
-                  description: "Record name (e.g., 'www' or 'api.staging')"
-                  minLength: 1
+                  description: "Record name (e.g., 'www', 'api.staging', or empty for apex / zone root)"
+                  minLength: 0
                   maxLength: 253
                   x-kubernetes-validations:
                     - rule: "self == oldSelf"
