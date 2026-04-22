@@ -49,6 +49,7 @@ CATALOG_RECORDS_DIR = REPO_ROOT / "entities" / "catalog" / "records"
 
 REPO_URL = "https://github.com/arthur-bryan/aws-dns-crossplane-poc"
 REPO_BRANCH = "feature/ape-platform-alignment"
+BACKSTAGE_BASE_URL = os.environ.get("APE_BACKSTAGE_URL", "http://localhost:3000")
 
 
 # ---------------------------------------------------------------------------
@@ -275,7 +276,7 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
         """) + "\n".join(f"    - {t}" for t in tags) + dedent(f"""
           links:
             - title: Edit record
-              url: /create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2F{ctx['system']}%22%2C%22environment%22%3A%22{ctx['environment']}%22%2C%22zoneName%22%3A%22{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D
+              url: {BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2F{ctx['system']}%22%2C%22environment%22%3A%22{ctx['environment']}%22%2C%22zoneName%22%3A%22{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D
               icon: edit
             - title: View in AWS Console
               url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/{rec['zone_id']}

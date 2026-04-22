@@ -300,7 +300,7 @@ spec:
               - ${{ parameters.environment }}
             links:
               - title: Edit record
-                url: /create/templates/default/aws-dns-record-edit?formData=${{ {"system": parameters.system, "environment": parameters.environment, "zoneName": parameters.zoneName, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
+                url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=${{ {"system": parameters.system, "environment": parameters.environment, "zoneName": parameters.zoneName, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
                 icon: edit
               - title: View in AWS Console
                 url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ parameters.zoneId }}
