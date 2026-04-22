@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record
-  title: AWS Route53 DNS Record (Lab)
-  description: Create an AWS Route53 DNS record — lab-adapted version of the production template
+  title: AWS Route53 DNS Record Template
+  description: A template for creating an AWS Route53 DNS record
   labels:
     category: resources
     visibility: "public"
@@ -16,9 +16,8 @@ metadata:
     - aws
     - dns
     - route53
-    - lab
 spec:
-  owner: group:platform-team
+  owner: group:application-platform-engineering
   type: resource
 
   parameters:

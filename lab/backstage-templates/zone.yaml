@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-zone
-  title: AWS Route53 DNS Zone (Lab)
-  description: Create an AWS Route53 hosted zone — lab-adapted version of the production template
+  title: AWS Route53 DNS Zone Template
+  description: A template for creating an AWS Route53 hosted zone
   labels:
     category: resources
     visibility: "public"
@@ -16,9 +16,8 @@ metadata:
     - aws
     - dns
     - route53
-    - lab
 spec:
-  owner: group:platform-team
+  owner: group:application-platform-engineering
   type: resource
 
   parameters:

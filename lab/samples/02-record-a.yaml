@@ -1,15 +1,20 @@
 ---
-# A record using zoneName lookup (composition resolves zoneId).
+# REFERENCE ONLY — showing XR shape produced by the scaffolder.
+# Do NOT `kubectl apply` this directly. All Zone/Record lifecycle must flow
+# through the Backstage scaffolder -> PR -> ArgoCD path.
+#
+# A record using zoneName lookup (composition resolves zoneId via an
+# observe-only Zone MR).
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
   name: www-example-com
-  namespace: system-corporate-site-dev
+  namespace: system-infrastructure-dev
 spec:
   name: www-example-com
-  domain: marketing
-  subdomain: websites
-  system: corporate-site
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
   environment: dev
   aws:
     account: 100000000000

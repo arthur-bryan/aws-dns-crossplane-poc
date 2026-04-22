@@ -42,7 +42,7 @@ lab/
 │   ├── 02-record-a.yaml
 │   ├── 03-record-alias-cloudfront.yaml
 │   └── 04-record-weighted-bluegreen.yaml
-├── backstage-templates/             # lab-adapted (vanilla-Backstage) templates
+├── backstage-templates/             # scaffolder-compatible templates (zone/record/record-edit)
 │   ├── catalog-info.yaml
 │   ├── zone.yaml
 │   ├── record.yaml
@@ -54,7 +54,7 @@ lab/
 entities/
 ├── catalog-info.yaml                # Backstage Domain/System/Environment seed
 └── environments/
-    └── marketing/websites/corporate-site/dev/
+    └── cross/cloud/infrastructure/dev/
         ├── namespace.yaml
         └── resources/aws/           # Zone/Record XRs land here from PRs
 ```
@@ -63,7 +63,7 @@ entities/
 
 - Docker / docker-desktop / Rancher Desktop running
 - `kind` v0.25+, `kubectl` v1.28+, `helm` v3.14+
-- `node` 20 LTS + `yarn` 1.x (for Backstage)
+- `node` 22 LTS + `yarn` 4.x (Backstage's `engines` requirement; `.nvmrc` provided at `lab/backstage/.nvmrc`)
 - AWS credentials that can `route53:*`, provided via `~/.aws/credentials`
 - GitHub PAT (classic, `repo` scope) for Backstage → PR and Argo → repo
 
@@ -85,11 +85,14 @@ make -C lab argo-password      # prints initial admin password
 # 4. Point Argo at this repo (requires the push happened already)
 kubectl apply -f lab/argocd/root-app.yaml
 
-# 5. Sanity check via kubectl (no Backstage needed)
-kubectl apply -f lab/samples/01-zone-example-com.yaml
-kubectl get zone.dock.tech -A
-kubectl get zones.route53.aws.m.upbound.io -A
+# 5. Cluster sanity — check XRDs and Composition are installed
+kubectl get xrd
+kubectl get compositions
 ```
+
+> `lab/samples/*.yaml` are **reference XR shapes only**. Do NOT `kubectl apply`
+> them. All Zone/Record lifecycle flows through the Backstage scaffolder →
+> PR → ArgoCD path.
 
 ## Tearing down
 
@@ -133,21 +136,18 @@ cd lab/backstage/ape-lab && \
 
 ### 1. Create a Zone via Backstage
 
-1. Browse to `http://localhost:3000` → **Create...** → pick **AWS Route53 DNS Zone (Lab)**.
+1. Browse to `http://localhost:3000` → **Create...** → pick **AWS Route53 DNS Zone Template**.
 2. Fill the form:
-   - Name: `test-zone-lab`
-   - System: pick `corporate-site` from EntityPicker
+   - Name: a unique kebab-case id for the XR (e.g. `example-com`)
+   - System: pick `infrastructure` from EntityPicker
    - Environment: `dev`
-   - Zone Name: `lab.example.com` (replace with a real sub-domain you control)
+   - Zone Name: a real sub-domain you control (e.g. `test.arthurbryan.com`)
    - AWS Account ID: your 12-digit account
    - AWS Account Name: `dev-account` (must match the ClusterProviderConfig)
 3. Submit → scaffolder runs → PR opened against this repo.
 
-**Verify:**
-```bash
-# The PR should contain:
-entities/environments/marketing/websites/corporate-site/dev/resources/aws/zone-test-zone-lab.yaml
-```
+**Verify:** the PR should contain one new file at
+`entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-example-com.yaml`.
 
 ### 2. Merge the PR and watch Argo sync
 
@@ -160,78 +160,81 @@ kubectl -n argocd get applications entities -w
 
 # Zone XR should appear
 kubectl get zone.dock.tech -A
-# NAME           SYNCED  READY  COMPOSITION
-# test-zone-lab  True    True   zone
+# NAME         SYNCED  READY  COMPOSITION
+# example-com  True    True   zone
 ```
 
 ### 3. Verify the Route53 zone exists
 
 ```bash
 # From your local AWS CLI (using same creds as aws-creds secret):
-aws route53 list-hosted-zones --query 'HostedZones[?Name==`lab.example.com.`]'
+aws route53 list-hosted-zones --query 'HostedZones[?Name==`test.arthurbryan.com.`]'
 
 # And nameservers pushed to XR status:
-kubectl get zone.dock.tech test-zone-lab \
-  -n system-corporate-site-dev \
+kubectl get zone.dock.tech example-com \
+  -n system-infrastructure-dev \
   -o jsonpath='{.status.nameServers}' | jq .
 ```
 
 ### 4. Create a record via Backstage
 
-1. `http://localhost:3000` → **Create...** → **AWS Route53 DNS Record (Lab)**.
+1. `http://localhost:3000` → **Create...** → **AWS Route53 DNS Record Template**.
 2. Fill the form:
-   - Name: `www-lab`
-   - System: `corporate-site`, Environment: `dev`
-   - Parent Zone: `lab.example.com`
-   - Record Name: `www.lab.example.com`
+   - Name: `www-example-com`
+   - System: `infrastructure`, Environment: `dev`
+   - Parent Zone: `test.arthurbryan.com`
+   - Record Name: `www.test.arthurbryan.com`
    - Type: `A` → Values: `[192.0.2.1]`, TTL: `300`
 3. Submit → merge the PR.
 
 **Verify:**
 ```bash
 kubectl get record.dock.tech -A
-# NAME     SYNCED  READY  COMPOSITION
-# www-lab  True    True   record
+# NAME              SYNCED  READY  COMPOSITION
+# www-example-com   True    True   record
 
 # Two MRs created by the composition:
 kubectl get records.route53.aws.m.upbound.io -A   # A record
 kubectl get zones.route53.aws.m.upbound.io -A     # observe-only zone lookup
 
 # DNS resolves after ~TTL seconds
-dig +short www.lab.example.com @<one-of-your-nameservers>
+dig +short www.test.arthurbryan.com @<one-of-your-nameservers>
 ```
 
 ### 5. Edit a record via record-edit template
 
-1. Backstage → **Create...** → **Edit AWS Route53 DNS Record (Lab)** (under hidden/tag=lab).
-2. Pre-fill:
-   - Name: `www-lab`, System: `corporate-site`, Environment: `dev`
-   - Type: `A` (immutable, disabled), Record Name: `www.lab.example.com` (immutable, disabled)
+1. Backstage → **Create...** → **Edit AWS Route53 DNS Record** (filtered under tag `hidden`).
+2. Fill the same identity fields (disabled in the form where they are immutable):
+   - Name: `www-example-com`, System: `infrastructure`, Environment: `dev`
+   - Type: `A` (immutable), Record Name: `www.test.arthurbryan.com` (immutable)
    - Values: `[192.0.2.5, 192.0.2.6]` (new), TTL: `60`
 3. Submit → PR #2 opened → merge.
 
 **Verify:**
 ```bash
-kubectl get record.route53.aws.m.upbound.io www-lab -n system-corporate-site-dev \
+kubectl get record.route53.aws.m.upbound.io www-example-com \
+  -n system-infrastructure-dev \
   -o jsonpath='{.spec.forProvider.records}'
 # ["192.0.2.5","192.0.2.6"]
 
 # TTL reflected:
-kubectl get record.route53.aws.m.upbound.io www-lab -n system-corporate-site-dev \
+kubectl get record.route53.aws.m.upbound.io www-example-com \
+  -n system-infrastructure-dev \
   -o jsonpath='{.spec.forProvider.ttl}'
 # 60
 ```
 
-### 6. Tear down the test resources (optional)
+### 6. Tear down the test resources (APE-compliant deletion)
+
+Deletion is a git operation — never `kubectl delete` the XR directly.
 
 ```bash
-# Delete XRs — Crossplane cascades to Route53:
-kubectl delete record.dock.tech www-lab -n system-corporate-site-dev
-kubectl delete zone.dock.tech test-zone-lab -n system-corporate-site-dev
-
-# Also delete the entity YAML + open cleanup PR:
-#   git rm entities/environments/.../resources/aws/{zone,record}-*.yaml
-#   git commit -m "chore(dns): tear down lab test" && gh pr create
+git checkout -b chore/remove-dns-smoke-test
+git rm entities/environments/cross/cloud/infrastructure/dev/resources/aws/{zone-example-com,record-www-example-com}.yaml
+git commit -m "chore(dns): remove DNS smoke test resources"
+gh pr create -f
+gh pr merge --squash --delete-branch
+# Argo prunes -> Crossplane deletes -> Route53 deletes
 ```
 
 ## Troubleshooting

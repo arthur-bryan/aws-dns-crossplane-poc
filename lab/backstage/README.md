@@ -1,6 +1,6 @@
-# Backstage — APE DNS Lab
+# Backstage — APE DNS
 
-Scaffolded Backstage app wired to the lab-adapted DNS templates. Opens a PR
+Scaffolded Backstage app wired to the DNS scaffolder templates. Opens a PR
 against this repo whenever a template is submitted; ArgoCD then syncs the new
 entity YAML after the PR is merged.
 
