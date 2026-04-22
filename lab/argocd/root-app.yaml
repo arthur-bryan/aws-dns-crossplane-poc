@@ -19,6 +19,14 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
+  # Argo auto-stamps child Applications with the tracking label
+  # argocd.argoproj.io/instance=lab-root. The label isn't in the manifests on
+  # git, so without this rule the root-app would permanently show OutOfSync.
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jqPathExpressions:
+        - '.metadata.labels."argocd.argoproj.io/instance"'
   syncPolicy:
     automated:
       prune: true
