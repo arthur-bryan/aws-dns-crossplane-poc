@@ -1,0 +1,30 @@
+---
+# Secondary Ingress for ArgoCD with no `host` rule — acts as a catch-all so
+# reaching the lab host by raw LAN IP (e.g. http://192.168.x.y/) lands on the
+# ArgoCD UI without needing a hosts-file entry on the client PC.
+#
+# The chart's primary Ingress (argocd.localtest.me, managed via values.yaml)
+# keeps working alongside this one; nginx-ingress matches the host-specific
+# rule first and falls back to this catch-all for everything else.
+#
+# Safe to apply because nothing else in this lab is exposed on port 80 —
+# Backstage runs natively on :3000 / :7007, not behind ingress-nginx.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server-ip
+  namespace: argocd
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80
