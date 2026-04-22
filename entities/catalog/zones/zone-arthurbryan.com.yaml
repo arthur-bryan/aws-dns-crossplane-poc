@@ -4,7 +4,7 @@ kind: Resource
 metadata:
   name: zone-arthurbryan.com
   namespace: system-infrastructure-dev
-  title: arthurbryan.com
+  title: "arthurbryan.com · dev"
   description: "Route53 Hosted Zone arthurbryan.com (dev) — imported"
   annotations:
     dock.tech/xr-kind: Zone
@@ -16,6 +16,7 @@ metadata:
     dock.tech/system: infrastructure
     dock.tech/environment: dev
     dock.tech/aws-account-id: "597230762851"
+    dock.tech/aws-account-name: dev-account
     dock.tech/managed-by: batch-import
     # "View Source" icon in the header → raw XR YAML on GitHub.
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-arthurbryan.com.yaml"

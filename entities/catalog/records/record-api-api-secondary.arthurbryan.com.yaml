@@ -20,10 +20,10 @@ metadata:
     dock.tech/environment: dev
     dock.tech/managed-by: batch-import
     # Pencil icon in the entity header (top-right). Launches the
-    # scaffolder form pre-filled with this record's identity.
-    # The zone is passed as a Backstage entityRef (record-edit uses
-    # an EntityPicker, not a free-text zone name).
-    backstage.io/edit-url: "http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2Finfrastructure%22%2C%22environment%22%3A%22dev%22%2C%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22api%22%2C%22type%22%3A%22A%22%7D"
+    # scaffolder form pre-filled with this record's identity. Everything
+    # else (env/account/system) is derived from the picked zone, so the
+    # formData only carries the three truly record-scoped fields.
+    backstage.io/edit-url: "http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22api%22%2C%22type%22%3A%22A%22%7D"
     # "View Source" icon in the header → raw XR YAML on GitHub.
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api-api-secondary.arthurbryan.com.yaml"
   tags:
