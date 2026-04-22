@@ -122,46 +122,52 @@ make -C lab backstage-log       # tail -f the log
 
 ## LAN access (reach Backstage + Argo from another PC on your network)
 
-**Setup uses WSL2 mirrored networking + systemd auto-start + one-time Windows firewall rules.** After initial setup, the lab comes back cleanly after `wsl --shutdown`, PC reboot, etc. — no manual intervention required beyond opening a browser.
+**Windows 10 vs Windows 11.** WSL2 `networkingMode=mirrored` (which would make LAN access zero-config) requires **Windows 11 22H2+**. On Windows 10 (this host, build 19045), WSL silently falls back to NAT mode, so we have to bridge the NAT with `netsh interface portproxy`. The script below handles that idempotently.
 
-### One-time WSL-side setup (already done for this lab)
+### What's auto-started vs. what needs a one-time manual step
 
-These steps have already been executed on this checkout:
+| Layer | After WSL / PC reboot | How |
+|---|---|---|
+| kind cluster + everything inside it (Crossplane, Argo, catalog) | auto | Docker daemon + `restart=unless-stopped` |
+| Backstage (UI + API) | auto | systemd user service `ape-backstage.service` + lingering |
+| Windows firewall rules | auto | Persistent once created by the script |
+| `netsh` portproxy rules | **manual — re-run script** | WSL2 NAT rotates the WSL IP each boot, so rules need re-pointing |
 
-1. `%USERPROFILE%\.wslconfig` written with `networkingMode=mirrored` (WSL2 shares Windows' network — no NAT, no portproxy, no IP rotation).
-2. `docker update --restart unless-stopped ape-dns-lab-control-plane` — kind container auto-starts when Docker daemon starts.
-3. `make -C lab install-service` — installs `~/.config/systemd/user/ape-backstage.service` + enables lingering, so Backstage auto-starts when systemd-user starts (on WSL boot).
+The third row is the only friction. A one-liner handles it.
 
-To re-run any of these on a fresh clone:
+### One-time lab-host setup
+
+All of these have already been executed on this checkout; listed here so a fresh clone can replay them.
 
 ```bash
-# 1. mirrored mode (needs Windows-side edit; see .wslconfig in your Windows %USERPROFILE%)
-# 2. kind autostart
+# kind container auto-starts when Docker daemon starts
 make -C lab autostart-on
-# 3. Backstage autostart
+
+# Backstage auto-starts as a systemd user service (survives WSL restart)
 make -C lab install-service
 ```
 
-### One-time Windows-side setup
+On the Windows side, `%USERPROFILE%\.wslconfig` intentionally contains no `networkingMode` line (mirrored mode doesn't work on Win10 — see the file's comments for how to enable it once you're on Win11).
 
-After `.wslconfig` exists, restart WSL from an elevated Windows PowerShell:
+### After every WSL restart: refresh portproxy
 
-```powershell
-wsl --shutdown
-```
-
-Wait ~10 seconds, then open a new WSL terminal (starts WSL back up with mirrored networking).
-
-Then, still in elevated Windows PowerShell, open the four ports in the firewall:
+From an **elevated Windows PowerShell** on the lab host (right-click → Run as Administrator):
 
 ```powershell
-New-NetFirewallRule -DisplayName "APE lab — HTTP"       -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80
-New-NetFirewallRule -DisplayName "APE lab — HTTPS"      -Direction Inbound -Action Allow -Protocol TCP -LocalPort 443
-New-NetFirewallRule -DisplayName "APE lab — Backstage"  -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000
-New-NetFirewallRule -DisplayName "APE lab — Backstage API" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 7007
+cd \\wsl$\Ubuntu\home\bryan\github\aws-dns-crossplane-poc\lab\windows
+Set-ExecutionPolicy -Scope Process Bypass
+.\ape-lab-portproxy.ps1
 ```
 
-One-time. Does not need re-running after reboots.
+The script:
+1. Reads the current WSL2 IP (`wsl hostname -I`).
+2. Rewrites 4 `netsh interface portproxy` rules (80, 443, 3000, 7007) to point at it.
+3. Creates inbound firewall rules for those ports on first run (idempotent thereafter).
+4. Prints the lab host's LAN IPv4 and the URLs the client PC should use.
+
+This is the only step you need after `wsl --shutdown` or a PC reboot. It takes ~2 seconds.
+
+If you want to skip even that: pin your WSL IP by adding `[network] generateHosts=false` / static routes, or upgrade to Windows 11 and uncomment the mirrored-mode block in `.wslconfig`.
 
 ### Backstage baseUrl (one-time per install)
 
@@ -188,35 +194,15 @@ The lab host can still reach the same URL (loopback via its own LAN IP works), s
 
 ### On the client PC (the other Windows)
 
-Find the lab host's LAN IPv4 (on the lab host):
-
-```powershell
-ipconfig | findstr IPv4
-```
-
-On the client:
+Find the lab host's LAN IPv4 from `ape-lab-portproxy.ps1` output (or on the lab host: `ipconfig | findstr IPv4`).
 
 | Service | URL |
 |---|---|
-| Backstage | `http://<WIN_LAN_IP>:3000` — works immediately, no config needed |
+| Backstage | `http://<WIN_LAN_IP>:3000` |
 | Backstage API | `http://<WIN_LAN_IP>:7007` |
 | ArgoCD | `http://argocd.localtest.me/` — add `<WIN_LAN_IP>  argocd.localtest.me` to `C:\Windows\System32\drivers\etc\hosts` (edit via Notepad "Run as administrator") |
 
-No PowerShell or firewall work needed on the client PC — the client just makes outbound connections.
-
-### What survives a WSL restart
-
-With the setup above:
-
-| Component | Auto-restarts? | How |
-|---|---|---|
-| kind cluster | ✅ | Docker daemon starts with WSL; container has `restart=unless-stopped` |
-| Crossplane + Argo + Backstage catalog | ✅ | All inside the kind cluster — come up with kind |
-| Backstage (UI + API) | ✅ | systemd user service (`ape-backstage.service`); lingering enabled |
-| Windows port exposure | ✅ | Mirrored mode eliminates WSL2 NAT; ports on Windows LAN IP match WSL2 ports |
-| Windows firewall rules | ✅ | Persistent once created |
-
-Nothing to re-run after WSL or PC restart. Just open the URL.
+No PowerShell or firewall work on the client PC — it just makes outbound connections.
 
 ## Known limitations
 
