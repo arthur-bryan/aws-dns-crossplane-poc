@@ -120,6 +120,69 @@ make -C lab backstage-down      # stop
 make -C lab backstage-log       # tail -f the log
 ```
 
+## LAN access (reach Backstage + Argo from another PC on your network)
+
+The lab runs on WSL2 with NAT networking. Reaching the UIs from another device requires port forwarding + firewall + Backstage base-URL changes.
+
+### 1. On Windows (elevated PowerShell)
+
+```powershell
+# Replace 172.27.107.49 with your current WSL2 IP (run `ip addr show eth0` inside WSL to confirm).
+# The WSL2 IP changes on every WSL restart — re-run these after reboots.
+
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=80    connectaddress=172.27.107.49 connectport=80
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=443   connectaddress=172.27.107.49 connectport=443
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=3000  connectaddress=172.27.107.49 connectport=3000
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=7007  connectaddress=172.27.107.49 connectport=7007
+
+New-NetFirewallRule -DisplayName "WSL2 lab HTTP"   -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80
+New-NetFirewallRule -DisplayName "WSL2 lab HTTPS"  -Direction Inbound -Action Allow -Protocol TCP -LocalPort 443
+New-NetFirewallRule -DisplayName "WSL2 lab BS-UI"  -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000
+New-NetFirewallRule -DisplayName "WSL2 lab BS-API" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 7007
+```
+
+Find your Windows LAN IP with `ipconfig | findstr IPv4`.
+
+### 2. Backstage baseUrls
+
+Edit `lab/backstage/app-config.lan.yaml` — replace `192.168.1.100` with your Windows IPv4. Then start Backstage with it layered:
+
+```bash
+cd lab/backstage/ape-lab
+yarn start --config ../../app-config.example.yaml --config ../../app-config.lan.yaml
+# (app-config.yaml is loaded by default first; the two --config files override)
+```
+
+`app.listen.host: 0.0.0.0` is already in `app-config.example.yaml`, so the dev servers bind to all interfaces.
+
+### 3. ArgoCD from another PC
+
+The ingress routes by Host header `argocd.localtest.me`, which resolves to 127.0.0.1 on the internet (won't reach the lab from another machine). Fix on the client PC:
+
+**Linux/macOS:** add to `/etc/hosts`:
+
+```
+<WIN_LAN_IP>  argocd.localtest.me
+```
+
+**Windows client:** edit `C:\Windows\System32\drivers\etc\hosts` with the same entry (needs Administrator).
+
+Then browse to `http://argocd.localtest.me/` from the other PC.
+
+### 4. Access URLs from the other PC
+
+| Service | URL |
+|---|---|
+| Backstage | `http://<WIN_LAN_IP>:3000` |
+| Backstage API | `http://<WIN_LAN_IP>:7007` |
+| ArgoCD | `http://argocd.localtest.me/` (with hosts entry above) |
+
+### Gotchas
+
+- **WSL2 IP rotates on restart.** After `wsl --shutdown` or a Windows reboot, re-run the `netsh interface portproxy add` commands with the new WSL2 IP. Or: remove all with `netsh interface portproxy reset` and re-add. Scripting it: on WSL startup put the current IP in `/mnt/c/Users/<you>/update-portproxy.ps1` and run the script from an elevated shell.
+- **Mirrored networking mode** (`wsl.conf` `[wsl2] networkingMode=mirrored`) makes WSL2 and Windows share the same network, eliminating the portproxy dance. Available in Windows 11 + recent WSL builds. Add `[wsl2] networkingMode=mirrored` to `%USERPROFILE%\.wslconfig` and `wsl --shutdown`.
+- **CORS from the LAN origin**: the `app-config.lan.yaml` overlay sets `backend.cors.origin` to the LAN URL. If you use a different hostname (e.g. a custom DNS entry), update that value.
+
 ## Known limitations
 
 - **`Edit AWS Route53 DNS Record` appears in `/create`.** It shouldn't — edits are meant to be reached via the pencil icon on a record's catalog entity page, which pre-fills the form with the record's identity. Hiding tag-filtered templates from `/create` requires a `PageBlueprint` override in Backstage's new frontend system (~1h of TypeScript plugin work + tests). The template's title is prefixed with ⚠️ and its description strongly nudges users toward the pencil-icon flow. Track in [todo].
