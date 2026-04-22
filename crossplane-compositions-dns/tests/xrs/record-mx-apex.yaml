@@ -1,0 +1,25 @@
+---
+# MX records at apex — typical email routing for a domain.
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-apex-mx.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-apex-mx.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: ""
+  type: MX
+  values:
+    - "10 mail1.example.com"
+    - "20 mail2.example.com"
+  ttl: 3600

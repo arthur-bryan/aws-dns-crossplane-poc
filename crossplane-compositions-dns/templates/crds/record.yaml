@@ -92,7 +92,7 @@ spec:
                 type:
                   type: string
                   description: "DNS record type"
-                  enum: [A, AAAA, CNAME, TXT, ALIAS]
+                  enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
                   x-kubernetes-validations:
                     - rule: "self == oldSelf"
                       message: "type is immutable"
@@ -136,10 +136,12 @@ spec:
                     - dnsName
                     - serviceType
 
-                # Weighted routing policy
+                # Routing policies (at most ONE of weighted/failover/latency/geolocation/multivalue).
+                # All routing policies use setIdentifier to disambiguate
+                # multiple records sharing the same name+type.
                 setIdentifier:
                   type: string
-                  description: "Unique identifier for weighted/routing policy records"
+                  description: "Unique identifier for routing policy records"
                   minLength: 1
                   maxLength: 128
 
@@ -148,6 +150,48 @@ spec:
                   description: "Traffic weight (0-255) for weighted routing"
                   minimum: 0
                   maximum: 255
+
+                failoverRoutingPolicy:
+                  type: object
+                  description: "Failover routing (primary/secondary); requires healthCheckId on the PRIMARY record"
+                  required: [type]
+                  properties:
+                    type:
+                      type: string
+                      enum: [PRIMARY, SECONDARY]
+
+                latencyRoutingPolicy:
+                  type: object
+                  description: "Latency-based routing; Route53 returns the answer from the region with the lowest latency to the client"
+                  required: [region]
+                  properties:
+                    region:
+                      type: string
+                      pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+
+                geolocationRoutingPolicy:
+                  type: object
+                  description: "Geolocation routing based on client's approximate location"
+                  properties:
+                    continent:
+                      type: string
+                      enum: ["*", AF, AN, AS, EU, OC, NA, SA]
+                    country:
+                      type: string
+                      description: "ISO 3166-1 alpha-2 country code, or '*' for default"
+                    subdivision:
+                      type: string
+                      description: "US state code (only when country=US)"
+
+                multivalueAnswerRoutingPolicy:
+                  type: boolean
+                  default: false
+                  description: "Return multiple random answers (up to 8); requires setIdentifier"
+
+                healthCheckId:
+                  type: string
+                  description: "Route53 health check ID; used with failover / multivalue routing"
+                  pattern: '^[a-f0-9-]+$'
 
                 import:
                   type: object
@@ -177,10 +221,19 @@ spec:
                   message: "values is required for non-ALIAS records"
                 - rule: "!has(self.aliasTarget) || self.aliasTarget.serviceType != 'Custom' || has(self.aliasTarget.hostedZoneId)"
                   message: "hostedZoneId is required when serviceType is Custom"
-                - rule: "!has(self.setIdentifier) || has(self.weight)"
-                  message: "weight is required when setIdentifier is provided (weighted routing)"
                 - rule: "!has(self.weight) || has(self.setIdentifier)"
                   message: "setIdentifier is required when weight is provided (weighted routing)"
+                - rule: "!has(self.failoverRoutingPolicy) || has(self.setIdentifier)"
+                  message: "setIdentifier is required for failover routing"
+                - rule: "!has(self.latencyRoutingPolicy) || has(self.setIdentifier)"
+                  message: "setIdentifier is required for latency routing"
+                - rule: "!has(self.geolocationRoutingPolicy) || has(self.setIdentifier)"
+                  message: "setIdentifier is required for geolocation routing"
+                - rule: "!self.multivalueAnswerRoutingPolicy || has(self.setIdentifier)"
+                  message: "setIdentifier is required for multivalue-answer routing"
+                # Only one routing policy at a time.
+                - rule: "(has(self.weight) ? 1 : 0) + (has(self.failoverRoutingPolicy) ? 1 : 0) + (has(self.latencyRoutingPolicy) ? 1 : 0) + (has(self.geolocationRoutingPolicy) ? 1 : 0) + (self.multivalueAnswerRoutingPolicy ? 1 : 0) <= 1"
+                  message: "At most one routing policy may be specified (weight / failover / latency / geolocation / multivalue)"
 
             status:
               type: object

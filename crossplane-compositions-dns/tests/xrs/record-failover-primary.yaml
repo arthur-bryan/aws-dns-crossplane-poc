@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-api-primary-failover.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-api-primary-failover.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: api
+  type: A
+  values:
+    - 192.0.2.1
+  ttl: 60
+  setIdentifier: primary-us-east-1
+  failoverRoutingPolicy:
+    type: PRIMARY
+  healthCheckId: 12345678-abcd-4abc-8abc-1234567890ab

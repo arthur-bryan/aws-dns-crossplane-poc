@@ -145,6 +145,36 @@ assert_contains "$OUT" 'weightedRoutingPolicy:' "weightedRoutingPolicy block pre
 assert_contains "$OUT" 'weight: 70' "weight = 70"
 
 echo
+echo "=== record-failover PRIMARY + health check ==="
+OUT="$OUT_DIR/record-failover.out"
+render "$XRS_DIR/record-failover-primary.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'failoverRoutingPolicy:' "failoverRoutingPolicy block present"
+assert_contains "$OUT" 'type: PRIMARY' "failover type = PRIMARY"
+assert_contains "$OUT" 'healthCheckId: 12345678-abcd-4abc-8abc-1234567890ab' "healthCheckId propagated"
+assert_not_contains "$OUT" 'weightedRoutingPolicy:' "weighted NOT set"
+
+echo
+echo "=== record-latency ==="
+OUT="$OUT_DIR/record-latency.out"
+render "$XRS_DIR/record-latency.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'latencyRoutingPolicy:' "latencyRoutingPolicy block present"
+assert_contains "$OUT" '^[[:space:]]+region: us-east-1$' "latency.region = us-east-1"
+
+echo
+echo "=== record-geolocation ==="
+OUT="$OUT_DIR/record-geo.out"
+render "$XRS_DIR/record-geolocation.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'geolocationRoutingPolicy:' "geolocationRoutingPolicy block present"
+assert_contains "$OUT" 'continent: EU' "continent = EU"
+
+echo
+echo "=== record-multivalue ==="
+OUT="$OUT_DIR/record-mv.out"
+render "$XRS_DIR/record-multivalue.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'multivalueAnswerRoutingPolicy: true' "multivalueAnswerRoutingPolicy = true"
+assert_contains "$OUT" 'healthCheckId:' "healthCheckId set on multivalue"
+
+echo
 echo "=== record-import-A ==="
 OUT="$OUT_DIR/record-import-a.out"
 render "$XRS_DIR/record-import-a.yaml" "$RECORD_COMP" "$OUT"
@@ -161,6 +191,22 @@ render "$XRS_DIR/record-import-weighted-a.yaml" "$RECORD_COMP" "$OUT"
 assert_contains "$OUT" 'crossplane\.io/external-name: Z1234567890ABC_api\.example\.com_A_green-deployment' \
   "import weighted external-name = zoneId_fqdn_type_setIdentifier"
 assert_contains "$OUT" 'setIdentifier: green-deployment' "setIdentifier preserved on import"
+
+echo
+echo "=== record-MX (apex, multiple values) ==="
+OUT="$OUT_DIR/record-mx-apex.out"
+render "$XRS_DIR/record-mx-apex.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'type: MX' "MR type = MX"
+assert_contains "$OUT" '10 mail1\.example\.com' "first MX value present"
+assert_contains "$OUT" '20 mail2\.example\.com' "second MX value present"
+assert_contains "$OUT" 'name: ""' "apex MX has empty forProvider.name"
+
+echo
+echo "=== record-SRV ==="
+OUT="$OUT_DIR/record-srv.out"
+render "$XRS_DIR/record-srv.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'type: SRV' "MR type = SRV"
+assert_contains "$OUT" '10 60 5060 sipserver1' "SRV value parts preserved"
 
 echo
 echo "=== record-apex-alias (empty recordName) ==="
