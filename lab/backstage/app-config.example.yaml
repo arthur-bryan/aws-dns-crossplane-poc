@@ -1,0 +1,55 @@
+# Committed template for lab/backstage/ape-lab/app-config.local.yaml
+#
+# On first run:
+#   export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxx   # PAT with `repo` scope
+#   cp lab/backstage/app-config.example.yaml lab/backstage/ape-lab/app-config.local.yaml
+#   cd lab/backstage/ape-lab && yarn dev
+#
+# app-config.local.yaml is gitignored so your PAT references stay local. Any
+# non-secret customization lives in THIS file; keep them in sync.
+
+app:
+  title: APE DNS Lab Backstage
+  baseUrl: http://localhost:3000
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+
+organization:
+  name: APE Platform (Lab)
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+catalog:
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template, Domain, Group, User]
+  locations:
+    # Paths are relative to packages/backend/ (backend cwd when `yarn dev`).
+    # lab/backstage/ape-lab/packages/backend/ → 5 ups reaches the repo root.
+    #
+    # 1. APE hierarchy (Domain, SubDomain, System, Environment) seeded in entities/.
+    - type: file
+      target: ../../../../../entities/catalog-info.yaml
+      rules:
+        - allow: [Domain, System, Resource, Group]
+
+    # 2. The three lab-adapted DNS scaffolder templates.
+    - type: file
+      target: ../../../../backstage-templates/catalog-info.yaml
+      rules:
+        - allow: [Location, Template]
+
+scaffolder:
+  defaultAuthor:
+    name: APE Lab Scaffolder
+    email: scaffolder@ape.local
+  defaultCommitMessage: "chore(dns): scaffolder-generated change"
+
+auth:
+  providers:
+    guest: {}
