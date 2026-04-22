@@ -67,6 +67,10 @@ lab/backstage/*/dist-types/
 lab/backstage/*/app-config.local.yaml
 lab/backstage/*/.env
 
+# Runtime artifacts from backstage-up.sh / backstage-down.sh
+lab/backstage/backstage.pid
+lab/backstage/backstage.log
+
 # AWS credentials (never commit)
 route53-credentials
 aws-credentials
