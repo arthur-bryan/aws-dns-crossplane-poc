@@ -1,0 +1,25 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-smoke.test-crossplane-smoke.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"source":"smoke-test","purpose":"verify record create + edit"}'
+spec:
+  name: record-smoke.test-crossplane-smoke.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 597230762851
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z06103403384DB6HW78UD
+  zoneName: test-crossplane-smoke.arthurbryan.com
+  recordName: smoke
+  type: TXT
+  values:
+    - "crossplane smoke test v1"
+  ttl: 60
