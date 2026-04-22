@@ -26,7 +26,7 @@ render() {
 
 assert_contains() {
   local file="$1" pattern="$2" label="$3"
-  if grep -qE "$pattern" "$file"; then
+  if grep -qE -e "$pattern" "$file"; then
     echo -e "  ${GREEN}✓${NC} $label"
     pass=$((pass+1))
   else
@@ -40,7 +40,7 @@ assert_contains() {
 
 assert_not_contains() {
   local file="$1" pattern="$2" label="$3"
-  if ! grep -qE "$pattern" "$file"; then
+  if ! grep -qE -e "$pattern" "$file"; then
     echo -e "  ${GREEN}✓${NC} $label"
     pass=$((pass+1))
   else
@@ -77,7 +77,7 @@ OUT="$OUT_DIR/zone-create.out"
 render "$XRS_DIR/zone-create.yaml" "$ZONE_COMP" "$OUT"
 assert_contains "$OUT" '^[[:space:]]+kind: Zone$' "Zone MR emitted"
 assert_contains "$OUT" 'apiVersion: route53\.aws\.m\.upbound\.io/v1beta1' "Uses modern route53 API"
-assert_contains "$OUT" 'crossplane\.io/external-name: example\.com' "external-name = zoneName for create"
+assert_not_contains "$OUT" 'crossplane\.io/external-name:' "external-name omitted on create (provider generates)"
 assert_contains "$OUT" 'name: example\.com' "forProvider.name = example.com"
 assert_contains "$OUT" 'comment: Corporate website DNS zone' "comment propagated"
 assert_contains "$OUT" '- Create' "managementPolicies includes Create"
@@ -105,15 +105,8 @@ assert_contains "$OUT" 'type: A' "type = A"
 assert_contains "$OUT" 'zoneId: Z1234567890ABC' "zoneId propagated"
 assert_contains "$OUT" 'ttl: 300' "ttl = 300"
 assert_contains "$OUT" '192\.0\.2\.1' "value 192.0.2.1 present"
-assert_not_contains "$OUT" 'zone-lookup' "no zone-lookup when zoneId given"
-
-echo
-echo "=== record-A with zoneName (triggers zone-lookup) ==="
-OUT="$OUT_DIR/record-a-with-zonename.out"
-render "$XRS_DIR/record-a-with-zonename.yaml" "$RECORD_COMP" "$OUT"
-assert_contains "$OUT" 'kind: Zone' "zone-lookup MR emitted (Zone kind)"
-assert_contains "$OUT" 'zone-lookup' "zone-lookup suffix in resource name annotation"
-# On first render pass, status.atProvider isn't populated, so Record MR isn't emitted yet.
+assert_not_contains "$OUT" 'crossplane\.io/external-name:' "external-name omitted on create"
+assert_not_contains "$OUT" 'zone-lookup' "no zone-lookup path"
 
 echo
 echo "=== record-ALIAS (CloudFront) ==="

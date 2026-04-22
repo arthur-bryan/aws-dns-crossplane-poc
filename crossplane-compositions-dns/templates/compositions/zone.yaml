@@ -37,10 +37,6 @@ spec:
             [[- $tags          := $params.tags ]]
             [[- $import        := $params.import ]]
             [[- $importing     := and $import $import.existing ]]
-            [[- $externalName  := $zoneName ]]
-            [[- if $importing ]]
-            [[- $externalName = $import.zoneId ]]
-            [[- end ]]
 
             [[- $zone := getComposedResource . $name ]]
 
@@ -49,7 +45,15 @@ spec:
             kind: Zone
             metadata:
               annotations:
-                crossplane.io/external-name: [[ $externalName ]]
+                # On import, external-name MUST be the AWS Zone ID (Z...) so the
+                # observe call succeeds. On create, we intentionally omit the
+                # annotation — the provider generates the Zone ID after create
+                # and sets external-name itself. Setting it to the zone name
+                # pre-create causes Route53 to reject observe with
+                # "resourceId too long" (zone IDs are ≤32 chars).
+                [[- if $importing ]]
+                crossplane.io/external-name: [[ $import.zoneId ]]
+                [[- end ]]
                 [[ setResourceNameAnnotation $name ]]
               name: [[ $name ]]
               namespace: [[ $namespace ]]
