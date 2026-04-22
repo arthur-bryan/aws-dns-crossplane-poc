@@ -21,5 +21,6 @@ spec:
   recordName: smoke
   type: TXT
   values:
-    - "crossplane smoke test v1"
-  ttl: 60
+    - "crossplane smoke test v2 edited"
+    - "second value added"
+  ttl: 120
