@@ -1,0 +1,73 @@
+# Backstage catalog seed for the lab.
+# Register this file in Backstage via app-config:
+#   catalog.locations:
+#     - type: file
+#       target: ../../../entities/catalog-info.yaml
+#
+# The APE hierarchy is Domain → SubDomain → System → Environment.
+# Each Zone / Record resource created via Backstage scaffolder will belong to
+# a System in this hierarchy and land under:
+#   entities/environments/{domain}/{subdomain}/{system}/{env}/resources/aws/
+---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: marketing
+  description: Marketing domain
+  annotations:
+    dock.tech/domain: marketing
+spec:
+  owner: group:platform-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: websites
+  description: Websites subdomain of marketing
+  annotations:
+    dock.tech/domain: marketing
+    dock.tech/subdomain: websites
+spec:
+  owner: group:platform-team
+  subdomainOf: marketing
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: corporate-site
+  description: Corporate marketing website
+  annotations:
+    dock.tech/domain: marketing
+    dock.tech/subdomain: websites
+    dock.tech/system: corporate-site
+spec:
+  owner: group:platform-team
+  domain: websites
+---
+# Environment entities (APE pattern) — one per env the system runs in.
+# Used by EntityPicker in zone/record templates.
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: corporate-site-dev
+  namespace: system-corporate-site-dev
+  description: Dev environment for corporate-site
+  annotations:
+    dock.tech/domain: marketing
+    dock.tech/subdomain: websites
+    dock.tech/system: corporate-site
+    dock.tech/environment: dev
+spec:
+  type: environment
+  owner: group:platform-team
+  system: corporate-site
+---
+# Group entity for owner references used above.
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-team
+  description: APE platform team
+spec:
+  type: team
+  children: []

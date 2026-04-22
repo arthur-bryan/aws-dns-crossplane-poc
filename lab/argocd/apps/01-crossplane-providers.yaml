@@ -1,0 +1,31 @@
+---
+# Installs the AWS providers. This is the production chart, unmodified.
+# On kind the IRSA pod-annotation is a no-op; providers load creds from the
+# ClusterProviderConfig (source: Secret) applied by 03-lab-provider-config.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane-providers
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc
+    targetRevision: feature/ape-platform-alignment
+    path: crossplane-providers
+    helm:
+      releaseName: crossplane-providers
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

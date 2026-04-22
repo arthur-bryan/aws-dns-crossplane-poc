@@ -1,0 +1,159 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aws-dns-zone
+  title: AWS Route53 DNS Zone (Lab)
+  description: Create an AWS Route53 hosted zone — lab-adapted version of the production template
+  labels:
+    category: resources
+    visibility: "public"
+    ape: "true"
+    sre: "true"
+    techlead: "true"
+    developer: "false"
+  tags:
+    - resource
+    - aws
+    - dns
+    - route53
+    - lab
+spec:
+  owner: group:platform-team
+  type: resource
+
+  parameters:
+    - title: DNS Zone Information
+      required:
+        - name
+        - system
+        - environment
+        - zoneName
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the DNS zone resource (kebab-case)
+          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+          ui:autofocus: true
+        system:
+          title: System
+          type: string
+          description: System this zone belongs to
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: System
+        environment:
+          title: Environment
+          type: string
+          enum: [dev, hml, poc, prd]
+          default: dev
+        zoneName:
+          title: Zone Name
+          type: string
+          description: FQDN without trailing dot (e.g. example.com)
+          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+          ui:help: "Example: test.dev.dock.tech (no trailing dot)"
+        comment:
+          title: Comment
+          type: string
+          maxLength: 256
+          description: Optional comment for the zone
+
+    - title: AWS Account
+      required:
+        - awsAccountId
+        - awsAccountName
+      properties:
+        awsAccountId:
+          title: AWS Account ID
+          type: string
+          pattern: '^[0-9]{12}$'
+          description: Target AWS account (12 digits)
+        awsAccountName:
+          title: AWS Account Name
+          type: string
+          default: dev-account
+          description: Must match a ClusterProviderConfig name
+        awsRegion:
+          title: AWS Region
+          type: string
+          default: us-east-1
+          pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+
+    - title: Additional Tags (Optional)
+      properties:
+        tags:
+          title: Tags
+          type: object
+          description: Additional AWS tags (hierarchy tags added automatically)
+          additionalProperties:
+            type: string
+
+  steps:
+    - id: fetchSystem
+      name: Fetch System entity
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.system }}
+
+    - id: writeXR
+      name: Write Zone XR manifest
+      action: roadiehq:utils:fs:write
+      input:
+        path: >-
+          entities/environments/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.name }}.yaml
+        content: |
+          ---
+          apiVersion: dock.tech/v1
+          kind: Zone
+          metadata:
+            name: ${{ parameters.name }}
+            namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
+            annotations:
+              dock.tech/scaffolder-parameters: ${{ parameters | dump }}
+          spec:
+            name: ${{ parameters.name }}
+            domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
+            subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
+            system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
+            environment: ${{ parameters.environment }}
+            aws:
+              account: ${{ parameters.awsAccountId }}
+              accountName: ${{ parameters.awsAccountName }}
+            zoneName: ${{ parameters.zoneName }}
+            {%- if parameters.comment %}
+            comment: ${{ parameters.comment }}
+            {%- endif %}
+            {%- if parameters.tags %}
+            tags:
+              {%- for key, value in parameters.tags %}
+              ${{ key }}: ${{ value }}
+              {%- endfor %}
+            {%- endif %}
+
+    - id: openPR
+      name: Open PR with new zone manifest
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
+        branchName: scaffolder/zone-${{ parameters.name }}-${{ parameters.environment }}
+        targetBranchName: feature/ape-platform-alignment
+        title: "feat(dns): create zone ${{ parameters.zoneName }}"
+        description: |
+          Scaffolder-generated Zone XR.
+
+          System: ${{ parameters.system }}
+          Environment: ${{ parameters.environment }}
+          Zone: ${{ parameters.zoneName }}
+
+  output:
+    links:
+      - title: Pull Request
+        url: ${{ steps.openPR.output.remoteUrl }}

@@ -1,0 +1,38 @@
+---
+# Lab ClusterProviderConfig — mirrors the shape of
+# crossplane-provider-config-aws/templates/provider-config.yaml but flips
+# credentials.source from IRSA → Secret so it works on a local kind cluster.
+#
+# The referenced Secret `aws-creds` in `crossplane-system` is NOT created by
+# this manifest. User injects creds via:
+#   make -C lab aws-creds
+# (reads ~/.aws/credentials and writes a Secret with key=credentials)
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
+metadata:
+  name: dev-account
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-creds
+      key: credentials
+---
+# EnvironmentConfig consumed by compositions to resolve per-account metadata.
+# Matches the shape the production chart produces; only values differ (lab).
+apiVersion: apiextensions.crossplane.io/v1beta1
+kind: EnvironmentConfig
+metadata:
+  name: dev-account
+  labels:
+    accountName: dev-account
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  aws:
+    account: 000000000000
+    accountName: dev-account
+    region: us-east-1

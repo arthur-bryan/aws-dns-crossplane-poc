@@ -1,0 +1,30 @@
+---
+# Installs the DNS XRDs + Compositions (production chart, unmodified).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane-compositions-dns
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc
+    targetRevision: feature/ape-platform-alignment
+    path: crossplane-compositions-dns
+    helm:
+      releaseName: crossplane-compositions-dns
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
