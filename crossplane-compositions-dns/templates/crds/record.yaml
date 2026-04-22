@@ -8,9 +8,6 @@ spec:
   names:
     kind: Record
     plural: records
-  claimNames:
-    kind: Record
-    plural: records
   versions:
     - name: v1
       served: true

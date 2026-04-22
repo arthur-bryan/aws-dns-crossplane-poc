@@ -39,7 +39,7 @@ spec:
             [[- $zone := getComposedResource . $name ]]
 
             ---
-            apiVersion: route53.aws.upbound.io/v1beta1
+            apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: Zone
             metadata:
               annotations:
@@ -54,6 +54,7 @@ spec:
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
               forProvider:
+                name: [[ $zoneName ]]
                 comment: [[ $comment ]]
                 tags:
                   createdBy: ape-platform
