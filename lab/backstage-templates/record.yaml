@@ -264,6 +264,60 @@ spec:
             weight: ${{ parameters.weight }}
             {%- endif %}
 
+    - id: writeCatalogEntity
+      name: Write Backstage Resource entity
+      action: roadiehq:utils:fs:write
+      input:
+        path: entities/catalog/records/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+        content: |
+          ---
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
+          metadata:
+            name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
+            namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
+            title: ${{ parameters.recordName }}.${{ parameters.zoneName }}
+            description: "DNS ${{ parameters.type }} record ${{ parameters.recordName }}.${{ parameters.zoneName }} (${{ parameters.environment }})"
+            annotations:
+              dock.tech/xr-kind: Record
+              dock.tech/xr-name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
+              dock.tech/zone-name: ${{ parameters.zoneName }}
+              dock.tech/zone-id: ${{ parameters.zoneId }}
+              dock.tech/record-name: ${{ parameters.recordName }}
+              dock.tech/record-type: ${{ parameters.type }}
+              dock.tech/record-fqdn: ${{ parameters.recordName }}.${{ parameters.zoneName }}
+              dock.tech/domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
+              dock.tech/subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
+              dock.tech/system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
+              dock.tech/environment: ${{ parameters.environment }}
+              dock.tech/managed-by: scaffolder
+            tags:
+              - aws
+              - dns
+              - route53
+              - record
+              - ${{ parameters.type | lower }}
+              - ${{ parameters.environment }}
+            links:
+              - title: Edit record
+                url: /create/templates/default/aws-dns-record-edit?formData=${{ {"system": parameters.system, "environment": parameters.environment, "zoneName": parameters.zoneName, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
+                icon: edit
+              - title: View in AWS Console
+                url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ parameters.zoneId }}
+                icon: cloud
+              - title: View XR file on GitHub
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+                icon: github
+              - title: Delete record (opens GitHub delete UI)
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+                icon: delete
+          spec:
+            type: aws-dns-record
+            owner: group:application-platform-engineering
+            system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
+            dependsOn:
+              - resource:default/zone-${{ parameters.zoneName }}
+
     - id: openPR
       name: Open PR with new record manifest
       action: publish:github:pull-request
