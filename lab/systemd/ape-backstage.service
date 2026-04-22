@@ -1,0 +1,18 @@
+[Unit]
+Description=APE DNS Lab Backstage
+Documentation=https://github.com/arthur-bryan/aws-dns-crossplane-poc
+After=default.target
+
+[Service]
+Type=simple
+# Adjust if your repo checkout is elsewhere.
+WorkingDirectory=__REPO__/lab/backstage/ape-lab
+# Resolve Node 22 via nvm, pull PAT from gh CLI, exec yarn start in foreground.
+ExecStart=/bin/bash -lc 'source "$HOME/.nvm/nvm.sh" && nvm use 22 >/dev/null 2>&1 && export GITHUB_TOKEN="$($HOME/.local/bin/gh auth token)" && exec yarn start'
+Restart=on-failure
+RestartSec=15
+StandardOutput=append:__REPO__/lab/backstage/backstage.log
+StandardError=append:__REPO__/lab/backstage/backstage.log
+
+[Install]
+WantedBy=default.target
