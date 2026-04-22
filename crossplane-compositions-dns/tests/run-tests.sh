@@ -137,6 +137,13 @@ assert_contains "$OUT" 'zoneId: Z35SXDOTRQ7X7K' "ALB us-east-1 hosted zone ID re
 assert_contains "$OUT" 'evaluateTargetHealth: true' "evaluateTargetHealth propagated"
 
 echo
+echo "=== record-ALIAS cross-region (DNS in us-east-1, ALB in eu-west-2) ==="
+OUT="$OUT_DIR/record-alias-alb-xregion.out"
+render "$XRS_DIR/record-alias-alb-cross-region.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'zoneId: ZHURV8PSTC4K8' "aliasTarget.region (eu-west-2) used, not spec.aws.region (us-east-1)"
+assert_not_contains "$OUT" 'zoneId: Z35SXDOTRQ7X7K' "us-east-1 ALB zoneId NOT used"
+
+echo
 echo "=== record-weighted ==="
 OUT="$OUT_DIR/record-weighted.out"
 render "$XRS_DIR/record-weighted.yaml" "$RECORD_COMP" "$OUT"

@@ -217,9 +217,12 @@ spec:
                   title: AWS Service Type
                   type: string
                   enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom]
+                  description: "Route53 needs the hosted zone ID of the target. The platform resolves it from the service type + region — no need to look it up yourself."
                 dnsName:
                   title: Target DNS Name
                   type: string
+                  description: "DNS name of the target resource (the target typically lives in a different AWS account than this DNS account — find it in that account and paste it here)."
+                  ui:help: "Example: d1234567890.cloudfront.net or my-alb-12345.us-east-1.elb.amazonaws.com"
                 evaluateTargetHealth:
                   title: Evaluate Target Health
                   type: boolean
@@ -228,15 +231,29 @@ spec:
               dependencies:
                 serviceType:
                   oneOf:
+                    # CloudFront + GlobalAccelerator are global — no region needed.
                     - properties:
                         serviceType:
-                          enum: [CloudFront, GlobalAccelerator, S3Website, APIGateway, ALB, NLB]
+                          enum: [CloudFront, GlobalAccelerator]
+                    # Regional services: user picks the region where the target resource lives.
+                    - properties:
+                        serviceType:
+                          enum: [ALB, NLB, S3Website, APIGateway]
+                        targetRegion:
+                          title: Target Region
+                          type: string
+                          pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+                          description: "Region of the target resource (the ALB/NLB/S3 website/API Gateway you're pointing at — NOT the DNS account's region)."
+                          default: us-east-1
+                          ui:help: "Cross-account: this is the region where the ALB/NLB lives, in its own account."
+                      required: [targetRegion]
                     - properties:
                         serviceType: { const: Custom }
                         customZoneId:
                           title: Custom Hosted Zone ID
                           type: string
                           pattern: '^Z[A-Z0-9]+$'
+                          description: "Raw Route53 hosted zone ID of the target (only needed for endpoints the platform can't auto-resolve)."
                       required: [customZoneId]
 
     - title: AWS Account
@@ -423,6 +440,9 @@ spec:
               serviceType: ${{ parameters.serviceType }}
               dnsName: ${{ parameters.dnsName }}
               evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
+              {%- if parameters.targetRegion %}
+              region: ${{ parameters.targetRegion }}
+              {%- endif %}
               {%- if parameters.serviceType == 'Custom' %}
               hostedZoneId: ${{ parameters.customZoneId }}
               {%- endif %}

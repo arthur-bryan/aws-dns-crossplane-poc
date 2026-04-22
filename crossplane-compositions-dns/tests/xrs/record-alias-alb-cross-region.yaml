@@ -1,0 +1,28 @@
+---
+# Cross-account ALIAS → ALB: DNS account context is us-east-1 (spec.aws.region),
+# but the ALB itself lives in eu-west-2 (aliasTarget.region). The composition
+# must resolve the eu-west-2 ALB hosted zone ID (ZHURV8PSTC4K8), not us-east-1.
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-eu-alb.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-eu-alb.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: eu-alb
+  type: ALIAS
+  aliasTarget:
+    serviceType: ALB
+    region: eu-west-2
+    dnsName: my-alb-12345.eu-west-2.elb.amazonaws.com
+    evaluateTargetHealth: true
