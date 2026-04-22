@@ -42,9 +42,16 @@ spec:
             [[- $zoneId    := $params.zoneId ]]
             [[- $zoneName  := $params.zoneName ]]
 
+            # Route53 has no ALIAS type — it's A (or AAAA) with an alias block.
+            # Our XRD uses ALIAS as a pseudo-type for UX; translate for the MR.
+            [[- $mrType := $type ]]
+            [[- if eq $type "ALIAS" ]]
+            [[- $mrType = "A" ]]
+            [[- end ]]
+
             [[- $importExtName := "" ]]
             [[- if $importing ]]
-            [[- $importExtName = printf "%s_%s_%s" $zoneId (printf "%s.%s" $params.recordName $zoneName) $params.type ]]
+            [[- $importExtName = printf "%s_%s_%s" $zoneId (printf "%s.%s" $params.recordName $zoneName) $mrType ]]
             [[- if $params.setIdentifier ]]
             [[- $importExtName = printf "%s_%s" $importExtName $params.setIdentifier ]]
             [[- end ]]
@@ -165,7 +172,7 @@ spec:
               [[- end ]]
               forProvider:
                 name: [[ $fqdn ]]
-                type: [[ $type ]]
+                type: [[ $mrType ]]
                 zoneId: [[ $zoneId ]]
                 [[- if $setIdentifier ]]
                 setIdentifier: [[ $setIdentifier ]]
