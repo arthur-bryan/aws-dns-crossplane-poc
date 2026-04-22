@@ -1,73 +1,72 @@
-# Backstage catalog seed for the lab.
-# Register this file in Backstage via app-config:
-#   catalog.locations:
-#     - type: file
-#       target: ../../../entities/catalog-info.yaml
+# Backstage catalog seed.
+# Hierarchy (APE pattern): Domain → SubDomain → System → Environment.
 #
-# The APE hierarchy is Domain → SubDomain → System → Environment.
-# Each Zone / Record resource created via Backstage scaffolder will belong to
-# a System in this hierarchy and land under:
-#   entities/environments/{domain}/{subdomain}/{system}/{env}/resources/aws/
+# DNS resources created through the scaffolder land under:
+#   entities/environments/{domain}/{subdomain}/{system}/{environment}/resources/aws/
+#
+# Current hierarchy used for DNS ownership:
+#   Domain        cross
+#   SubDomain     cloud
+#   System        infrastructure
+#   Environments  dev, hml, prd (dev seeded here)
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Domain
 metadata:
-  name: marketing
-  description: Marketing domain
+  name: cross
+  description: Cross-cutting platform domain
   annotations:
-    dock.tech/domain: marketing
+    dock.tech/domain: cross
 spec:
-  owner: group:platform-team
+  owner: group:application-platform-engineering
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Domain
 metadata:
-  name: websites
-  description: Websites subdomain of marketing
+  name: cloud
+  description: Cloud subdomain under the cross domain
   annotations:
-    dock.tech/domain: marketing
-    dock.tech/subdomain: websites
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
 spec:
-  owner: group:platform-team
-  subdomainOf: marketing
+  owner: group:application-platform-engineering
+  subdomainOf: cross
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
-  name: corporate-site
-  description: Corporate marketing website
+  name: infrastructure
+  description: Platform infrastructure — owns shared DNS, networking, and related resources
   annotations:
-    dock.tech/domain: marketing
-    dock.tech/subdomain: websites
-    dock.tech/system: corporate-site
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
 spec:
-  owner: group:platform-team
-  domain: websites
+  owner: group:application-platform-engineering
+  domain: cloud
 ---
-# Environment entities (APE pattern) — one per env the system runs in.
-# Used by EntityPicker in zone/record templates.
+# Environment entity for dev. One per env the system runs in.
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: corporate-site-dev
-  namespace: system-corporate-site-dev
-  description: Dev environment for corporate-site
+  name: infrastructure-dev
+  namespace: system-infrastructure-dev
+  description: Dev environment for the infrastructure system
   annotations:
-    dock.tech/domain: marketing
-    dock.tech/subdomain: websites
-    dock.tech/system: corporate-site
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
     dock.tech/environment: dev
 spec:
   type: environment
-  owner: group:platform-team
-  system: corporate-site
+  owner: group:application-platform-engineering
+  system: infrastructure
 ---
-# Group entity for owner references used above.
 apiVersion: backstage.io/v1alpha1
 kind: Group
 metadata:
-  name: platform-team
-  description: APE platform team
+  name: application-platform-engineering
+  description: APE — Application Platform Engineering
 spec:
   type: team
   children: []

@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record-edit
-  title: Edit AWS Route53 DNS Record (Lab)
-  description: Edit an existing DNS record — lab-adapted version of the production record-edit template
+  title: Edit AWS Route53 DNS Record
+  description: Edit an existing AWS Route53 DNS record
   labels:
     category: resources
     ape: "true"
@@ -15,10 +15,9 @@ metadata:
     - aws
     - dns
     - route53
-    - lab
     - hidden
 spec:
-  owner: group:platform-team
+  owner: group:application-platform-engineering
   type: resource
 
   parameters:

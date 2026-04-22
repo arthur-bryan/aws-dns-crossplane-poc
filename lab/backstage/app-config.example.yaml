@@ -9,7 +9,7 @@
 # non-secret customization lives in THIS file; keep them in sync.
 
 app:
-  title: APE DNS Lab Backstage
+  title: APE Backstage
   baseUrl: http://localhost:3000
 
 backend:
@@ -18,7 +18,7 @@ backend:
     port: 7007
 
 organization:
-  name: APE Platform (Lab)
+  name: APE Platform
 
 integrations:
   github:
@@ -38,7 +38,7 @@ catalog:
       rules:
         - allow: [Domain, System, Resource, Group]
 
-    # 2. The three lab-adapted DNS scaffolder templates.
+    # 2. The three DNS scaffolder templates (zone, record, record-edit).
     - type: file
       target: ../../../../backstage-templates/catalog-info.yaml
       rules:
@@ -46,7 +46,7 @@ catalog:
 
 scaffolder:
   defaultAuthor:
-    name: APE Lab Scaffolder
+    name: APE Scaffolder
     email: scaffolder@ape.local
   defaultCommitMessage: "chore(dns): scaffolder-generated change"
 

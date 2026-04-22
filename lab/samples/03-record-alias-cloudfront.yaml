@@ -1,16 +1,20 @@
 ---
+# REFERENCE ONLY — showing XR shape produced by the scaffolder.
+# Do NOT `kubectl apply` this directly. All Zone/Record lifecycle must flow
+# through the Backstage scaffolder -> PR -> ArgoCD path.
+#
 # ALIAS to a CloudFront distribution. hostedZoneId is resolved by the
-# composition from serviceType=CloudFront → Z2FDTNDATAQYW2 (global).
+# composition from serviceType=CloudFront -> Z2FDTNDATAQYW2 (global).
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
   name: cdn-example-com
-  namespace: system-corporate-site-dev
+  namespace: system-infrastructure-dev
 spec:
   name: cdn-example-com
-  domain: marketing
-  subdomain: websites
-  system: corporate-site
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
   environment: dev
   aws:
     account: 100000000000

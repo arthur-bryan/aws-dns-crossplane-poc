@@ -1,0 +1,13 @@
+---
+# Namespace for all XRs (Zone, Record) belonging to the infrastructure system
+# in the dev environment. Kept under entities/ so ArgoCD creates it before any
+# XR YAML in this path gets synced.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: system-infrastructure-dev
+  labels:
+    ape.dock.tech/domain: cross
+    ape.dock.tech/subdomain: cloud
+    ape.dock.tech/system: infrastructure
+    ape.dock.tech/environment: dev

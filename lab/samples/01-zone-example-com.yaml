@@ -1,21 +1,22 @@
 ---
-# Direct-kubectl zone XR (bypasses Backstage — useful for bootstrap/smoke).
-# Applies with: kubectl apply -f lab/samples/01-zone-example-com.yaml
+# REFERENCE ONLY — showing XR shape produced by the scaffolder.
+# Do NOT `kubectl apply` this directly. All Zone/Record lifecycle must flow
+# through the Backstage scaffolder -> PR -> ArgoCD path.
 apiVersion: dock.tech/v1
 kind: Zone
 metadata:
   name: example-com
-  namespace: system-corporate-site-dev
+  namespace: system-infrastructure-dev
 spec:
   name: example-com
-  domain: marketing
-  subdomain: websites
-  system: corporate-site
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
   environment: dev
   aws:
     account: 100000000000
     accountName: dev-account
   zoneName: example.com
-  comment: Lab test zone - safe to delete
+  comment: Reference XR — safe to delete
   tags:
-    managedBy: ape-lab
+    managedBy: ape

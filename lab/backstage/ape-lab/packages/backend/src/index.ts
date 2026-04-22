@@ -20,8 +20,8 @@ backend.add(
   import('@backstage/plugin-scaffolder-backend-module-notifications'),
 );
 
-// Lab: roadiehq utils provides roadiehq:utils:fs:write and roadiehq:utils:merge
-// actions used by the lab-adapted DNS templates (zone, record, record-edit).
+// roadiehq utils provides roadiehq:utils:fs:write and roadiehq:utils:merge
+// actions used by the DNS scaffolder templates (zone, record, record-edit).
 backend.add(import('@roadiehq/scaffolder-backend-module-utils'));
 
 // techdocs plugin
