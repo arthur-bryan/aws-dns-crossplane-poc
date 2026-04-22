@@ -195,7 +195,7 @@ spec:
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
+          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
         targetPath: >-
           entities/environments/${{
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain']
@@ -203,7 +203,7 @@ spec:
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws
+          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
     - id: mergeChanges
       name: Merge edit into existing YAML
@@ -216,7 +216,7 @@ spec:
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
+          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
         content: |
           metadata:
             annotations:

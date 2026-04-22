@@ -139,7 +139,7 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/${{ parameters.zoneName }}/zone.yaml
         content: |
           ---
           apiVersion: dock.tech/v1
@@ -184,7 +184,7 @@ spec:
       name: Write Backstage Resource entity
       action: roadiehq:utils:fs:write
       input:
-        path: entities/catalog/zones/zone-${{ parameters.zoneName }}.yaml
+        path: entities/catalog/${{ parameters.environment }}/${{ parameters.zoneName }}/zone.yaml
         content: |
           ---
           apiVersion: backstage.io/v1alpha1
@@ -205,7 +205,7 @@ spec:
               dock.tech/aws-account-id: "${{ parameters.awsAccountId }}"
               dock.tech/aws-account-name: ${{ parameters.awsAccountName }}
               dock.tech/managed-by: scaffolder
-              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml"
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/${{ parameters.zoneName }}/zone.yaml"
             tags:
               - aws
               - dns
@@ -217,7 +217,7 @@ spec:
                 url: https://console.aws.amazon.com/route53/v2/hostedzones
                 icon: cloud
               - title: Delete zone (opens GitHub delete UI)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/${{ parameters.zoneName }}/zone.yaml
                 icon: delete
           spec:
             type: aws-dns-zone
