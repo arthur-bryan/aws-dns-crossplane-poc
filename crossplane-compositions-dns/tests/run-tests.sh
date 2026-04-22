@@ -83,6 +83,17 @@ assert_contains "$OUT" 'comment: Corporate website DNS zone' "comment propagated
 assert_contains "$OUT" '- Create' "managementPolicies includes Create"
 assert_contains "$OUT" '- Delete' "managementPolicies includes Delete"
 assert_not_contains "$OUT" 'imported: "true"' "not tagged as imported"
+assert_not_contains "$OUT" '^[[:space:]]+vpc:$' "public zone has no vpc block"
+
+echo
+echo "=== zone-private (two VPC associations) ==="
+OUT="$OUT_DIR/zone-private.out"
+render "$XRS_DIR/zone-private.yaml" "$ZONE_COMP" "$OUT"
+assert_contains "$OUT" '^[[:space:]]+vpc:$' "vpc block emitted"
+assert_contains "$OUT" 'vpcId: vpc-0123456789abcdef0' "first vpcId propagated"
+assert_contains "$OUT" 'vpcRegion: us-east-1' "first vpcRegion propagated"
+assert_contains "$OUT" 'vpcId: vpc-fedcba9876543210f' "second vpcId propagated"
+assert_contains "$OUT" 'visibility: private' "tag visibility=private set"
 
 echo
 echo "=== zone-import (arthurbryan.com) ==="
@@ -150,6 +161,26 @@ render "$XRS_DIR/record-import-weighted-a.yaml" "$RECORD_COMP" "$OUT"
 assert_contains "$OUT" 'crossplane\.io/external-name: Z1234567890ABC_api\.example\.com_A_green-deployment' \
   "import weighted external-name = zoneId_fqdn_type_setIdentifier"
 assert_contains "$OUT" 'setIdentifier: green-deployment' "setIdentifier preserved on import"
+
+echo
+echo "=== record-apex-alias (empty recordName) ==="
+OUT="$OUT_DIR/record-apex-alias.out"
+render "$XRS_DIR/record-apex-alias.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'kind: Record' "Record MR emitted for apex"
+assert_contains "$OUT" 'type: A' "ALIAS translated to A"
+assert_contains "$OUT" 'alias:' "alias block present"
+assert_contains "$OUT" 'zoneId: Z2FDTNDATAQYW2' "CloudFront hosted zone resolved"
+assert_contains "$OUT" 'name: ""$' "forProvider.name is empty for apex"
+assert_not_contains "$OUT" 'name: example\.com$' "forProvider.name is NOT the zone name"
+
+echo
+echo "=== record-apex-import-txt (double-underscore external-name) ==="
+OUT="$OUT_DIR/record-apex-import-txt.out"
+render "$XRS_DIR/record-apex-import-txt.yaml" "$RECORD_COMP" "$OUT"
+assert_contains "$OUT" 'crossplane\.io/external-name: Z1234567890ABC__TXT' \
+  "apex import external-name is zoneId__type (empty middle segment)"
+assert_contains "$OUT" 'name: ""$' "forProvider.name is empty for apex"
+assert_contains "$OUT" '- Observe' "import still observe+update"
 
 # ---------------------------------------------------------------------------
 # XRD validation tests — ensure CEL rules reject bad inputs.

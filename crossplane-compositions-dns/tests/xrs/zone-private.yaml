@@ -1,0 +1,24 @@
+---
+# Private hosted zone with two VPC associations.
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-internal.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: zone-internal.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+  zoneName: internal.example.com
+  comment: Internal-only zone for service discovery
+  visibility: private
+  vpcs:
+    - vpcId: vpc-0123456789abcdef0
+      vpcRegion: us-east-1
+    - vpcId: vpc-fedcba9876543210f
+      vpcRegion: us-west-2

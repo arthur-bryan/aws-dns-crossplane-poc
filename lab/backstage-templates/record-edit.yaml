@@ -26,7 +26,7 @@ spec:
       required:
         - system
         - environment
-        - zoneName
+        - zone
         - recordName
         - type
       properties:
@@ -43,19 +43,22 @@ spec:
           type: string
           enum: [dev, hml, prd]
           default: dev
-        zoneName:
-          title: Parent Zone
+        zone:
+          title: Parent Zone (immutable)
           type: string
-          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
-          description: Parent zone FQDN (no trailing dot, immutable)
-          ui:help: "Example: example.com"
+          description: Parent hosted zone; the record file is located via this reference.
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: Resource
+                spec.type: aws-dns-zone
         recordName:
           title: Record Name
           type: string
-          minLength: 1
+          minLength: 0
           maxLength: 253
-          description: Short record name (immutable)
-          ui:help: "Example: api-test → api-test.example.com"
+          description: Short record name (immutable). Leave empty for apex records.
+          ui:help: "Example: api-test → api-test.example.com. Leave empty for the zone's apex."
         type:
           title: Record Type
           type: string
@@ -155,6 +158,23 @@ spec:
       input:
         entityRef: ${{ parameters.system }}
 
+    - id: fetchZone
+      name: Fetch parent Zone entity
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.zone }}
+
+    # Matches the create template: resource key is recordName for subdomain
+    # records, apex-<type> for apex records.
+    - id: computeKey
+      name: Derive resource key
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          recordName: ${{ parameters.recordName }}
+          type: ${{ parameters.type }}
+        expression: 'recordName ? recordName : "apex-" & $lowercase(type)'
+
     - id: fetchExisting
       name: Download existing Record YAML
       action: fetch:plain
@@ -166,7 +186,7 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
         targetPath: >-
           entities/environments/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
@@ -187,7 +207,7 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
         content: |
           metadata:
             annotations:
@@ -214,15 +234,15 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-edit-${{ parameters.recordName }}-${{ parameters.zoneName }}-${{ parameters.environment }}
+        branchName: scaffolder/record-edit-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ parameters.environment }}
         targetBranchName: feature/ape-platform-alignment
-        title: "chore(dns): update record ${{ parameters.recordName }}.${{ parameters.zoneName }}"
+        title: "chore(dns): update ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else ('at apex of ' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) }}"
         description: |
           Scaffolder-generated edit to Record XR.
 
           System: ${{ parameters.system }}
           Environment: ${{ parameters.environment }}
-          Record: ${{ parameters.recordName }}.${{ parameters.zoneName }} (${{ parameters.type }})
+          Record: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else (steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] + ' (apex)') }} (${{ parameters.type }})
 
   output:
     links:

@@ -2,13 +2,13 @@
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: record-api.arthurbryan.com-api-primary
+  name: record-api-api-secondary.arthurbryan.com
   namespace: system-infrastructure-dev
-  title: api.arthurbryan.com (api-primary)
+  title: api.arthurbryan.com (api-secondary)
   description: "DNS A record api.arthurbryan.com (dev) — imported"
   annotations:
     dock.tech/xr-kind: Record
-    dock.tech/xr-name: record-api.arthurbryan.com-api-primary
+    dock.tech/xr-name: record-api-api-secondary.arthurbryan.com
     dock.tech/zone-name: arthurbryan.com
     dock.tech/zone-id: Z03010981ALJFZB4QLU8W
     dock.tech/record-name: api
@@ -21,9 +21,11 @@ metadata:
     dock.tech/managed-by: batch-import
     # Pencil icon in the entity header (top-right). Launches the
     # scaffolder form pre-filled with this record's identity.
-    backstage.io/edit-url: "http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2Finfrastructure%22%2C%22environment%22%3A%22dev%22%2C%22zoneName%22%3A%22arthurbryan.com%22%2C%22recordName%22%3A%22api%22%2C%22type%22%3A%22A%22%7D"
+    # The zone is passed as a Backstage entityRef (record-edit uses
+    # an EntityPicker, not a free-text zone name).
+    backstage.io/edit-url: "http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2Finfrastructure%22%2C%22environment%22%3A%22dev%22%2C%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22api%22%2C%22type%22%3A%22A%22%7D"
     # "View Source" icon in the header → raw XR YAML on GitHub.
-    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api.arthurbryan.com-api-primary.yaml"
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api-api-secondary.arthurbryan.com.yaml"
   tags:
     - aws
     - dns
@@ -37,7 +39,7 @@ metadata:
       url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z03010981ALJFZB4QLU8W
       icon: cloud
     - title: Delete record (opens GitHub delete UI)
-      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api.arthurbryan.com-api-primary.yaml
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api-api-secondary.arthurbryan.com.yaml
       icon: delete
 spec:
   type: aws-dns-record

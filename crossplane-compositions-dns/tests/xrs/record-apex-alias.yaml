@@ -1,0 +1,26 @@
+---
+# Apex ALIAS (zone-root A record pointing at a CloudFront distribution).
+# AWS Console equivalent: "Create record" with the Name field blank.
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-apex.example.com-A
+  namespace: system-infrastructure-dev
+spec:
+  name: record-apex.example.com-A
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: ""
+  type: ALIAS
+  aliasTarget:
+    serviceType: CloudFront
+    dnsName: d1234567890abcd.cloudfront.net
+    evaluateTargetHealth: false

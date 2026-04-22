@@ -52,6 +52,39 @@ spec:
           type: string
           maxLength: 256
           description: Optional comment for the zone
+        visibility:
+          title: Zone Type
+          type: string
+          enum: [public, private]
+          default: public
+          description: "Public: resolvable on the internet. Private: only resolvable from associated VPCs (requires VPC IDs below)."
+      dependencies:
+        visibility:
+          oneOf:
+            - properties:
+                visibility: { const: public }
+            - properties:
+                visibility: { const: private }
+                vpcs:
+                  title: Associated VPCs
+                  description: At least one VPC association is required for a private zone.
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [vpcId, vpcRegion]
+                    properties:
+                      vpcId:
+                        title: VPC ID
+                        type: string
+                        pattern: '^vpc-[a-f0-9]+$'
+                        description: "Example: vpc-0123456789abcdef0"
+                      vpcRegion:
+                        title: VPC Region
+                        type: string
+                        pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+                        default: us-east-1
+              required: [vpcs]
 
     - title: AWS Account
       required:
@@ -123,6 +156,14 @@ spec:
             zoneName: ${{ parameters.zoneName }}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
+            {%- endif %}
+            visibility: ${{ parameters.visibility | default('public') }}
+            {%- if parameters.visibility == 'private' and parameters.vpcs %}
+            vpcs:
+            {%- for vpc in parameters.vpcs %}
+              - vpcId: ${{ vpc.vpcId }}
+                vpcRegion: ${{ vpc.vpcRegion }}
+            {%- endfor %}
             {%- endif %}
             {%- if parameters.tags %}
             tags:
