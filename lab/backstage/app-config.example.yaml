@@ -11,10 +11,14 @@
 app:
   title: APE Backstage
   baseUrl: http://localhost:3000
+  listen:
+    host: 0.0.0.0   # Bind to all interfaces so LAN access works through Windows portproxy
+    port: 3000
 
 backend:
   baseUrl: http://localhost:7007
   listen:
+    host: 0.0.0.0
     port: 7007
 
 organization:
