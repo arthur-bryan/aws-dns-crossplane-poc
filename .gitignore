@@ -52,16 +52,20 @@ summary/
 !README.md
 !docs/ARCHITECTURE.md
 
-# Local lab — Backstage scaffolded app artifacts
-lab/backstage/node_modules/
-lab/backstage/.yarn/
-lab/backstage/packages/*/dist/
-lab/backstage/packages/*/dist-types/
-lab/backstage/plugins/*/dist/
-lab/backstage/plugins/*/dist-types/
-lab/backstage/dist-types/
-lab/backstage/.env
-lab/backstage/app-config.local.yaml
+# Local lab — Backstage scaffolded app artifacts.
+# The scaffolded app at lab/backstage/ape-lab/ has its own .gitignore that
+# covers node_modules / dist / .yarn / app-config.local.yaml. These entries
+# belong-and-braces it for any alternate app locations or older layouts.
+lab/backstage/*/node_modules/
+lab/backstage/*/.yarn/cache/
+lab/backstage/*/.yarn/install-state.gz
+lab/backstage/*/packages/*/dist/
+lab/backstage/*/packages/*/dist-types/
+lab/backstage/*/plugins/*/dist/
+lab/backstage/*/plugins/*/dist-types/
+lab/backstage/*/dist-types/
+lab/backstage/*/app-config.local.yaml
+lab/backstage/*/.env
 
 # AWS credentials (never commit)
 route53-credentials
