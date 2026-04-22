@@ -1,0 +1,27 @@
+---
+# Root App-of-Apps — applies every manifest under lab/argocd/apps/.
+# Deploy with: kubectl apply -f lab/argocd/root-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lab-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc
+    targetRevision: feature/ape-platform-alignment
+    path: lab/argocd/apps
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

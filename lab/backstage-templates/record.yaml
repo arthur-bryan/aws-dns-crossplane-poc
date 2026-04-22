@@ -1,0 +1,281 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aws-dns-record
+  title: AWS Route53 DNS Record (Lab)
+  description: Create an AWS Route53 DNS record — lab-adapted version of the production template
+  labels:
+    category: resources
+    visibility: "public"
+    ape: "true"
+    sre: "true"
+    techlead: "true"
+    developer: "true"
+  tags:
+    - resource
+    - aws
+    - dns
+    - route53
+    - lab
+spec:
+  owner: group:platform-team
+  type: resource
+
+  parameters:
+    - title: DNS Record Information
+      required:
+        - name
+        - system
+        - environment
+        - zoneName
+        - recordName
+        - type
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the DNS record resource (kebab-case)
+          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+          ui:autofocus: true
+        system:
+          title: System
+          type: string
+          description: System this record belongs to
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: System
+        environment:
+          title: Environment
+          type: string
+          enum: [dev, hml, poc, prd]
+          default: dev
+        zoneName:
+          title: Parent Zone (FQDN)
+          type: string
+          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+          description: The zone this record belongs to (must already exist)
+        recordName:
+          title: Record Name (FQDN)
+          type: string
+          minLength: 1
+          maxLength: 253
+          description: Fully qualified record name (e.g. www.example.com)
+        type:
+          title: Record Type
+          type: string
+          enum: [A, AAAA, CNAME, TXT, ALIAS]
+
+      dependencies:
+        type:
+          oneOf:
+            - properties:
+                type: { const: A }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: IPv4 Addresses
+                  type: array
+                  items: { type: string, pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}$' }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: AAAA }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: IPv6 Addresses
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: CNAME }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: Target Hostname
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+                  maxItems: 1
+              required: [values]
+            - properties:
+                type: { const: TXT }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: Text values
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: ALIAS }
+                serviceType:
+                  title: AWS Service Type
+                  type: string
+                  enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom]
+                dnsName:
+                  title: Target DNS Name
+                  type: string
+                evaluateTargetHealth:
+                  title: Evaluate Target Health
+                  type: boolean
+                  default: false
+              required: [serviceType, dnsName]
+              dependencies:
+                serviceType:
+                  oneOf:
+                    - properties:
+                        serviceType:
+                          enum: [CloudFront, GlobalAccelerator, S3Website, APIGateway, ALB, NLB]
+                    - properties:
+                        serviceType: { const: Custom }
+                        customZoneId:
+                          title: Custom Hosted Zone ID
+                          type: string
+                          pattern: '^Z[A-Z0-9]+$'
+                      required: [customZoneId]
+
+    - title: AWS Account
+      required: [awsAccountId, awsAccountName]
+      properties:
+        awsAccountId:
+          title: AWS Account ID
+          type: string
+          pattern: '^[0-9]{12}$'
+        awsAccountName:
+          title: AWS Account Name
+          type: string
+          default: dev-account
+        awsRegion:
+          title: AWS Region
+          type: string
+          default: us-east-1
+          pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+
+    - title: Weighted Routing (Optional)
+      description: Enable weighted routing to distribute traffic across records
+      properties:
+        enableWeightedRouting:
+          title: Enable Weighted Routing
+          type: boolean
+          default: false
+      dependencies:
+        enableWeightedRouting:
+          oneOf:
+            - properties:
+                enableWeightedRouting: { const: false }
+            - properties:
+                enableWeightedRouting: { const: true }
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                weight:
+                  title: Weight (0-255)
+                  type: integer
+                  minimum: 0
+                  maximum: 255
+                  default: 100
+              required: [setIdentifier, weight]
+
+  steps:
+    - id: fetchSystem
+      name: Fetch System entity
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.system }}
+
+    - id: writeXR
+      name: Write Record XR manifest
+      action: roadiehq:utils:fs:write
+      input:
+        path: >-
+          entities/environments/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.name }}.yaml
+        content: |
+          ---
+          apiVersion: dock.tech/v1
+          kind: Record
+          metadata:
+            name: ${{ parameters.name }}
+            namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
+            annotations:
+              dock.tech/scaffolder-parameters: ${{ parameters | dump }}
+          spec:
+            name: ${{ parameters.name }}
+            domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
+            subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
+            system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
+            environment: ${{ parameters.environment }}
+            aws:
+              account: ${{ parameters.awsAccountId }}
+              accountName: ${{ parameters.awsAccountName }}
+              region: ${{ parameters.awsRegion }}
+            zoneName: ${{ parameters.zoneName }}
+            recordName: ${{ parameters.recordName }}
+            type: ${{ parameters.type }}
+            {%- if parameters.type != 'ALIAS' %}
+            ttl: ${{ parameters.ttl }}
+            values:
+            {%- for v in parameters.values %}
+              - ${{ v }}
+            {%- endfor %}
+            {%- else %}
+            aliasTarget:
+              serviceType: ${{ parameters.serviceType }}
+              dnsName: ${{ parameters.dnsName }}
+              evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
+              {%- if parameters.serviceType == 'Custom' %}
+              hostedZoneId: ${{ parameters.customZoneId }}
+              {%- endif %}
+            {%- endif %}
+            {%- if parameters.enableWeightedRouting %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            weight: ${{ parameters.weight }}
+            {%- endif %}
+
+    - id: openPR
+      name: Open PR with new record manifest
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
+        branchName: scaffolder/record-${{ parameters.name }}-${{ parameters.environment }}
+        targetBranchName: feature/ape-platform-alignment
+        title: "feat(dns): create record ${{ parameters.recordName }}"
+        description: |
+          Scaffolder-generated Record XR.
+
+          System: ${{ parameters.system }}
+          Environment: ${{ parameters.environment }}
+          Zone: ${{ parameters.zoneName }}
+          Record: ${{ parameters.recordName }} (${{ parameters.type }})
+
+  output:
+    links:
+      - title: Pull Request
+        url: ${{ steps.openPR.output.remoteUrl }}

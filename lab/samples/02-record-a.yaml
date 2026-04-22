@@ -1,0 +1,24 @@
+---
+# A record using zoneName lookup (composition resolves zoneId).
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: www-example-com
+  namespace: system-corporate-site-dev
+spec:
+  name: www-example-com
+  domain: marketing
+  subdomain: websites
+  system: corporate-site
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneName: example.com
+  recordName: www.example.com
+  type: A
+  values:
+    - 192.0.2.1
+    - 192.0.2.2
+  ttl: 300

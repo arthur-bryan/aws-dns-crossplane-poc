@@ -1,0 +1,50 @@
+---
+# Blue/green weighted routing: two Records with same recordName but different
+# setIdentifier + weight. Route53 splits traffic 70/30.
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: api-example-com-blue
+  namespace: system-corporate-site-dev
+spec:
+  name: api-example-com-blue
+  domain: marketing
+  subdomain: websites
+  system: corporate-site
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneName: example.com
+  recordName: api.example.com
+  type: A
+  values:
+    - 192.0.2.10
+  ttl: 60
+  setIdentifier: blue-deployment
+  weight: 70
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: api-example-com-green
+  namespace: system-corporate-site-dev
+spec:
+  name: api-example-com-green
+  domain: marketing
+  subdomain: websites
+  system: corporate-site
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneName: example.com
+  recordName: api.example.com
+  type: A
+  values:
+    - 192.0.2.20
+  ttl: 60
+  setIdentifier: green-deployment
+  weight: 30

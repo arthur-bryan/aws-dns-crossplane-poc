@@ -51,3 +51,18 @@ summary/
 *.md
 !README.md
 !docs/ARCHITECTURE.md
+
+# Local lab — Backstage scaffolded app artifacts
+lab/backstage/node_modules/
+lab/backstage/.yarn/
+lab/backstage/packages/*/dist/
+lab/backstage/packages/*/dist-types/
+lab/backstage/plugins/*/dist/
+lab/backstage/plugins/*/dist-types/
+lab/backstage/dist-types/
+lab/backstage/.env
+lab/backstage/app-config.local.yaml
+
+# AWS credentials (never commit)
+route53-credentials
+aws-credentials

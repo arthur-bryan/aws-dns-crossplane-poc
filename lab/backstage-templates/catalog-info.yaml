@@ -1,0 +1,17 @@
+# Register the lab templates as Backstage Locations.
+# Wire in app-config.local.yaml:
+#   catalog.locations:
+#     - type: file
+#       target: ../../lab/backstage-templates/catalog-info.yaml
+#       rules: [{ allow: [Template, Location] }]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: lab-dns-templates
+  description: Lab-adapted DNS scaffolder templates (zone, record, record-edit)
+spec:
+  targets:
+    - ./zone.yaml
+    - ./record.yaml
+    - ./record-edit.yaml

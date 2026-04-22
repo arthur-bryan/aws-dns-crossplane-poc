@@ -1,0 +1,21 @@
+---
+# Direct-kubectl zone XR (bypasses Backstage — useful for bootstrap/smoke).
+# Applies with: kubectl apply -f lab/samples/01-zone-example-com.yaml
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: example-com
+  namespace: system-corporate-site-dev
+spec:
+  name: example-com
+  domain: marketing
+  subdomain: websites
+  system: corporate-site
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+  zoneName: example.com
+  comment: Lab test zone - safe to delete
+  tags:
+    managedBy: ape-lab

@@ -1,0 +1,25 @@
+---
+# ALIAS to a CloudFront distribution. hostedZoneId is resolved by the
+# composition from serviceType=CloudFront → Z2FDTNDATAQYW2 (global).
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: cdn-example-com
+  namespace: system-corporate-site-dev
+spec:
+  name: cdn-example-com
+  domain: marketing
+  subdomain: websites
+  system: corporate-site
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneName: example.com
+  recordName: cdn.example.com
+  type: ALIAS
+  aliasTarget:
+    serviceType: CloudFront
+    dnsName: d1234567890abcd.cloudfront.net
+    evaluateTargetHealth: false

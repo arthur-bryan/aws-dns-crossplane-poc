@@ -1,0 +1,226 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aws-dns-record-edit
+  title: Edit AWS Route53 DNS Record (Lab)
+  description: Edit an existing DNS record — lab-adapted version of the production record-edit template
+  labels:
+    category: resources
+    ape: "true"
+    sre: "true"
+    techlead: "true"
+    developer: "true"
+  tags:
+    - resource
+    - aws
+    - dns
+    - route53
+    - lab
+    - hidden
+spec:
+  owner: group:platform-team
+  type: resource
+
+  parameters:
+    - title: Target Record
+      description: Identifies which record YAML to edit. Immutable fields are disabled.
+      required:
+        - system
+        - environment
+        - name
+        - recordName
+        - type
+      properties:
+        system:
+          title: System
+          type: string
+          description: System this record belongs to (immutable)
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: System
+        environment:
+          title: Environment
+          type: string
+          enum: [dev, hml, poc, prd]
+        name:
+          title: Resource Name
+          type: string
+          description: The `metadata.name` of the existing Record (immutable)
+          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+        recordName:
+          title: Record Name (FQDN — immutable)
+          type: string
+          ui:disabled: true
+        type:
+          title: Record Type (immutable)
+          type: string
+          enum: [A, AAAA, CNAME, TXT, ALIAS]
+          ui:disabled: true
+
+      dependencies:
+        type:
+          oneOf:
+            - properties:
+                type: { const: A }
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: IPv4 Addresses
+                  type: array
+                  items: { type: string, pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}$' }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: AAAA }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                values:
+                  title: IPv6 Addresses
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: CNAME }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                values:
+                  title: Target Hostname
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+                  maxItems: 1
+              required: [values]
+            - properties:
+                type: { const: TXT }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                values:
+                  title: Text values
+                  type: array
+                  items: { type: string }
+                  minItems: 1
+              required: [values]
+            - properties:
+                type: { const: ALIAS }
+                serviceType:
+                  title: AWS Service Type (immutable)
+                  type: string
+                  enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom]
+                  ui:disabled: true
+                dnsName:
+                  title: Target DNS Name
+                  type: string
+                evaluateTargetHealth:
+                  title: Evaluate Target Health
+                  type: boolean
+                  default: false
+              required: [serviceType, dnsName]
+
+    - title: Weighted Routing (Optional)
+      properties:
+        enableWeightedRouting:
+          title: Enable Weighted Routing
+          type: boolean
+          default: false
+      dependencies:
+        enableWeightedRouting:
+          oneOf:
+            - properties:
+                enableWeightedRouting: { const: false }
+            - properties:
+                enableWeightedRouting: { const: true }
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                weight:
+                  title: Weight (0-255)
+                  type: integer
+                  minimum: 0
+                  maximum: 255
+              required: [setIdentifier, weight]
+
+  steps:
+    - id: fetchSystem
+      name: Fetch System entity
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.system }}
+
+    - id: fetchExisting
+      name: Download existing Record YAML
+      action: fetch:plain
+      input:
+        url: >-
+          https://github.com/arthur-bryan/aws-dns-crossplane-poc/raw/feature/ape-platform-alignment/entities/environments/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.name }}.yaml
+        targetPath: >-
+          entities/environments/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ parameters.environment }}/resources/aws
+
+    - id: mergeChanges
+      name: Merge edit into existing YAML
+      action: roadiehq:utils:merge
+      input:
+        path: >-
+          entities/environments/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+          }}/${{
+            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.name }}.yaml
+        content: |
+          metadata:
+            annotations:
+              dock.tech/scaffolder-parameters: ${{ parameters | dump }}
+          spec:
+            {%- if parameters.type != 'ALIAS' %}
+            ttl: ${{ parameters.ttl }}
+            values:
+            {%- for v in parameters.values %}
+              - ${{ v }}
+            {%- endfor %}
+            {%- else %}
+            aliasTarget:
+              dnsName: ${{ parameters.dnsName }}
+              evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
+            {%- endif %}
+            {%- if parameters.enableWeightedRouting %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            weight: ${{ parameters.weight }}
+            {%- endif %}
+
+    - id: openPR
+      name: Open PR with edited record
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
+        branchName: scaffolder/record-edit-${{ parameters.name }}-${{ parameters.environment }}
+        targetBranchName: feature/ape-platform-alignment
+        title: "chore(dns): update record ${{ parameters.recordName }}"
+        description: |
+          Scaffolder-generated edit to Record XR.
+
+          System: ${{ parameters.system }}
+          Environment: ${{ parameters.environment }}
+          Record: ${{ parameters.recordName }} (${{ parameters.type }})
+
+  output:
+    links:
+      - title: Pull Request
+        url: ${{ steps.openPR.output.remoteUrl }}
