@@ -138,7 +138,6 @@ cd lab/backstage/ape-lab && \
 
 1. Browse to `http://localhost:3000` → **Create...** → pick **AWS Route53 DNS Zone Template**.
 2. Fill the form:
-   - Name: a unique kebab-case id for the XR (e.g. `example-com`)
    - System: pick `infrastructure` from EntityPicker
    - Environment: `dev`
    - Zone Name: a real sub-domain you control (e.g. `test.arthurbryan.com`)
@@ -147,7 +146,8 @@ cd lab/backstage/ape-lab && \
 3. Submit → scaffolder runs → PR opened against this repo.
 
 **Verify:** the PR should contain one new file at
-`entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-example-com.yaml`.
+`entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-test.arthurbryan.com.yaml`,
+and the XR inside has `metadata.name: zone-test.arthurbryan.com`.
 
 ### 2. Merge the PR and watch Argo sync
 
@@ -160,8 +160,8 @@ kubectl -n argocd get applications entities -w
 
 # Zone XR should appear
 kubectl get zone.dock.tech -A
-# NAME         SYNCED  READY  COMPOSITION
-# example-com  True    True   zone
+# NAME                       SYNCED  READY  COMPOSITION
+# zone-test.arthurbryan.com  True    True   zone
 ```
 
 ### 3. Verify the Route53 zone exists
@@ -171,7 +171,7 @@ kubectl get zone.dock.tech -A
 aws route53 list-hosted-zones --query 'HostedZones[?Name==`test.arthurbryan.com.`]'
 
 # And nameservers pushed to XR status:
-kubectl get zone.dock.tech example-com \
+kubectl get zone.dock.tech zone-test.arthurbryan.com \
   -n system-infrastructure-dev \
   -o jsonpath='{.status.nameServers}' | jq .
 ```
@@ -180,45 +180,47 @@ kubectl get zone.dock.tech example-com \
 
 1. `http://localhost:3000` → **Create...** → **AWS Route53 DNS Record Template**.
 2. Fill the form:
-   - Name: `www-example-com`
    - System: `infrastructure`, Environment: `dev`
    - Parent Zone: `test.arthurbryan.com`
-   - Record Name: `www.test.arthurbryan.com`
+   - Record Name: `api-test` (short form — will become `api-test.test.arthurbryan.com`)
    - Type: `A` → Values: `[192.0.2.1]`, TTL: `300`
-3. Submit → merge the PR.
+3. Submit → merge the PR. File created at
+   `entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api-test.test.arthurbryan.com.yaml`.
 
 **Verify:**
 ```bash
 kubectl get record.dock.tech -A
-# NAME              SYNCED  READY  COMPOSITION
-# www-example-com   True    True   record
+# NAME                                 SYNCED  READY  COMPOSITION
+# record-api-test.test.arthurbryan.com  True    True   record
 
 # Two MRs created by the composition:
 kubectl get records.route53.aws.m.upbound.io -A   # A record
 kubectl get zones.route53.aws.m.upbound.io -A     # observe-only zone lookup
 
 # DNS resolves after ~TTL seconds
-dig +short www.test.arthurbryan.com @<one-of-your-nameservers>
+dig +short api-test.test.arthurbryan.com @<one-of-your-nameservers>
 ```
 
 ### 5. Edit a record via record-edit template
 
 1. Backstage → **Create...** → **Edit AWS Route53 DNS Record** (filtered under tag `hidden`).
-2. Fill the same identity fields (disabled in the form where they are immutable):
-   - Name: `www-example-com`, System: `infrastructure`, Environment: `dev`
-   - Type: `A` (immutable), Record Name: `www.test.arthurbryan.com` (immutable)
+2. Fill the identity fields (immutable in the XR, but required by the form to locate the file):
+   - System: `infrastructure`, Environment: `dev`
+   - Parent Zone: `test.arthurbryan.com`
+   - Record Name: `api-test`
+   - Type: `A`
    - Values: `[192.0.2.5, 192.0.2.6]` (new), TTL: `60`
 3. Submit → PR #2 opened → merge.
 
 **Verify:**
 ```bash
-kubectl get record.route53.aws.m.upbound.io www-example-com \
+kubectl get record.route53.aws.m.upbound.io record-api-test.test.arthurbryan.com \
   -n system-infrastructure-dev \
   -o jsonpath='{.spec.forProvider.records}'
 # ["192.0.2.5","192.0.2.6"]
 
 # TTL reflected:
-kubectl get record.route53.aws.m.upbound.io www-example-com \
+kubectl get record.route53.aws.m.upbound.io record-api-test.test.arthurbryan.com \
   -n system-infrastructure-dev \
   -o jsonpath='{.spec.forProvider.ttl}'
 # 60
@@ -230,7 +232,8 @@ Deletion is a git operation — never `kubectl delete` the XR directly.
 
 ```bash
 git checkout -b chore/remove-dns-smoke-test
-git rm entities/environments/cross/cloud/infrastructure/dev/resources/aws/{zone-example-com,record-www-example-com}.yaml
+git rm entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api-test.test.arthurbryan.com.yaml
+git rm entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-test.arthurbryan.com.yaml
 git commit -m "chore(dns): remove DNS smoke test resources"
 gh pr create -f
 gh pr merge --squash --delete-branch

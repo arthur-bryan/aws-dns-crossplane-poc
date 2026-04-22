@@ -22,18 +22,18 @@ spec:
 
   parameters:
     - title: Target Record
-      description: Identifies which record YAML to edit. Immutable fields are disabled.
+      description: Identifies which record XR to edit. Immutable fields are disabled once the edit form opens.
       required:
         - system
         - environment
-        - name
+        - zoneName
         - recordName
         - type
       properties:
         system:
           title: System
           type: string
-          description: System this record belongs to (immutable)
+          description: System that owns the record
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -41,21 +41,26 @@ spec:
         environment:
           title: Environment
           type: string
-          enum: [dev, hml, poc, prd]
-        name:
-          title: Resource Name
+          enum: [dev, hml, prd]
+          default: dev
+        zoneName:
+          title: Parent Zone
           type: string
-          description: The `metadata.name` of the existing Record (immutable)
-          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+          description: Parent zone FQDN (no trailing dot, immutable)
+          ui:help: "Example: example.com"
         recordName:
-          title: Record Name (FQDN — immutable)
+          title: Record Name
           type: string
-          ui:disabled: true
+          minLength: 1
+          maxLength: 253
+          description: Short record name (immutable)
+          ui:help: "Example: api-test → api-test.example.com"
         type:
-          title: Record Type (immutable)
+          title: Record Type
           type: string
+          description: Record type (immutable)
           enum: [A, AAAA, CNAME, TXT, ALIAS]
-          ui:disabled: true
 
       dependencies:
         type:
@@ -105,10 +110,10 @@ spec:
             - properties:
                 type: { const: ALIAS }
                 serviceType:
-                  title: AWS Service Type (immutable)
+                  title: AWS Service Type
                   type: string
+                  description: Immutable — matches the existing record's service type
                   enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom]
-                  ui:disabled: true
                 dnsName:
                   title: Target DNS Name
                   type: string
@@ -161,7 +166,7 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.name }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
         targetPath: >-
           entities/environments/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
@@ -182,7 +187,7 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.name }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
         content: |
           metadata:
             annotations:
@@ -209,15 +214,15 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-edit-${{ parameters.name }}-${{ parameters.environment }}
+        branchName: scaffolder/record-edit-${{ parameters.recordName }}-${{ parameters.zoneName }}-${{ parameters.environment }}
         targetBranchName: feature/ape-platform-alignment
-        title: "chore(dns): update record ${{ parameters.recordName }}"
+        title: "chore(dns): update record ${{ parameters.recordName }}.${{ parameters.zoneName }}"
         description: |
           Scaffolder-generated edit to Record XR.
 
           System: ${{ parameters.system }}
           Environment: ${{ parameters.environment }}
-          Record: ${{ parameters.recordName }} (${{ parameters.type }})
+          Record: ${{ parameters.recordName }}.${{ parameters.zoneName }} (${{ parameters.type }})
 
   output:
     links:

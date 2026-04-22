@@ -2,13 +2,15 @@
 # REFERENCE ONLY — showing XR shape produced by the scaffolder.
 # Do NOT `kubectl apply` this directly. All Zone/Record lifecycle must flow
 # through the Backstage scaffolder -> PR -> ArgoCD path.
+#
+# metadata.name / spec.name convention: zone-{zoneName}
 apiVersion: dock.tech/v1
 kind: Zone
 metadata:
-  name: example-com
+  name: zone-example.com
   namespace: system-infrastructure-dev
 spec:
-  name: example-com
+  name: zone-example.com
   domain: cross
   subdomain: cloud
   system: infrastructure

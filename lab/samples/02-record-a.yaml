@@ -3,15 +3,15 @@
 # Do NOT `kubectl apply` this directly. All Zone/Record lifecycle must flow
 # through the Backstage scaffolder -> PR -> ArgoCD path.
 #
-# A record using zoneName lookup (composition resolves zoneId via an
-# observe-only Zone MR).
+# metadata.name / spec.name convention: record-{recordName}.{zoneName}
+# FQDN resolved by the composition: {recordName}.{zoneName}
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: www-example-com
+  name: record-www.example.com
   namespace: system-infrastructure-dev
 spec:
-  name: www-example-com
+  name: record-www.example.com
   domain: cross
   subdomain: cloud
   system: infrastructure
@@ -21,7 +21,7 @@ spec:
     accountName: dev-account
     region: us-east-1
   zoneName: example.com
-  recordName: www.example.com
+  recordName: www
   type: A
   values:
     - 192.0.2.1

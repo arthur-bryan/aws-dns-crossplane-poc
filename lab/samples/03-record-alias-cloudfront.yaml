@@ -8,10 +8,10 @@
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: cdn-example-com
+  name: record-cdn.example.com
   namespace: system-infrastructure-dev
 spec:
-  name: cdn-example-com
+  name: record-cdn.example.com
   domain: cross
   subdomain: cloud
   system: infrastructure
@@ -21,7 +21,7 @@ spec:
     accountName: dev-account
     region: us-east-1
   zoneName: example.com
-  recordName: cdn.example.com
+  recordName: cdn
   type: ALIAS
   aliasTarget:
     serviceType: CloudFront
