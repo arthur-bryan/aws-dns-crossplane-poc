@@ -49,13 +49,10 @@ catalog:
         - allow: [Location, Template]
 
     # 3. Zone + Record Resource entities produced by the scaffolder (and by the
-    #    batch import tool). Glob discovers every zone/record as it's merged.
+    #    batch import tool). Grouped by env/zone: entities/catalog/<env>/<zone>/*.yaml.
+    #    Double-glob picks up every zone folder without needing one entry per env.
     - type: file
-      target: ../../../../../entities/catalog/zones/*.yaml
-      rules:
-        - allow: [Resource]
-    - type: file
-      target: ../../../../../entities/catalog/records/*.yaml
+      target: ../../../../../entities/catalog/**/*.yaml
       rules:
         - allow: [Resource]
 

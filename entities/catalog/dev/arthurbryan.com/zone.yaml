@@ -19,7 +19,7 @@ metadata:
     dock.tech/aws-account-name: dev-account
     dock.tech/managed-by: batch-import
     # "View Source" icon in the header → raw XR YAML on GitHub.
-    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-arthurbryan.com.yaml"
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/arthurbryan.com/zone.yaml"
   tags:
     - aws
     - dns
@@ -32,7 +32,7 @@ metadata:
       url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z03010981ALJFZB4QLU8W
       icon: cloud
     - title: Delete zone (opens GitHub delete UI)
-      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-arthurbryan.com.yaml
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/arthurbryan.com/zone.yaml
       icon: delete
 spec:
   type: aws-dns-zone

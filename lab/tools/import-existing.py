@@ -43,9 +43,12 @@ DEFAULTS = {
 SUPPORTED_POLICIES: set[str] = {"Simple", "Weighted"}
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-ENV_DIR_TMPL = "entities/environments/{domain}/{subdomain}/{system}/{environment}/resources/aws"
-CATALOG_ZONES_DIR = REPO_ROOT / "entities" / "catalog" / "zones"
-CATALOG_RECORDS_DIR = REPO_ROOT / "entities" / "catalog" / "records"
+# Env-first, then per-zone grouping: one folder per hosted zone holds its Zone XR
+# (zone.yaml) plus all record XRs. Filenames inside the folder drop the
+# .<zoneName> suffix since the folder already identifies the zone.
+ENV_DIR_TMPL = "entities/environments/{domain}/{subdomain}/{system}/{environment}/resources/aws/{zone_name}"
+# Catalog entities mirror the env/zone grouping.
+CATALOG_DIR_TMPL = "entities/catalog/{environment}/{zone_name}"
 
 REPO_URL = "https://github.com/arthur-bryan/aws-dns-crossplane-poc"
 REPO_BRANCH = "feature/ape-platform-alignment"
@@ -408,10 +411,8 @@ def main() -> int:
         "aws_account_name": args.aws_account_name,
         "aws_region": args.aws_region,
     }
-    env_dir = REPO_ROOT / ENV_DIR_TMPL.format(**ctx)
-
     print(f"AWS Account : {ctx['aws_account_id']} ({ctx['aws_account_name']})")
-    print(f"Target path : entities/environments/{ctx['domain']}/{ctx['subdomain']}/{ctx['system']}/{ctx['environment']}/resources/aws/")
+    print(f"Target path : entities/environments/{ctx['domain']}/{ctx['subdomain']}/{ctx['system']}/{ctx['environment']}/resources/aws/<zone>/")
     print(f"Mode        : {'WRITE' if args.write else 'DRY-RUN (use --write to apply)'}")
     print()
 
@@ -429,11 +430,15 @@ def main() -> int:
         zone_id = zone["Id"].split("/")[-1]
         print(f"\n=== Zone: {zone_name} ({zone_id}, {zone['ResourceRecordSetCount']} records) ===")
 
-        # Zone XR + catalog entity
-        zone_xr_path = env_dir / f"zone-{zone_name}.yaml"
+        zone_ctx = {**ctx, "zone_name": zone_name}
+        env_zone_dir = REPO_ROOT / ENV_DIR_TMPL.format(**zone_ctx)
+        catalog_zone_dir = REPO_ROOT / CATALOG_DIR_TMPL.format(**zone_ctx)
+
+        # Zone XR + catalog entity (folder name = zone, filename = zone.yaml)
+        zone_xr_path = env_zone_dir / "zone.yaml"
         zone_xr_rel = str(zone_xr_path.relative_to(REPO_ROOT))
         writer.handle(zone_xr_path, zone_xr_yaml(ctx, zone_name, zone_id), "zone XR")
-        writer.handle(CATALOG_ZONES_DIR / f"zone-{zone_name}.yaml",
+        writer.handle(catalog_zone_dir / "zone.yaml",
                       zone_catalog_yaml(ctx, zone_name, zone_id, zone_xr_rel),
                       "zone catalog entity")
 
@@ -453,12 +458,14 @@ def main() -> int:
             # Weighted records share recordName — disambiguate by setIdentifier.
             if rec.get("set_identifier"):
                 key = f"{key}-{rec['set_identifier']}"
+            # metadata.name stays fully qualified (global cluster identifier).
             rec["xr_name"] = f"record-{key}.{rec['zone_name']}"
             rec["display_fqdn"] = display_fqdn
-            rec_xr_path = env_dir / f"{rec['xr_name']}.yaml"
+            # Filename drops the zone suffix (zone implied by folder).
+            rec_xr_path = env_zone_dir / f"record-{key}.yaml"
             rec_xr_rel = str(rec_xr_path.relative_to(REPO_ROOT))
             writer.handle(rec_xr_path, record_xr_yaml(ctx, rec), f"record XR [{rec['type']}]")
-            writer.handle(CATALOG_RECORDS_DIR / f"{rec['xr_name']}.yaml",
+            writer.handle(catalog_zone_dir / f"record-{key}.yaml",
                           record_catalog_yaml(ctx, rec, rec_xr_rel),
                           f"record catalog entity [{rec['type']}]")
 

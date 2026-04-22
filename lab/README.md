@@ -53,10 +53,17 @@ lab/
 
 entities/
 ├── catalog-info.yaml                # Backstage Domain/System/Environment seed
+├── catalog/
+│   └── <env>/<zoneName>/            # Backstage Resource entities (zone + records)
+│       ├── zone.yaml
+│       └── record-<key>.yaml
 └── environments/
-    └── cross/cloud/infrastructure/dev/
+    └── cross/cloud/infrastructure/<env>/
         ├── namespace.yaml
-        └── resources/aws/           # Zone/Record XRs land here from PRs
+        └── resources/aws/
+            └── <zoneName>/          # Zone + Record XRs, one file per resource
+                ├── zone.yaml
+                └── record-<key>.yaml
 ```
 
 ## Prerequisites
@@ -261,9 +268,9 @@ cd lab/backstage/ape-lab && \
    - AWS Account Name: `dev-account` (must match the ClusterProviderConfig)
 3. Submit → scaffolder runs → PR opened against this repo.
 
-**Verify:** the PR should contain one new file at
-`entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-test.arthurbryan.com.yaml`,
-and the XR inside has `metadata.name: zone-test.arthurbryan.com`.
+**Verify:** the PR should contain two new files:
+- `entities/environments/cross/cloud/infrastructure/dev/resources/aws/test.arthurbryan.com/zone.yaml` — the Zone XR (`metadata.name: zone-test.arthurbryan.com`)
+- `entities/catalog/dev/test.arthurbryan.com/zone.yaml` — the matching Backstage Resource entity
 
 ### 2. Merge the PR and watch Argo sync
 
@@ -300,8 +307,9 @@ kubectl get zone.dock.tech zone-test.arthurbryan.com \
    - Parent Zone: `test.arthurbryan.com`
    - Record Name: `api-test` (short form — will become `api-test.test.arthurbryan.com`)
    - Type: `A` → Values: `[192.0.2.1]`, TTL: `300`
-3. Submit → merge the PR. File created at
-   `entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api-test.test.arthurbryan.com.yaml`.
+3. Submit → merge the PR. Two new files, both grouped under the zone folder:
+   - `entities/environments/cross/cloud/infrastructure/dev/resources/aws/test.arthurbryan.com/record-api-test.yaml` — XR
+   - `entities/catalog/dev/test.arthurbryan.com/record-api-test.yaml` — catalog entity
 
 **Verify:**
 ```bash
@@ -348,8 +356,9 @@ Deletion is a git operation — never `kubectl delete` the XR directly.
 
 ```bash
 git checkout -b chore/remove-dns-smoke-test
-git rm entities/environments/cross/cloud/infrastructure/dev/resources/aws/record-api-test.test.arthurbryan.com.yaml
-git rm entities/environments/cross/cloud/infrastructure/dev/resources/aws/zone-test.arthurbryan.com.yaml
+# Remove the whole zone folder on both sides — catalog entity + all its records.
+git rm -r entities/environments/cross/cloud/infrastructure/dev/resources/aws/test.arthurbryan.com
+git rm -r entities/catalog/dev/test.arthurbryan.com
 git commit -m "chore(dns): remove DNS smoke test resources"
 gh pr create -f
 gh pr merge --squash --delete-branch
