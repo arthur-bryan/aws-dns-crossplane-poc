@@ -150,7 +150,7 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
         metadata:
           name: zone-{zone_name}
           namespace: system-{ctx['system']}-{ctx['environment']}
-          title: {zone_name}
+          title: "{zone_name} · {ctx['environment']}"
           description: "Route53 Hosted Zone {zone_name} ({ctx['environment']}) — imported"
           annotations:
             dock.tech/xr-kind: Zone
@@ -162,6 +162,7 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
             dock.tech/system: {ctx['system']}
             dock.tech/environment: {ctx['environment']}
             dock.tech/aws-account-id: "{ctx['aws_account_id']}"
+            dock.tech/aws-account-name: {ctx['aws_account_name']}
             dock.tech/managed-by: batch-import
             # "View Source" icon in the header → raw XR YAML on GitHub.
             backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
@@ -275,10 +276,10 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             dock.tech/environment: {ctx['environment']}
             dock.tech/managed-by: batch-import
             # Pencil icon in the entity header (top-right). Launches the
-            # scaffolder form pre-filled with this record's identity.
-            # The zone is passed as a Backstage entityRef (record-edit uses
-            # an EntityPicker, not a free-text zone name).
-            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22system%22%3A%22system%3Adefault%2F{ctx['system']}%22%2C%22environment%22%3A%22{ctx['environment']}%22%2C%22zone%22%3A%22resource%3Asystem-{ctx['system']}-{ctx['environment']}%2Fzone-{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D"
+            # scaffolder form pre-filled with this record's identity. Everything
+            # else (env/account/system) is derived from the picked zone, so the
+            # formData only carries the three truly record-scoped fields.
+            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-{ctx['system']}-{ctx['environment']}%2Fzone-{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D"
             # "View Source" icon in the header → raw XR YAML on GitHub.
             backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:

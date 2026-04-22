@@ -192,7 +192,7 @@ spec:
           metadata:
             name: zone-${{ parameters.zoneName }}
             namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
-            title: ${{ parameters.zoneName }}
+            title: "${{ parameters.zoneName }} · ${{ parameters.environment }}"
             description: "Route53 Hosted Zone ${{ parameters.zoneName }} (${{ parameters.environment }})"
             annotations:
               dock.tech/xr-kind: Zone
@@ -203,6 +203,7 @@ spec:
               dock.tech/system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
               dock.tech/environment: ${{ parameters.environment }}
               dock.tech/aws-account-id: "${{ parameters.awsAccountId }}"
+              dock.tech/aws-account-name: ${{ parameters.awsAccountName }}
               dock.tech/managed-by: scaffolder
               backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml"
             tags:

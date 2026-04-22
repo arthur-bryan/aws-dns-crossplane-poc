@@ -46,7 +46,6 @@ spec:
                   required:
                     - account
                     - accountName
-                    - region
                   properties:
                     account:
                       description: "AWS account ID (12 digits)"
@@ -58,9 +57,8 @@ spec:
                       type: string
                       minLength: 1
                     region:
-                      description: "AWS region"
+                      description: "AWS region — optional; used only as a fallback for ALIAS zone-ID lookup when aliasTarget.region is absent"
                       type: string
-                      default: us-east-2
                       pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
 
                 zoneId:

@@ -25,29 +25,14 @@ spec:
     - title: Target Record
       description: Identifies which record XR to edit. Immutable fields are disabled once the edit form opens.
       required:
-        - system
-        - environment
         - zone
         - recordName
         - type
       properties:
-        system:
-          title: System
-          type: string
-          description: System that owns the record
-          ui:field: EntityPicker
-          ui:options:
-            catalogFilter:
-              - kind: System
-        environment:
-          title: Environment
-          type: string
-          enum: [dev, hml, prd]
-          default: dev
         zone:
           title: Parent Zone (immutable)
           type: string
-          description: Parent hosted zone; the record file is located via this reference.
+          description: Parent hosted zone. Environment, AWS account, domain, subdomain, and system are all inherited from the zone.
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -181,12 +166,7 @@ spec:
     # (same constraint as the AWS Console).
 
   steps:
-    - id: fetchSystem
-      name: Fetch System entity
-      action: catalog:fetch
-      input:
-        entityRef: ${{ parameters.system }}
-
+    # Zone carries env/account/system context via annotations.
     - id: fetchZone
       name: Fetch parent Zone entity
       action: catalog:fetch
@@ -210,20 +190,20 @@ spec:
       input:
         url: >-
           https://github.com/arthur-bryan/aws-dns-crossplane-poc/raw/feature/ape-platform-alignment/entities/environments/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain']
           }}/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
         targetPath: >-
           entities/environments/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain']
           }}/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws
 
     - id: mergeChanges
       name: Merge edit into existing YAML
@@ -231,12 +211,12 @@ spec:
       input:
         path: >-
           entities/environments/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain']
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain']
           }}/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
-            steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
+            steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
+          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}.yaml
         content: |
           metadata:
             annotations:
@@ -260,14 +240,14 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-edit-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ parameters.environment }}
+        branchName: scaffolder/record-edit-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
         targetBranchName: feature/ape-platform-alignment
         title: "chore(dns): update ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else ('at apex of ' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) }}"
         description: |
           Scaffolder-generated edit to Record XR.
 
           System: ${{ parameters.system }}
-          Environment: ${{ parameters.environment }}
+          Environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
           Record: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else (steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] + ' (apex)') }} (${{ parameters.type }})
 
   output:
