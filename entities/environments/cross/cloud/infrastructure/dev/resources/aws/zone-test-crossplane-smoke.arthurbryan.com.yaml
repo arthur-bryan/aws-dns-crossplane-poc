@@ -1,0 +1,19 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-test-crossplane-smoke.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"source":"smoke-test","purpose":"verify end-to-end create path"}'
+spec:
+  name: zone-test-crossplane-smoke.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 597230762851
+    accountName: dev-account
+  zoneName: test-crossplane-smoke.arthurbryan.com
+  comment: "Smoke test zone — delete after verification"
