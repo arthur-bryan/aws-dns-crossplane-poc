@@ -37,6 +37,7 @@ spec:
             [[- $tags          := $params.tags ]]
             [[- $visibility    := default "public" $params.visibility ]]
             [[- $vpcs          := $params.vpcs ]]
+            [[- $deletionProtection := $params.deletionProtection ]]
             [[- $import        := $params.import ]]
             [[- $importing     := and $import $import.existing ]]
 
@@ -60,6 +61,10 @@ spec:
               name: [[ $name ]]
               namespace: [[ $namespace ]]
             spec:
+              [[- if $deletionProtection ]]
+              # Deletion protection — removing this XR leaves the AWS zone intact.
+              deletionPolicy: Orphan
+              [[- end ]]
               providerConfigRef:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig

@@ -52,6 +52,11 @@ spec:
           type: string
           maxLength: 256
           description: Optional comment for the zone
+        deletionProtection:
+          title: Deletion Protection
+          type: boolean
+          default: false
+          description: "When ON, removing this XR orphans the Route53 zone instead of deleting it. Strongly recommended for production zones."
         visibility:
           title: Zone Type
           type: string
@@ -156,6 +161,9 @@ spec:
             zoneName: ${{ parameters.zoneName }}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
+            {%- endif %}
+            {%- if parameters.deletionProtection %}
+            deletionProtection: true
             {%- endif %}
             visibility: ${{ parameters.visibility | default('public') }}
             {%- if parameters.visibility == 'private' and parameters.vpcs %}

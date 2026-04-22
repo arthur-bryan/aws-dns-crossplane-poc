@@ -216,7 +216,7 @@ spec:
                 serviceType:
                   title: AWS Service Type
                   type: string
-                  enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom]
+                  enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, ElasticBeanstalk, Custom]
                   description: "Route53 needs the hosted zone ID of the target. The platform resolves it from the service type + region — no need to look it up yourself."
                 dnsName:
                   title: Target DNS Name
@@ -238,7 +238,7 @@ spec:
                     # Regional services: user picks the region where the target resource lives.
                     - properties:
                         serviceType:
-                          enum: [ALB, NLB, S3Website, APIGateway]
+                          enum: [ALB, NLB, S3Website, APIGateway, ElasticBeanstalk]
                         targetRegion:
                           title: Target Region
                           type: string
@@ -285,7 +285,7 @@ spec:
         routingPolicy:
           title: Routing Policy
           type: string
-          enum: [simple, weighted, failover, latency, geolocation, multivalue]
+          enum: [simple, weighted, failover, latency, geolocation, geoproximity, multivalue]
           default: simple
       dependencies:
         routingPolicy:
@@ -355,6 +355,33 @@ spec:
                 geoSubdivision:
                   title: US state code (optional, only when country=US)
                   type: string
+              required: [setIdentifier]
+            - properties:
+                routingPolicy: { const: geoproximity }
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                geoproxAwsRegion:
+                  title: AWS Region near which to route (optional)
+                  type: string
+                  pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
+                  description: "For AWS-region-based routing; leave empty if using coordinates"
+                geoproxLatitude:
+                  title: Latitude (optional)
+                  type: string
+                  description: "For non-AWS resources; pair with longitude"
+                geoproxLongitude:
+                  title: Longitude (optional)
+                  type: string
+                geoproxBias:
+                  title: Bias (-90 to +90)
+                  type: integer
+                  minimum: -90
+                  maximum: 90
+                  default: 0
+                  description: "Negative shrinks, positive expands the match area"
               required: [setIdentifier]
             - properties:
                 routingPolicy: { const: multivalue }
@@ -472,6 +499,20 @@ spec:
               {%- endif %}
               {%- if parameters.geoSubdivision %}
               subdivision: ${{ parameters.geoSubdivision }}
+              {%- endif %}
+            {%- elif parameters.routingPolicy == 'geoproximity' %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            geoproximityRoutingPolicy:
+              {%- if parameters.geoproxAwsRegion %}
+              awsRegion: ${{ parameters.geoproxAwsRegion }}
+              {%- endif %}
+              {%- if parameters.geoproxLatitude and parameters.geoproxLongitude %}
+              coordinates:
+                latitude: "${{ parameters.geoproxLatitude }}"
+                longitude: "${{ parameters.geoproxLongitude }}"
+              {%- endif %}
+              {%- if parameters.geoproxBias %}
+              bias: ${{ parameters.geoproxBias }}
               {%- endif %}
             {%- elif parameters.routingPolicy == 'multivalue' %}
             setIdentifier: ${{ parameters.setIdentifier }}

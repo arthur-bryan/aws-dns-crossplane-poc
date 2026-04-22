@@ -164,7 +164,7 @@ spec:
                   title: AWS Service Type
                   type: string
                   description: Immutable — matches the existing record's service type
-                  enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom]
+                  enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, ElasticBeanstalk, Custom]
                 dnsName:
                   title: Target DNS Name
                   type: string
