@@ -220,7 +220,7 @@ spec:
         content: |
           metadata:
             annotations:
-              dock.tech/scaffolder-parameters: ${{ parameters | dump }}
+              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
           spec:
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
