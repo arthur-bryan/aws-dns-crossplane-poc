@@ -291,6 +291,8 @@ spec:
               dock.tech/system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
               dock.tech/environment: ${{ parameters.environment }}
               dock.tech/managed-by: scaffolder
+              backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=${{ {"system": parameters.system, "environment": parameters.environment, "zoneName": parameters.zoneName, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml"
             tags:
               - aws
               - dns
@@ -299,15 +301,9 @@ spec:
               - ${{ parameters.type | lower }}
               - ${{ parameters.environment }}
             links:
-              - title: Edit record
-                url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=${{ {"system": parameters.system, "environment": parameters.environment, "zoneName": parameters.zoneName, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
-                icon: edit
               - title: View in AWS Console
                 url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ parameters.zoneId }}
                 icon: cloud
-              - title: View XR file on GitHub
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
-                icon: github
               - title: Delete record (opens GitHub delete UI)
                 url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
                 icon: delete
