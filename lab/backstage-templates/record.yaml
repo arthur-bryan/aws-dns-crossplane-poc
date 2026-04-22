@@ -23,19 +23,12 @@ spec:
   parameters:
     - title: DNS Record Information
       required:
-        - name
         - system
         - environment
         - zoneName
         - recordName
         - type
       properties:
-        name:
-          title: Name
-          type: string
-          description: Unique name of the DNS record resource (kebab-case)
-          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
-          ui:autofocus: true
         system:
           title: System
           type: string
@@ -47,19 +40,22 @@ spec:
         environment:
           title: Environment
           type: string
-          enum: [dev, hml, poc, prd]
+          enum: [dev, hml, prd]
           default: dev
         zoneName:
-          title: Parent Zone (FQDN)
+          title: Parent Zone
           type: string
           pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
-          description: The zone this record belongs to (must already exist)
+          description: Existing hosted zone FQDN (no trailing dot)
+          ui:autofocus: true
+          ui:help: "Example: example.com"
         recordName:
-          title: Record Name (FQDN)
+          title: Record Name
           type: string
           minLength: 1
           maxLength: 253
-          description: Fully qualified record name (e.g. www.example.com)
+          description: Short name; joined with the parent zone to form the FQDN
+          ui:help: "Example: api-test → api-test.example.com"
         type:
           title: Record Type
           type: string
@@ -160,10 +156,12 @@ spec:
           title: AWS Account ID
           type: string
           pattern: '^[0-9]{12}$'
+          description: Target AWS account (12 digits)
         awsAccountName:
           title: AWS Account Name
           type: string
           default: dev-account
+          description: Must match a ClusterProviderConfig name
         awsRegion:
           title: AWS Region
           type: string
@@ -215,18 +213,18 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.name }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/record-${{ parameters.recordName }}.${{ parameters.zoneName }}.yaml
         content: |
           ---
           apiVersion: dock.tech/v1
           kind: Record
           metadata:
-            name: ${{ parameters.name }}
+            name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
             namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
             annotations:
               dock.tech/scaffolder-parameters: ${{ parameters | dump }}
           spec:
-            name: ${{ parameters.name }}
+            name: record-${{ parameters.recordName }}.${{ parameters.zoneName }}
             domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
             subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
             system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
@@ -263,16 +261,16 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-${{ parameters.name }}-${{ parameters.environment }}
+        branchName: scaffolder/record-${{ parameters.recordName }}-${{ parameters.zoneName }}-${{ parameters.environment }}
         targetBranchName: feature/ape-platform-alignment
-        title: "feat(dns): create record ${{ parameters.recordName }}"
+        title: "feat(dns): create record ${{ parameters.recordName }}.${{ parameters.zoneName }}"
         description: |
           Scaffolder-generated Record XR.
 
           System: ${{ parameters.system }}
           Environment: ${{ parameters.environment }}
           Zone: ${{ parameters.zoneName }}
-          Record: ${{ parameters.recordName }} (${{ parameters.type }})
+          Record: ${{ parameters.recordName }}.${{ parameters.zoneName }} (${{ parameters.type }})
 
   output:
     links:

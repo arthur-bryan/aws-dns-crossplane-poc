@@ -23,17 +23,10 @@ spec:
   parameters:
     - title: DNS Zone Information
       required:
-        - name
         - system
         - environment
         - zoneName
       properties:
-        name:
-          title: Name
-          type: string
-          description: Unique name of the DNS zone resource (kebab-case)
-          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
-          ui:autofocus: true
         system:
           title: System
           type: string
@@ -45,14 +38,15 @@ spec:
         environment:
           title: Environment
           type: string
-          enum: [dev, hml, poc, prd]
+          enum: [dev, hml, prd]
           default: dev
         zoneName:
           title: Zone Name
           type: string
-          description: FQDN without trailing dot (e.g. example.com)
           pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
-          ui:help: "Example: test.dev.dock.tech (no trailing dot)"
+          description: Fully qualified zone name (no trailing dot)
+          ui:autofocus: true
+          ui:help: "Example: example.com"
         comment:
           title: Comment
           type: string
@@ -107,18 +101,18 @@ spec:
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.name }}.yaml
+          }}/${{ parameters.environment }}/resources/aws/zone-${{ parameters.zoneName }}.yaml
         content: |
           ---
           apiVersion: dock.tech/v1
           kind: Zone
           metadata:
-            name: ${{ parameters.name }}
+            name: zone-${{ parameters.zoneName }}
             namespace: system-${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
             annotations:
               dock.tech/scaffolder-parameters: ${{ parameters | dump }}
           spec:
-            name: ${{ parameters.name }}
+            name: zone-${{ parameters.zoneName }}
             domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
             subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
             system: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/system'] }}
@@ -142,7 +136,7 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/zone-${{ parameters.name }}-${{ parameters.environment }}
+        branchName: scaffolder/zone-${{ parameters.zoneName }}-${{ parameters.environment }}
         targetBranchName: feature/ape-platform-alignment
         title: "feat(dns): create zone ${{ parameters.zoneName }}"
         description: |

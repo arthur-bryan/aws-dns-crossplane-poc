@@ -3,15 +3,19 @@
 # Do NOT `kubectl apply` this directly. All Zone/Record lifecycle must flow
 # through the Backstage scaffolder -> PR -> ArgoCD path.
 #
-# Blue/green weighted routing: two Records with the same recordName but
-# different setIdentifier + weight. Route53 splits traffic 70/30.
+# Blue/green weighted routing: two Records share recordName+zoneName (= same
+# FQDN) but have different setIdentifier + weight. Because the XR k8s object
+# name must still be unique per XR, the naming convention here appends the
+# setIdentifier suffix (the scaffolder template currently doesn't auto-handle
+# this; for a weighted pair you'd run the Record template twice and manually
+# differentiate the XR suffix via a follow-up commit).
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: api-example-com-blue
+  name: record-api.example.com-blue
   namespace: system-infrastructure-dev
 spec:
-  name: api-example-com-blue
+  name: record-api.example.com-blue
   domain: cross
   subdomain: cloud
   system: infrastructure
@@ -21,7 +25,7 @@ spec:
     accountName: dev-account
     region: us-east-1
   zoneName: example.com
-  recordName: api.example.com
+  recordName: api
   type: A
   values:
     - 192.0.2.10
@@ -32,10 +36,10 @@ spec:
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: api-example-com-green
+  name: record-api.example.com-green
   namespace: system-infrastructure-dev
 spec:
-  name: api-example-com-green
+  name: record-api.example.com-green
   domain: cross
   subdomain: cloud
   system: infrastructure
@@ -45,7 +49,7 @@ spec:
     accountName: dev-account
     region: us-east-1
   zoneName: example.com
-  recordName: api.example.com
+  recordName: api
   type: A
   values:
     - 192.0.2.20
