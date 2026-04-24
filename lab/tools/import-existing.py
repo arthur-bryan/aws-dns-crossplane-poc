@@ -249,6 +249,30 @@ def record_xr_yaml(ctx: dict, rec: dict) -> str:
     return "\n".join(parts)
 
 
+def record_scaffolder_parameters_json(ctx: dict, rec: dict) -> str:
+    """Synthesize the form-input JSON that the scaffolder would have produced
+    if this record had been created via Backstage — used by the edit template
+    to reconstruct the XR without re-reading it from GitHub."""
+    params: dict = {
+        "zone": f"resource:system-{ctx['system']}-{ctx['environment']}/zone-{rec['zone_name']}",
+        "recordName": rec["record_short"],
+        "type": rec["type"],
+    }
+    if rec["type"] == "ALIAS":
+        params["serviceType"] = "Custom"
+        params["dnsName"] = rec["alias_dns_name"]
+        params["evaluateTargetHealth"] = bool(rec["alias_eval_target_health"])
+        params["customZoneId"] = rec["alias_zone_id"]
+    else:
+        params["ttl"] = rec["ttl"]
+        params["values"] = rec["values"]
+    params["routingPolicy"] = "weighted" if rec.get("set_identifier") else "simple"
+    if rec.get("set_identifier"):
+        params["setIdentifier"] = rec["set_identifier"]
+        params["weight"] = rec["weight"]
+    return json.dumps(params, separators=(",", ":"))
+
+
 def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
     fqdn = rec["display_fqdn"]
     apex_suffix = " (apex)" if not rec["record_short"] else ""
@@ -256,6 +280,7 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
     if not rec["record_short"]:
         tags.append("apex")
     title = fqdn + apex_suffix + (f" ({rec['set_identifier']})" if rec.get("set_identifier") else "")
+    scaffolder_params = record_scaffolder_parameters_json(ctx, rec)
     return dedent(f"""\
         ---
         apiVersion: backstage.io/v1alpha1
@@ -278,6 +303,9 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             dock.tech/system: {ctx['system']}
             dock.tech/environment: {ctx['environment']}
             dock.tech/managed-by: batch-import
+            # Read by the edit template to reconstruct the XR without a
+            # GitHub round-trip (which breaks on slashed branches).
+            dock.tech/scaffolder-parameters: '{scaffolder_params}'
             # Pencil icon in the entity header (top-right). Launches the
             # scaffolder form pre-filled with this record's identity. Everything
             # else (env/account/system) is derived from the picked zone, so the

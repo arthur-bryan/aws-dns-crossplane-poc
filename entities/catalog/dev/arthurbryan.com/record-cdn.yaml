@@ -19,6 +19,7 @@ metadata:
     dock.tech/system: infrastructure
     dock.tech/environment: dev
     dock.tech/managed-by: batch-import
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"cdn","type":"ALIAS","serviceType":"Custom","dnsName":"d111111abcdef8.cloudfront.net","evaluateTargetHealth":false,"customZoneId":"Z2FDTNDATAQYW2","routingPolicy":"simple"}'
     # Pencil icon in the entity header (top-right). Launches the
     # scaffolder form pre-filled with this record's identity. Everything
     # else (env/account/system) is derived from the picked zone, so the
