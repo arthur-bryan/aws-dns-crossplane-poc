@@ -6,12 +6,8 @@ metadata:
   description: A template for creating an AWS Route53 DNS record
   labels:
     category: resources
-    visibility: "public"
-    ape: "true"
-    sre: "true"
-    techlead: "true"
-    developer: "false"
   tags:
+    - public
     - resource
     - aws
     - dns

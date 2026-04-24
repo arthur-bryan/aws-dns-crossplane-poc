@@ -47,18 +47,11 @@ spec:
             [[- $zoneId    := $params.zoneId ]]
             [[- $zoneName  := $params.zoneName ]]
 
-            # Route53 has no ALIAS type — it's A (or AAAA) with an alias block.
-            # Our XRD uses ALIAS as a pseudo-type for UX; translate for the MR.
             [[- $mrType := $type ]]
             [[- if eq $type "ALIAS" ]]
             [[- $mrType = "A" ]]
             [[- end ]]
 
-            # Apex (zone root) records: recordName is empty. The Upbound provider
-            # expects forProvider.name="" for apex, and the Terraform import ID
-            # becomes {zoneId}__{type} (double underscore for the empty segment).
-            # $fqdn = FQDN that the provider stores (empty for apex, full name
-            # otherwise). $displayFqdn = human-readable form used for status.
             [[- $fqdn := "" ]]
             [[- $displayFqdn := $zoneName ]]
             [[- if $recordName ]]
@@ -79,8 +72,6 @@ spec:
             [[- $resolvedAliasZoneId := "" ]]
             [[- if and (eq $type "ALIAS") $aliasTarget ]]
             [[- $serviceType := $aliasTarget.serviceType ]]
-            # Region of the TARGET resource (ALB, NLB, etc.) — NOT the DNS account's
-            # region. Falls back to spec.aws.region for backward compatibility.
             [[- $region := default $params.aws.region $aliasTarget.region ]]
             [[- if eq $serviceType "CloudFront" ]]
             [[- $resolvedAliasZoneId = "Z2FDTNDATAQYW2" ]]
@@ -180,17 +171,10 @@ spec:
 
             ---
             [[- if $zoneId ]]
-            # On import the external-name must match Terraform's import ID:
-            #   {zoneId}_{fqdn}_{type}[_{setIdentifier}]  — precomputed above.
-            # On create we omit external-name entirely; the provider assigns
-            # it after the Route53 API call.
             apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: Record
             metadata:
               annotations:
-                # On import, external-name must be the Terraform import ID so
-                # the initial observe succeeds. On create we intentionally omit
-                # it — the provider generates the ID after create.
                 [[- if $importing ]]
                 crossplane.io/external-name: [[ $importExtName ]]
                 [[- end ]]
@@ -202,8 +186,6 @@ spec:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig
               [[- if $importing ]]
-              # Adopt — observe + allow updates; removing the XR does NOT
-              # delete the AWS record.
               managementPolicies:
                 - Observe
                 - Update
@@ -212,7 +194,6 @@ spec:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
               [[- end ]]
               forProvider:
-                # Quote to force empty string ("" instead of null) for apex records.
                 name: "[[ $fqdn ]]"
                 type: [[ $mrType ]]
                 zoneId: [[ $zoneId ]]

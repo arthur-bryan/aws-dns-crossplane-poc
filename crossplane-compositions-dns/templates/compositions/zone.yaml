@@ -48,12 +48,6 @@ spec:
             kind: Zone
             metadata:
               annotations:
-                # On import, external-name MUST be the AWS Zone ID (Z...) so the
-                # observe call succeeds. On create, we intentionally omit the
-                # annotation — the provider generates the Zone ID after create
-                # and sets external-name itself. Setting it to the zone name
-                # pre-create causes Route53 to reject observe with
-                # "resourceId too long" (zone IDs are ≤32 chars).
                 [[- if $importing ]]
                 crossplane.io/external-name: [[ $import.zoneId ]]
                 [[- end ]]
@@ -62,15 +56,12 @@ spec:
               namespace: [[ $namespace ]]
             spec:
               [[- if $deletionProtection ]]
-              # Deletion protection — removing this XR leaves the AWS zone intact.
               deletionPolicy: Orphan
               [[- end ]]
               providerConfigRef:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig
               [[- if $importing ]]
-              # Adopt existing zone — observe + allow updates to comment/tags;
-              # deletion of this XR does NOT delete the AWS zone.
               managementPolicies:
                 - Observe
                 - Update

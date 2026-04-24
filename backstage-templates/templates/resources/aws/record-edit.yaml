@@ -6,11 +6,8 @@ metadata:
   description: Edit an existing AWS Route53 DNS record
   labels:
     category: resources
-    ape: "true"
-    sre: "true"
-    techlead: "true"
-    developer: "false"
   tags:
+    - public
     - resource
     - aws
     - dns
