@@ -7,15 +7,12 @@ metadata:
   labels:
     category: resources
   tags:
-    - public
     - resource
     - aws
-    - dns
-    - route53
+    - public
     - hidden
 
 spec:
-  owner: group:dock-tech/infrastructure
   type: resource
 
   parameters:
