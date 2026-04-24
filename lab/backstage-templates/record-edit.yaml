@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record-edit
-  title: "⚠️ Edit AWS Route53 DNS Record — use the pencil icon on a record, not this form"
-  description: "DO NOT launch from /create. Open an existing Record entity in the catalog and click the pencil icon in the header — this template is auto-invoked with pre-filled identity fields. Opening it here means you have to retype everything."
+  title: Edit AWS Route53 DNS Record
+  description: Edit an existing AWS Route53 DNS record
   labels:
     category: resources
     ape: "true"
@@ -186,7 +186,7 @@ spec:
 
     - id: fetchExisting
       name: Download existing Record YAML
-      action: fetch:plain
+      action: fetch:plain:file
       input:
         url: >-
           https://github.com/arthur-bryan/aws-dns-crossplane-poc/raw/feature/ape-platform-alignment/entities/environments/${{
@@ -203,7 +203,7 @@ spec:
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
 
     - id: mergeChanges
       name: Merge edit into existing YAML
