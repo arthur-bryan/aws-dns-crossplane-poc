@@ -215,7 +215,7 @@ No PowerShell, firewall, or hosts-file work on the client PC — it just makes o
 
 ## Known limitations
 
-- **`Edit AWS Route53 DNS Record` appears in `/create`.** It shouldn't — edits are meant to be reached via the pencil icon on a record's catalog entity page, which pre-fills the form with the record's identity. Hiding tag-filtered templates from `/create` requires a `PageBlueprint` override in Backstage's new frontend system (~1h of TypeScript plugin work + tests). The template's title is prefixed with ⚠️ and its description strongly nudges users toward the pencil-icon flow. Track in [todo].
+- **`Edit AWS Route53 DNS Record` appears in `/create`.** It shouldn't — edits are meant to be reached via the pencil icon on a record's catalog entity page, which pre-fills the form with the record's identity. Hiding tag-filtered templates from `/create` requires a `PageBlueprint` override in Backstage's new frontend system (~1h of TypeScript plugin work + tests). The template carries the `hidden` / `internal` tags so a filtered Catalog/Create page is possible once that plugin work lands.
 
 ## Tearing down (destructive)
 
