@@ -18,7 +18,7 @@ metadata:
   annotations:
     dock.tech/domain: cross
 spec:
-  owner: group:infrastructure
+  owner: group:default/infrastructure
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Domain
@@ -29,7 +29,7 @@ metadata:
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
 spec:
-  owner: group:infrastructure
+  owner: group:default/infrastructure
   subdomainOf: cross
 ---
 apiVersion: backstage.io/v1alpha1
@@ -42,7 +42,7 @@ metadata:
     dock.tech/subdomain: cloud
     dock.tech/system: infrastructure
 spec:
-  owner: group:infrastructure
+  owner: group:default/infrastructure
   domain: cloud
 ---
 # Environment entity for dev. One per env the system runs in.
@@ -59,7 +59,7 @@ metadata:
     dock.tech/environment: dev
 spec:
   type: environment
-  owner: group:infrastructure
+  owner: group:default/infrastructure
   system: infrastructure
 ---
 apiVersion: backstage.io/v1alpha1

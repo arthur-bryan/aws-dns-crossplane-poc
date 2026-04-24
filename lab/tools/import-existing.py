@@ -185,7 +185,7 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
               icon: delete
         spec:
           type: aws-dns-zone
-          owner: group:infrastructure
+          owner: group:default/infrastructure
           system: {ctx['system']}
     """)
 
@@ -296,7 +296,7 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
               icon: delete
         spec:
           type: aws-dns-record
-          owner: group:infrastructure
+          owner: group:default/infrastructure
           system: {ctx['system']}
           dependsOn:
             - resource:default/zone-{rec['zone_name']}

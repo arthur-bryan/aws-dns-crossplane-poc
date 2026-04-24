@@ -18,7 +18,7 @@ metadata:
     - hidden
     - internal
 spec:
-  owner: group:infrastructure
+  owner: group:default/infrastructure
   type: resource
 
   parameters:

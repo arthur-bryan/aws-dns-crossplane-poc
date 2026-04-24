@@ -17,7 +17,7 @@ metadata:
     - dns
     - route53
 spec:
-  owner: group:infrastructure
+  owner: group:default/infrastructure
   type: resource
 
   parameters:
@@ -529,7 +529,7 @@ spec:
                 icon: delete
           spec:
             type: aws-dns-record
-            owner: group:infrastructure
+            owner: group:default/infrastructure
             system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
             dependsOn:
               - resource:default/zone-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}

@@ -43,7 +43,7 @@ metadata:
       icon: delete
 spec:
   type: aws-dns-record
-  owner: group:infrastructure
+  owner: group:default/infrastructure
   system: infrastructure
   dependsOn:
     - resource:default/zone-arthurbryan.com
