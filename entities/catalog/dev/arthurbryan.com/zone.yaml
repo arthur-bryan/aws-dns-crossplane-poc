@@ -18,7 +18,7 @@ metadata:
     dock.tech/aws-account-id: "597230762851"
     dock.tech/aws-account-name: dev-account
     dock.tech/managed-by: batch-import
-    # "View Source" icon in the header → raw XR YAML on GitHub.
+
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/arthurbryan.com/zone.yaml"
   tags:
     - aws

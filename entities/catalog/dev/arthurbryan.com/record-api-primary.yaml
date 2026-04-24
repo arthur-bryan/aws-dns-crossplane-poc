@@ -20,12 +20,8 @@ metadata:
     dock.tech/environment: dev
     dock.tech/managed-by: batch-import
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"api","type":"A","ttl":300,"values":["10.0.1.11"],"routingPolicy":"weighted","setIdentifier":"api-primary","weight":70}'
-    # Pencil icon in the entity header (top-right). Launches the
-    # scaffolder form pre-filled with this record's identity. Everything
-    # else (env/account/system) is derived from the picked zone, so the
-    # formData only carries the three truly record-scoped fields.
     backstage.io/edit-url: "http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22api%22%2C%22type%22%3A%22A%22%7D"
-    # "View Source" icon in the header → raw XR YAML on GitHub.
+
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/arthurbryan.com/record-api-primary.yaml"
   tags:
     - aws
