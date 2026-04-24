@@ -20,50 +20,50 @@ spec:
               type: object
               properties:
                 name:
-                  description: "Resource name"
+                  description: The record name.
                   type: string
                   minLength: 1
                 domain:
-                  description: "The parent domain (e.g., cross, saas, bass)"
+                  description: The record domain.
                   type: string
                   minLength: 1
                 subdomain:
-                  description: "The parent subdomain (e.g., cloud, payments, identity)"
+                  description: The record subdomain.
                   type: string
                   minLength: 1
                 system:
-                  description: "The parent system (e.g., ape, api-gateway, user-service)"
+                  description: The record system.
                   type: string
                   minLength: 1
                 environment:
-                  description: "Target environment"
+                  description: The record environment.
                   type: string
                   enum: [dev, hml, poc, prd]
 
                 aws:
-                  description: "AWS account metadata"
+                  description: AWS account metadata.
                   type: object
                   required:
                     - account
                     - accountName
                   properties:
                     account:
-                      description: "AWS account ID (12 digits)"
+                      description: AWS account ID.
                       type: number
                       minimum: 100000000000
                       maximum: 999999999999
                     accountName:
-                      description: "AWS account name (matches ClusterProviderConfig)"
+                      description: AWS account name.
                       type: string
                       minLength: 1
                     region:
-                      description: "AWS region — optional; used only as a fallback for ALIAS zone-ID lookup when aliasTarget.region is absent"
+                      description: AWS region.
                       type: string
                       pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
 
                 zoneId:
                   type: string
-                  description: "Route53 hosted zone ID (Z...)"
+                  description: Zone ID.
                   pattern: '^Z[A-Z0-9]+$'
                   x-kubernetes-validations:
                     - rule: "self == oldSelf"
@@ -71,7 +71,7 @@ spec:
 
                 zoneName:
                   type: string
-                  description: "DNS zone name (alternative to zoneId)"
+                  description: Zone name.
                   minLength: 4
                   maxLength: 253
                   x-kubernetes-validations:
@@ -80,7 +80,7 @@ spec:
 
                 recordName:
                   type: string
-                  description: "Record name (e.g., 'www', 'api.staging', or empty for apex / zone root)"
+                  description: Record name.
                   minLength: 0
                   maxLength: 253
                   x-kubernetes-validations:
@@ -89,7 +89,7 @@ spec:
 
                 type:
                   type: string
-                  description: "DNS record type"
+                  description: Record type.
                   enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
                   x-kubernetes-validations:
                     - rule: "self == oldSelf"
@@ -97,42 +97,42 @@ spec:
 
                 ttl:
                   type: integer
-                  description: "TTL in seconds (not used for ALIAS records)"
+                  description: TTL in seconds.
                   minimum: 60
                   maximum: 86400
                   default: 3600
 
                 values:
                   type: array
-                  description: "Record values (for A, AAAA, CNAME, TXT)"
+                  description: Record values.
                   items:
                     type: string
                   minItems: 1
 
                 aliasTarget:
                   type: object
-                  description: "ALIAS target (for ALIAS records only)"
+                  description: ALIAS target.
                   properties:
                     dnsName:
                       type: string
-                      description: "Target DNS name"
+                      description: Target DNS name.
                     serviceType:
                       type: string
-                      description: "AWS service type (auto-fills hostedZoneId)"
+                      description: Service type.
                       enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, ElasticBeanstalk, Custom]
                       x-kubernetes-validations:
                         - rule: "self == oldSelf"
                           message: "serviceType is immutable"
                     region:
                       type: string
-                      description: "Region of the TARGET resource (required for ALB/NLB/S3Website/APIGateway; ignored for CloudFront/GlobalAccelerator/Custom). In cross-account DNS patterns this is the region where the ALB/NLB lives, NOT the DNS account's region."
+                      description: Target region.
                       pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
                     hostedZoneId:
                       type: string
-                      description: "Target hosted zone ID (required only for Custom serviceType)"
+                      description: Target zone ID.
                     evaluateTargetHealth:
                       type: boolean
-                      description: "Evaluate target health"
+                      description: Evaluate health.
                       default: false
                   required:
                     - dnsName
@@ -143,19 +143,19 @@ spec:
                 # multiple records sharing the same name+type.
                 setIdentifier:
                   type: string
-                  description: "Unique identifier for routing policy records"
+                  description: Set identifier.
                   minLength: 1
                   maxLength: 128
 
                 weight:
                   type: integer
-                  description: "Traffic weight (0-255) for weighted routing"
+                  description: Weight.
                   minimum: 0
                   maximum: 255
 
                 failoverRoutingPolicy:
                   type: object
-                  description: "Failover routing (primary/secondary); requires healthCheckId on the PRIMARY record"
+                  description: Failover routing.
                   required: [type]
                   properties:
                     type:
@@ -164,7 +164,7 @@ spec:
 
                 latencyRoutingPolicy:
                   type: object
-                  description: "Latency-based routing; Route53 returns the answer from the region with the lowest latency to the client"
+                  description: Latency routing.
                   required: [region]
                   properties:
                     region:
@@ -173,7 +173,7 @@ spec:
 
                 geolocationRoutingPolicy:
                   type: object
-                  description: "Geolocation routing based on client's approximate location"
+                  description: Geolocation routing.
                   properties:
                     continent:
                       type: string
@@ -183,7 +183,7 @@ spec:
                       description: "ISO 3166-1 alpha-2 country code, or '*' for default"
                     subdivision:
                       type: string
-                      description: "US state code (only when country=US)"
+                      description: State code.
 
                 geoproximityRoutingPolicy:
                   type: object
@@ -207,21 +207,21 @@ spec:
                       type: integer
                       minimum: -90
                       maximum: 90
-                      description: "Shrink (-) or expand (+) the matching area; default 0"
+                      description: Bias.
 
                 multivalueAnswerRoutingPolicy:
                   type: boolean
                   default: false
-                  description: "Return multiple random answers (up to 8); requires setIdentifier"
+                  description: Multivalue routing.
 
                 healthCheckId:
                   type: string
-                  description: "Route53 health check ID; used with failover / multivalue routing"
+                  description: Health check ID.
                   pattern: '^[a-f0-9-]+$'
 
                 import:
                   type: object
-                  description: "Import an existing Route53 record instead of creating a new one"
+                  description: Import existing record.
                   properties:
                     existing:
                       type: boolean
@@ -268,7 +268,7 @@ spec:
               properties:
                 fqdn:
                   type: string
-                  description: "Fully qualified domain name of the record"
+                  description: Record FQDN.
                 recordId:
                   type: string
                   description: "Record identifier"
@@ -277,4 +277,4 @@ spec:
                   description: "Record is ready"
                 message:
                   type: string
-                  description: "Human-readable status message"
+                  description: Status message.

@@ -20,46 +20,46 @@ spec:
               type: object
               properties:
                 name:
-                  description: "Resource name"
+                  description: The zone name.
                   type: string
                   minLength: 1
                 domain:
-                  description: "The parent domain (e.g., cross, saas, bass)"
+                  description: The zone domain.
                   type: string
                   minLength: 1
                 subdomain:
-                  description: "The parent subdomain (e.g., cloud, payments, identity)"
+                  description: The zone subdomain.
                   type: string
                   minLength: 1
                 system:
-                  description: "The parent system (e.g., ape, api-gateway, user-service)"
+                  description: The zone system.
                   type: string
                   minLength: 1
                 environment:
-                  description: "Target environment"
+                  description: The zone environment.
                   type: string
                   enum: [dev, hml, poc, prd]
 
                 aws:
-                  description: "AWS account metadata"
+                  description: AWS account metadata.
                   type: object
                   required:
                     - account
                     - accountName
                   properties:
                     account:
-                      description: "AWS account ID (12 digits)"
+                      description: AWS account ID.
                       type: number
                       minimum: 100000000000
                       maximum: 999999999999
                     accountName:
-                      description: "AWS account name (matches ClusterProviderConfig)"
+                      description: AWS account name.
                       type: string
                       minLength: 1
 
                 zoneName:
                   type: string
-                  description: "DNS zone name (FQDN without trailing dot)"
+                  description: DNS zone name.
                   minLength: 4
                   maxLength: 253
                   pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
@@ -69,12 +69,12 @@ spec:
 
                 comment:
                   type: string
-                  description: "Optional comment for the zone"
+                  description: Zone comment.
                   maxLength: 256
 
                 tags:
                   type: object
-                  description: "Additional AWS tags (hierarchy tags added automatically)"
+                  description: Additional AWS tags.
                   additionalProperties:
                     type: string
 
@@ -82,7 +82,7 @@ spec:
                   type: string
                   enum: [public, private]
                   default: public
-                  description: "Public zone (default, internet-resolvable) or Private zone (VPC-only)"
+                  description: Zone visibility.
                   x-kubernetes-validations:
                     - rule: "self == oldSelf"
                       message: "visibility is immutable after creation"
@@ -90,11 +90,11 @@ spec:
                 deletionProtection:
                   type: boolean
                   default: false
-                  description: "When true, removing this XR orphans the Route53 zone in AWS instead of deleting it. Recommended for production zones to guard against accidental PR merges. Toggleable."
+                  description: Deletion protection.
 
                 vpcs:
                   type: array
-                  description: "VPC associations (required when visibility=private)"
+                  description: VPC associations.
                   items:
                     type: object
                     required: [vpcId, vpcRegion]
@@ -102,23 +102,23 @@ spec:
                       vpcId:
                         type: string
                         pattern: '^vpc-[a-f0-9]+$'
-                        description: "VPC ID, e.g. vpc-0123456789abcdef0"
+                        description: VPC ID.
                       vpcRegion:
                         type: string
                         pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
-                        description: "AWS region where the VPC lives, e.g. us-east-1"
+                        description: VPC region.
 
                 import:
                   type: object
-                  description: "Import an existing Route53 zone instead of creating a new one"
+                  description: Import existing zone.
                   properties:
                     existing:
                       type: boolean
                       default: false
-                      description: "True to adopt an existing AWS Route53 zone"
+                      description: Import existing zone.
                     zoneId:
                       type: string
-                      description: "AWS Route53 Zone ID (e.g. Z03010981ALJFZB4QLU8W). Required when existing=true."
+                      description: Zone ID.
                       pattern: '^Z[A-Z0-9]+$'
                   x-kubernetes-validations:
                     - rule: "!self.existing || has(self.zoneId)"
@@ -150,15 +150,15 @@ spec:
               properties:
                 zoneId:
                   type: string
-                  description: "Route53 hosted zone ID"
+                  description: Zone ID.
                 nameServers:
                   type: array
-                  description: "NS records for zone delegation"
+                  description: Name servers.
                   items:
                     type: string
                 ready:
                   type: boolean
-                  description: "Zone is ready for use"
+                  description: Zone ready.
                 message:
                   type: string
-                  description: "Human-readable status message"
+                  description: Status message.
