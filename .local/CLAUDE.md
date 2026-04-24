@@ -8,6 +8,20 @@
 
 ---
 
+## ⚠️ CRITICAL: Git Commit Policy
+
+**ALWAYS commit as the user (arthur-bryan), NEVER as Claude.**
+
+When making git commits in ANY repository (POC or APE repos):
+- ✅ Commit author: `arthur-bryan <arthurbryan2030@gmail.com>`
+- ❌ NO Claude attribution in commit messages
+- ❌ NO "🤖 Generated with Claude Code" footer
+- ❌ NO "Co-Authored-By: Claude <noreply@anthropic.com>" trailer
+
+**This is NON-NEGOTIABLE.** We cannot and will not have Claude as a contributor/committer in the git history.
+
+---
+
 ## 🎯 Project Overview
 
 This project provides Crossplane-based DNS management compositions aligned with APE platform standards, enabling developers to self-service Route53 zones and records through Backstage templates.

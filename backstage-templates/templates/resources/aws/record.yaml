@@ -7,14 +7,11 @@ metadata:
   labels:
     category: resources
   tags:
-    - public
     - resource
     - aws
-    - dns
-    - route53
+    - public
 
 spec:
-  owner: group:dock-tech/infrastructure
   type: resource
 
   parameters:
@@ -44,7 +41,7 @@ spec:
               - kind: System
 
         zone:
-          title: DNS Zone
+          title: Parent Zone
           type: string
           description: Select the DNS zone where this record will be created
           ui:field: EntityPicker
@@ -77,12 +74,11 @@ spec:
             - CNAME
             - TXT
             - ALIAS
-          enumNames:
-            - 'A (IPv4 address)'
-            - 'AAAA (IPv6 address)'
-            - 'CNAME (canonical name)'
-            - 'TXT (text record)'
-            - 'ALIAS (AWS alias)'
+            - MX
+            - SRV
+            - NS
+            - CAA
+            - PTR
 
       dependencies:
         type:
@@ -174,6 +170,120 @@ spec:
                     type: string
                   minItems: 1
                   ui:help: "Example: v=spf1 include:_spf.google.com ~all"
+              required:
+                - values
+
+            # MX Record
+            - properties:
+                type:
+                  const: MX
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: MX Records
+                  type: array
+                  description: Mail exchange records (format: "priority hostname")
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+\S+\s*$'
+                  minItems: 1
+                  ui:help: 'Example: "10 mail.example.com" (lower priority wins)'
+              required:
+                - values
+
+            # SRV Record
+            - properties:
+                type:
+                  const: SRV
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: SRV Records
+                  type: array
+                  description: Service records (format: "priority weight port target")
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$'
+                  minItems: 1
+                  ui:help: 'Example: "10 60 5060 sipserver.example.com"'
+              required:
+                - values
+
+            # NS Record
+            - properties:
+                type:
+                  const: NS
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 172800
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: Nameservers
+                  type: array
+                  description: Nameserver hostnames for subdomain delegation
+                  items:
+                    type: string
+                  minItems: 1
+                  ui:help: 'Example: ns1.example.com (for delegating subdomains)'
+              required:
+                - values
+
+            # CAA Record
+            - properties:
+                type:
+                  const: CAA
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: CAA Records
+                  type: array
+                  description: Certificate authority authorization (format: "flags tag value")
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$'
+                  minItems: 1
+                  ui:help: 'Example: 0 issue "letsencrypt.org" (restricts which CAs can issue certs)'
+              required:
+                - values
+
+            # PTR Record
+            - properties:
+                type:
+                  const: PTR
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
+                values:
+                  title: Target Hostname
+                  type: array
+                  description: Hostname for reverse DNS lookup
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 1
+                  ui:help: 'Example: server.example.com (for reverse DNS)'
               required:
                 - values
 
