@@ -18,7 +18,7 @@ metadata:
     - hidden
     - internal
 spec:
-  owner: group:application-platform-engineering
+  owner: group:infrastructure
   type: resource
 
   parameters:

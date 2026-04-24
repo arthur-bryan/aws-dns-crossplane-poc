@@ -15,7 +15,7 @@ metadata:
     - hidden
 
 spec:
-  owner: group:dock-tech/application-platform-engineering
+  owner: group:dock-tech/infrastructure
   type: resource
 
   parameters:
