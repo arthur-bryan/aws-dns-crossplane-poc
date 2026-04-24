@@ -160,21 +160,20 @@ spec:
               required: [serviceType, dnsName]
 
     # Routing policy fields (setIdentifier / weight / failover / latency /
-    # geolocation / multivalue / healthCheckId) intentionally NOT editable
-    # through this template. The merge preserves whatever the XR already had.
-    # To change a record's routing policy, you must delete + recreate it
-    # (same constraint as the AWS Console).
+    # geolocation / multivalue / healthCheckId) are NOT editable here — they
+    # are immutable in AWS Route53 without delete+recreate. The edit flow
+    # reads the record's original scaffolder-parameters from the catalog
+    # entity annotation and carries those fields through untouched.
 
   steps:
-    # Zone carries env/account/system context via annotations.
     - id: fetchZone
       name: Fetch parent Zone entity
       action: catalog:fetch
       input:
         entityRef: ${{ parameters.zone }}
 
-    # Matches the create template: resource key is recordName for subdomain
-    # records, apex-<type> for apex records.
+    # Resource key mirrors the create template: recordName for subdomain
+    # records, apex-<type-lower> for apex records.
     - id: computeKey
       name: Derive resource key
       action: roadiehq:utils:jsonata
@@ -184,30 +183,41 @@ spec:
           type: ${{ parameters.type }}
         expression: 'recordName ? recordName : "apex-" & $lowercase(type)'
 
-    - id: fetchExisting
-      name: Download existing Record YAML
-      action: fetch:plain:file
+    # Fetch the existing Record catalog entity instead of reading the XR
+    # from GitHub. Avoids the GithubUrlReader slashed-branch parse bug
+    # (ref "feature/ape-platform-alignment" gets truncated to "feature").
+    - id: fetchRecord
+      name: Fetch existing Record entity
+      action: catalog:fetch
       input:
-        url: >-
-          https://github.com/arthur-bryan/aws-dns-crossplane-poc/raw/feature/ape-platform-alignment/entities/environments/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain']
-          }}/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
-          }}/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
-        targetPath: >-
-          entities/environments/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain']
-          }}/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
-          }}/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
+        entityRef: resource:system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
-    - id: mergeChanges
-      name: Merge edit into existing YAML
-      action: roadiehq:utils:merge
+    # Parse the original form parameters stored on the catalog entity.
+    # The create template writes the whole user-submitted form as JSON under
+    # dock.tech/scaffolder-parameters — this gives us setIdentifier, weight,
+    # routingPolicy, and any other immutable-but-required fields without
+    # needing to touch GitHub.
+    - id: parseOriginal
+      name: Parse original form parameters
+      action: roadiehq:utils:jsonata:json:transform
+      input:
+        data: ${{ steps.fetchRecord.output.entity.metadata.annotations['dock.tech/scaffolder-parameters'] }}
+        expression: '$'
+
+    # Right side wins on conflicts: the user's edits override original for
+    # ttl/values/aliasTarget; everything else (routing policy fields) stays.
+    - id: mergeParams
+      name: Merge edits into original parameters
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          original: ${{ steps.parseOriginal.output.result }}
+          edits: ${{ parameters }}
+        expression: '$merge([original, edits])'
+
+    - id: writeXR
+      name: Write Record XR manifest
+      action: roadiehq:utils:fs:write
       input:
         path: >-
           entities/environments/${{
@@ -218,10 +228,27 @@ spec:
             steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
           }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
         content: |
+          ---
+          apiVersion: dock.tech/v1
+          kind: Record
           metadata:
+            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+            namespace: system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
             annotations:
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              dock.tech/scaffolder-parameters: '${{ steps.mergeParams.output.result | dump }}'
           spec:
+            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+            domain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}
+            subdomain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}
+            system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
+            environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
+            aws:
+              account: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-id'] | int }}
+              accountName: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
+            zoneId: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
+            zoneName: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+            recordName: ${{ parameters.recordName }}
+            type: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
             values:
@@ -230,10 +257,114 @@ spec:
             {%- endfor %}
             {%- else %}
             aliasTarget:
+              serviceType: ${{ parameters.serviceType }}
               dnsName: ${{ parameters.dnsName }}
               evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
+              {%- if steps.mergeParams.output.result.targetRegion %}
+              region: ${{ steps.mergeParams.output.result.targetRegion }}
+              {%- endif %}
+              {%- if parameters.serviceType == 'Custom' and steps.mergeParams.output.result.customZoneId %}
+              hostedZoneId: ${{ steps.mergeParams.output.result.customZoneId }}
+              {%- endif %}
             {%- endif %}
-            # Routing policy fields preserved via deep merge — not touched here.
+            {%- if steps.mergeParams.output.result.routingPolicy == 'weighted' %}
+            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
+            weight: ${{ steps.mergeParams.output.result.weight }}
+            {%- elif steps.mergeParams.output.result.routingPolicy == 'failover' %}
+            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
+            failoverRoutingPolicy:
+              type: ${{ steps.mergeParams.output.result.failoverType }}
+              {%- if steps.mergeParams.output.result.healthCheckId %}
+            healthCheckId: ${{ steps.mergeParams.output.result.healthCheckId }}
+              {%- endif %}
+            {%- elif steps.mergeParams.output.result.routingPolicy == 'latency' %}
+            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
+            latencyRoutingPolicy:
+              region: ${{ steps.mergeParams.output.result.latencyRegion }}
+            {%- elif steps.mergeParams.output.result.routingPolicy == 'geolocation' %}
+            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
+            geolocationRoutingPolicy:
+              {%- if steps.mergeParams.output.result.geoContinent %}
+              continent: ${{ steps.mergeParams.output.result.geoContinent }}
+              {%- endif %}
+              {%- if steps.mergeParams.output.result.geoCountry %}
+              country: ${{ steps.mergeParams.output.result.geoCountry }}
+              {%- endif %}
+              {%- if steps.mergeParams.output.result.geoSubdivision %}
+              subdivision: ${{ steps.mergeParams.output.result.geoSubdivision }}
+              {%- endif %}
+            {%- elif steps.mergeParams.output.result.routingPolicy == 'geoproximity' %}
+            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
+            geoproximityRoutingPolicy:
+              {%- if steps.mergeParams.output.result.geoproxAwsRegion %}
+              awsRegion: ${{ steps.mergeParams.output.result.geoproxAwsRegion }}
+              {%- endif %}
+              {%- if steps.mergeParams.output.result.geoproxLatitude and steps.mergeParams.output.result.geoproxLongitude %}
+              coordinates:
+                latitude: "${{ steps.mergeParams.output.result.geoproxLatitude }}"
+                longitude: "${{ steps.mergeParams.output.result.geoproxLongitude }}"
+              {%- endif %}
+              {%- if steps.mergeParams.output.result.geoproxBias %}
+              bias: ${{ steps.mergeParams.output.result.geoproxBias }}
+              {%- endif %}
+            {%- elif steps.mergeParams.output.result.routingPolicy == 'multivalue' %}
+            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
+            multivalueAnswerRoutingPolicy: true
+              {%- if steps.mergeParams.output.result.healthCheckId %}
+            healthCheckId: ${{ steps.mergeParams.output.result.healthCheckId }}
+              {%- endif %}
+            {%- endif %}
+
+    - id: writeCatalogEntity
+      name: Rewrite Backstage Resource entity
+      action: roadiehq:utils:fs:write
+      input:
+        path: entities/catalog/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
+        content: |
+          ---
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
+          metadata:
+            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+            namespace: system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
+            title: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+            description: "DNS ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }} (${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }})"
+            annotations:
+              dock.tech/xr-kind: Record
+              dock.tech/xr-name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+              dock.tech/zone-name: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+              dock.tech/zone-id: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
+              dock.tech/record-name: ${{ parameters.recordName }}
+              dock.tech/record-type: ${{ parameters.type }}
+              dock.tech/record-fqdn: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+              dock.tech/domain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}
+              dock.tech/subdomain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}
+              dock.tech/system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
+              dock.tech/environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
+              dock.tech/managed-by: scaffolder
+              dock.tech/scaffolder-parameters: '${{ steps.mergeParams.output.result | dump }}'
+              backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=${{ {"zone": parameters.zone, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml"
+            tags:
+              - aws
+              - dns
+              - route53
+              - record
+              - ${{ parameters.type | lower }}
+              - ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
+            links:
+              - title: View in AWS Console
+                url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
+                icon: cloud
+              - title: Delete record (opens GitHub delete UI)
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
+                icon: delete
+          spec:
+            type: aws-dns-record
+            owner: group:default/infrastructure
+            system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
+            dependsOn:
+              - resource:default/zone-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
     - id: openPR
       name: Open PR with edited record
@@ -246,7 +377,6 @@ spec:
         description: |
           Scaffolder-generated edit to Record XR.
 
-          System: ${{ parameters.system }}
           Environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
           Record: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else (steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] + ' (apex)') }} (${{ parameters.type }})
 
