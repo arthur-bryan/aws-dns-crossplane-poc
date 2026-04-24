@@ -36,5 +36,5 @@ metadata:
       icon: delete
 spec:
   type: aws-dns-zone
-  owner: group:application-platform-engineering
+  owner: group:infrastructure
   system: infrastructure

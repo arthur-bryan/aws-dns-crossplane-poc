@@ -18,7 +18,7 @@ metadata:
   annotations:
     dock.tech/domain: cross
 spec:
-  owner: group:application-platform-engineering
+  owner: group:infrastructure
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Domain
@@ -29,7 +29,7 @@ metadata:
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
 spec:
-  owner: group:application-platform-engineering
+  owner: group:infrastructure
   subdomainOf: cross
 ---
 apiVersion: backstage.io/v1alpha1
@@ -42,7 +42,7 @@ metadata:
     dock.tech/subdomain: cloud
     dock.tech/system: infrastructure
 spec:
-  owner: group:application-platform-engineering
+  owner: group:infrastructure
   domain: cloud
 ---
 # Environment entity for dev. One per env the system runs in.
@@ -59,14 +59,14 @@ metadata:
     dock.tech/environment: dev
 spec:
   type: environment
-  owner: group:application-platform-engineering
+  owner: group:infrastructure
   system: infrastructure
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Group
 metadata:
-  name: application-platform-engineering
-  description: APE — Application Platform Engineering
+  name: infrastructure
+  description: Infrastructure team — owns platform DNS, networking, and shared AWS resources
 spec:
   type: team
   children: []
