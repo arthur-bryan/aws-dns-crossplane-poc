@@ -27,22 +27,24 @@ spec:
           type: string
           description: Parent hosted zone. Environment, AWS account, domain, subdomain, and system are all inherited from the zone.
           ui:field: EntityPicker
+          ui:disabled: true
           ui:options:
             catalogFilter:
               - kind: Resource
                 spec.type: aws-dns-zone
         recordName:
-          title: Record Name
+          title: Record Name (immutable)
           type: string
           minLength: 0
           maxLength: 253
-          description: Short record name (immutable). Leave empty for apex records.
-          ui:help: "Example: api-test → api-test.example.com. Leave empty for the zone's apex."
+          description: Short record name. Cannot be changed after creation.
+          ui:disabled: true
         type:
-          title: Record Type
+          title: Record Type (immutable)
           type: string
-          description: Record type (immutable)
+          description: Cannot be changed after creation. Delete and recreate to change type.
           enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
+          ui:disabled: true
 
       dependencies:
         type:
