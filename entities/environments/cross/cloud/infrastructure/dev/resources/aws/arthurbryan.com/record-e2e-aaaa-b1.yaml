@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-aaaa-b1.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-aaaa-b1","type":"AAAA","ttl":300,"values":["2001:db8::100"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-aaaa-b1","type":"AAAA","ttl":600,"values":["2001:db8::101"],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-aaaa-b1.arthurbryan.com
   domain: cross
@@ -19,6 +19,6 @@ spec:
   zoneName: arthurbryan.com
   recordName: e2e-aaaa-b1
   type: AAAA
-  ttl: 300
+  ttl: 600
   values:
-    - 2001:db8::100
+    - 2001:db8::101
