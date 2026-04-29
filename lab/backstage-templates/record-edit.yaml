@@ -50,6 +50,25 @@ spec:
           type: string
           description: Disambiguates one variant of a routing-policy record set. Leave empty for simple records.
           ui:disabled: true
+        weight:
+          title: Weight (weighted records only, 0-255)
+          type: integer
+          minimum: 0
+          maximum: 255
+          description: Relative traffic weight in a weighted record set. Leave empty for non-weighted records.
+        failoverType:
+          title: Failover Role (failover records only)
+          type: string
+          enum: [PRIMARY, SECONDARY]
+          description: Leave empty for non-failover records.
+        healthCheckId:
+          title: Health Check ID (failover/multivalue records only)
+          type: string
+          description: Leave empty if not applicable.
+        latencyRegion:
+          title: Latency Region (latency records only)
+          type: string
+          description: Leave empty for non-latency records.
 
       dependencies:
         type:
