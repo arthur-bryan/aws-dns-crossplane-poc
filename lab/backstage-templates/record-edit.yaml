@@ -17,7 +17,7 @@ spec:
   parameters:
     - title: Target Record
       description: |
-        Edits this record in place. TTL and values are mutable. Zone, Record Name, and Type identify the record in Route53 and cannot be changed in-place — the AWS provider refuses replacement updates. To change any of those, submit a delete request for this record followed by a new-record request with the desired identity.
+        TTL and values can be edited in place. Type can also be edited; the platform handles it as a destroy-and-recreate at AWS (the old record is deleted and a fresh one is created with the new type — brief gap during the swap). Zone and Record Name are part of the Route53 record identity and cannot be changed: submit a delete request and a new-record request to change them.
       required:
         - zone
         - recordName
@@ -41,11 +41,10 @@ spec:
           description: Submit a delete + new record to rename.
           ui:disabled: true
         type:
-          title: Record Type (immutable)
+          title: Record Type
           type: string
-          description: Submit a delete + new record to change type.
+          description: Changing type triggers a destroy-and-recreate of the AWS record. Values below must match the new type's pattern (e.g. CNAME requires an FQDN, not an IPv4).
           enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
-          ui:disabled: true
 
       dependencies:
         type:
@@ -195,6 +194,14 @@ spec:
         path: .e2e/merged-params.json
         content: ${{ steps.fetchRecord.output.entity.metadata.annotations['dock.tech/scaffolder-parameters'] }}
 
+    - id: snapshotOriginal
+      name: Snapshot original parameters before merge
+      action: roadiehq:utils:jsonata:json:transform
+      input:
+        path: .e2e/merged-params.json
+        expression: '$'
+        as: object
+
     - id: applyEdits
       name: Merge user edits into original parameters
       action: roadiehq:utils:json:merge
@@ -231,6 +238,9 @@ spec:
             namespace: system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
             annotations:
               dock.tech/scaffolder-parameters: '${{ steps.mergeParams.output.result | dump }}'
+              {%- if steps.snapshotOriginal.output.result.type != parameters.type %}
+              argocd.argoproj.io/sync-options: Replace=true
+              {%- endif %}
           spec:
             name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
             domain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}
