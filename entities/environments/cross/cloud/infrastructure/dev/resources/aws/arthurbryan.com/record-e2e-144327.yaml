@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-144327.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '"{\"zone\":\"resource:system-infrastructure-dev/zone-arthurbryan.com\",\"recordName\":\"e2e-144327\",\"type\":\"A\",\"ttl\":600,\"values\":[\"192.0.2.20\"],\"routingPolicy\":\"simple\"}"'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-144327","type":"A","ttl":600,"values":["192.0.2.20"],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-144327.arthurbryan.com
   domain: cross
