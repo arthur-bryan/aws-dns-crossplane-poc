@@ -239,7 +239,7 @@ spec:
             annotations:
               dock.tech/scaffolder-parameters: '${{ steps.mergeParams.output.result | dump }}'
               {%- if steps.snapshotOriginal.output.result.type != parameters.type %}
-              argocd.argoproj.io/sync-options: Replace=true
+              argocd.argoproj.io/sync-options: Force=true,Replace=true
               {%- endif %}
           spec:
             name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}

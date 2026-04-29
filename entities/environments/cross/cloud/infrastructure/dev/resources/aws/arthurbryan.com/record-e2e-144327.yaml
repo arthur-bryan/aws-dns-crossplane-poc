@@ -6,7 +6,7 @@ metadata:
   namespace: system-infrastructure-dev
   annotations:
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-144327","type":"CNAME","ttl":300,"values":["e2etarget.example.com"],"routingPolicy":"simple"}'
-    argocd.argoproj.io/sync-options: Replace=true
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-e2e-144327.arthurbryan.com
   domain: cross
