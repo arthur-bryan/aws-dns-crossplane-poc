@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-144327.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-144327","type":"A","ttl":900,"values":["192.0.2.30"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-144327","type":"CNAME","ttl":7200,"values":["teste.arthurbryan.com"],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-144327.arthurbryan.com
   domain: cross
@@ -18,7 +18,7 @@ spec:
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
   recordName: e2e-144327
-  type: A
-  ttl: 900
+  type: CNAME
+  ttl: 7200
   values:
-    - 192.0.2.30
+    - teste.arthurbryan.com
