@@ -59,11 +59,11 @@ spec:
             [[- $displayFqdn = $fqdn ]]
             [[- end ]]
 
-            [[- $importExtName := "" ]]
-            [[- if $importing ]]
-            [[- $importExtName = printf "%s_%s_%s" $zoneId $fqdn $mrType ]]
+            [[- $externalName := "" ]]
+            [[- if $zoneId ]]
+            [[- $externalName = printf "%s_%s_%s" $zoneId $fqdn $mrType ]]
             [[- if $params.setIdentifier ]]
-            [[- $importExtName = printf "%s_%s" $importExtName $params.setIdentifier ]]
+            [[- $externalName = printf "%s_%s" $externalName $params.setIdentifier ]]
             [[- end ]]
             [[- end ]]
 
@@ -175,8 +175,8 @@ spec:
             kind: Record
             metadata:
               annotations:
-                [[- if $importing ]]
-                crossplane.io/external-name: [[ $importExtName ]]
+                [[- if $externalName ]]
+                crossplane.io/external-name: [[ $externalName ]]
                 [[- end ]]
                 [[ setResourceNameAnnotation $name ]]
               name: [[ $name ]]
