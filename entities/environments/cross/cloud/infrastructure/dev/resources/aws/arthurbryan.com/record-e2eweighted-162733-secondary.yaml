@@ -5,7 +5,7 @@ metadata:
   name: record-e2eweighted-162733-secondary.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2eweighted-162733","type":"A","ttl":300,"values":["10.0.1.20"],"routingPolicy":"weighted","setIdentifier":"secondary","weight":80}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2eweighted-162733","type":"A","ttl":300,"values":["10.0.1.40"],"routingPolicy":"weighted","setIdentifier":"secondary","weight":30}'
 spec:
   name: record-e2eweighted-162733-secondary.arthurbryan.com
   domain: cross
@@ -21,6 +21,6 @@ spec:
   type: A
   ttl: 300
   values:
-    - 10.0.1.20
+    - 10.0.1.40
   setIdentifier: secondary
-  weight: 80
+  weight: 30
