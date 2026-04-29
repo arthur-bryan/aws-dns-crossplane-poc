@@ -19,11 +19,8 @@ metadata:
     dock.tech/system: infrastructure
     dock.tech/environment: dev
     dock.tech/managed-by: scaffolder
-    # Full original form parameters — used by the edit template to
-    # reconstruct the XR without re-reading it from GitHub (which
-    # breaks on slashed branch names).
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-geo-g3","type":"A","routingPolicy":"geolocation","setIdentifier":"NA","geoContinent":"NA","ttl":300,"values":["10.0.8.20"]}'
-    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-geo-g3%22%2C%22type%22%3A%22A%22%2C%22setIdentifier%22%3A%22NA%22%7D
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-geo-g3","type":"A","routingPolicy":"geolocation","setIdentifier":"NA","geoContinent":"NA","ttl":600,"values":["10.0.8.21"]}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-geo-g3%22%2C%22type%22%3A%22A%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/arthurbryan.com/record-e2e-geo-g3-na.yaml"
   tags:
     - aws
