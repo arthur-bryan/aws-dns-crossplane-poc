@@ -201,7 +201,7 @@ spec:
           recordName: ${{ parameters.recordName }}
           type: ${{ parameters.type }}
           setIdentifier: ${{ parameters.setIdentifier }}
-        expression: '(recordName ? recordName : "apex-" & $lowercase(type)) & (setIdentifier ? "-" & setIdentifier : "")'
+        expression: '$lowercase((recordName ? recordName : "apex-" & type) & (setIdentifier ? "-" & setIdentifier : ""))'
 
     # Fetch the existing Record catalog entity instead of reading the XR
     # from GitHub. Avoids the GithubUrlReader slashed-branch parse bug
