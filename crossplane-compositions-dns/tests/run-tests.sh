@@ -174,7 +174,7 @@ if render_record record-a-with-zoneid "$XRS/record-a-with-zoneid.yaml" "$OUT"; t
   assert_eq      "$doc" '.spec.forProvider.zoneId' 'Z1234567890ABC'           "zoneId propagated"
   assert_eq      "$doc" '.spec.forProvider.ttl'    '300'                      "ttl = 300"
   assert_yq_true "$doc" '.spec.forProvider.records | contains(["192.0.2.1"])' "value 192.0.2.1 present"
-  assert_null    "$doc" '.metadata.annotations["crossplane.io/external-name"]' "external-name omitted on create"
+  assert_eq      "$doc" '.metadata.annotations["crossplane.io/external-name"]' 'Z1234567890ABC_www.example.com_A' "external-name set deterministically on create"
   assert_null    "$doc" '.spec.forProvider.alias' "no alias block on simple record"
 fi
 
