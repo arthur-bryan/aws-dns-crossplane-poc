@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-txt-t1.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-txt-t1","type":"TXT","ttl":300,"values":["\"hello-e2e\""],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-txt-t1","type":"TXT","ttl":600,"values":["\"hello-e2e-edited\""],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-txt-t1.arthurbryan.com
   domain: cross
@@ -19,6 +19,6 @@ spec:
   zoneName: arthurbryan.com
   recordName: e2e-txt-t1
   type: TXT
-  ttl: 300
+  ttl: 600
   values:
-    - "hello-e2e"
+    - "hello-e2e-edited"
