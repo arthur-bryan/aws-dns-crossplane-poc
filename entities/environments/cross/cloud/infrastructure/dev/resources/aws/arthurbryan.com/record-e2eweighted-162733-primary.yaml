@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-e2eweighted-162733-primary.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2eweighted-162733","type":"A","ttl":300,"values":["10.0.1.10"],"routingPolicy":"weighted","setIdentifier":"primary","weight":20}'
+spec:
+  name: record-e2eweighted-162733-primary.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 597230762851
+    accountName: dev-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: e2eweighted-162733
+  type: A
+  ttl: 300
+  values:
+    - 10.0.1.10
+  setIdentifier: primary
+  weight: 20
