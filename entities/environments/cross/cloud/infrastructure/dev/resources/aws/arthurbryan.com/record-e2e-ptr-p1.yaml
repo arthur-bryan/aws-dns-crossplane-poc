@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-ptr-p1.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-ptr-p1","type":"PTR","ttl":300,"values":["host1.example.com"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-ptr-p1","type":"PTR","ttl":600,"values":["host2.example.com"],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-ptr-p1.arthurbryan.com
   domain: cross
@@ -19,6 +19,6 @@ spec:
   zoneName: arthurbryan.com
   recordName: e2e-ptr-p1
   type: PTR
-  ttl: 300
+  ttl: 600
   values:
-    - host1.example.com
+    - host2.example.com
