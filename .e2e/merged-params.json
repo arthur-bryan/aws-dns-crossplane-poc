@@ -1,0 +1,10 @@
+{
+  "zone": "resource:system-infrastructure-dev/zone-arthurbryan.com",
+  "recordName": "e2e-144327",
+  "type": "A",
+  "ttl": 600,
+  "values": [
+    "192.0.2.20"
+  ],
+  "routingPolicy": "simple"
+}
