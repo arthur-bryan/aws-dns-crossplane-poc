@@ -6,18 +6,11 @@ metadata:
   description: A template for creating an AWS Route53 DNS record
   labels:
     category: resources
-    visibility: "public"
-    ape: "true"
-    sre: "true"
-    techlead: "true"
-    developer: "false"
   tags:
     - resource
     - aws
-    - dns
-    - route53
+    - public
 spec:
-  owner: group:default/infrastructure
   type: resource
 
   parameters:
@@ -533,7 +526,7 @@ spec:
                 icon: delete
           spec:
             type: aws-dns-record
-            owner: group:default/infrastructure
+            owner: ${{ steps.fetchZone.output.entity.spec.owner }}
             system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
             dependsOn:
               - resource:default/zone-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
