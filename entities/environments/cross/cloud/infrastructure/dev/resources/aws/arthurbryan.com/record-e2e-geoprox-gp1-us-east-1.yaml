@@ -5,7 +5,8 @@ metadata:
   name: record-e2e-geoprox-gp1-us-east-1.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-geoprox-gp1","type":"A","routingPolicy":"geoproximity","setIdentifier":"us-east-1","geoproxAwsRegion":"us-east-1","geoproxBias":0,"ttl":300,"values":["10.0.9.10"]}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-geoprox-gp1","type":"A","routingPolicy":"geoproximity","setIdentifier":"us-east-1","geoproxAwsRegion":"us-east-1","geoproxBias":0,"ttl":600,"values":["10.0.9.11"]}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-e2e-geoprox-gp1-us-east-1.arthurbryan.com
   domain: cross
@@ -19,9 +20,9 @@ spec:
   zoneName: arthurbryan.com
   recordName: e2e-geoprox-gp1
   type: A
-  ttl: 300
+  ttl: 600
   values:
-    - 10.0.9.10
+    - 10.0.9.11
   setIdentifier: us-east-1
   geoproximityRoutingPolicy:
     awsRegion: us-east-1
