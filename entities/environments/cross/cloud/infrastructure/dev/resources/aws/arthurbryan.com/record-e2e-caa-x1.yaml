@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-caa-x1.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-caa-x1","type":"CAA","ttl":300,"values":["0 issue \"letsencrypt.org\""],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-caa-x1","type":"CAA","ttl":600,"values":["0 issue \"letsencrypt.org\"","0 issue \"amazon.com\""],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-caa-x1.arthurbryan.com
   domain: cross
@@ -19,6 +19,7 @@ spec:
   zoneName: arthurbryan.com
   recordName: e2e-caa-x1
   type: CAA
-  ttl: 300
+  ttl: 600
   values:
     - 0 issue "letsencrypt.org"
+    - 0 issue "amazon.com"
