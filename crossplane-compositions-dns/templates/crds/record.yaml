@@ -96,7 +96,7 @@ spec:
                   type: integer
                   description: TTL in seconds.
                   minimum: 60
-                  maximum: 86400
+                  maximum: 604800
                   default: 3600
 
                 values:

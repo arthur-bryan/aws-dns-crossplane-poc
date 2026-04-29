@@ -80,7 +80,7 @@ spec:
                   type: integer
                   default: 3600
                   minimum: 60
-                  maximum: 86400
+                  maximum: 604800
                 values:
                   title: IPv4 Addresses
                   type: array
@@ -89,7 +89,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: AAAA }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
                 values:
                   title: IPv6 Addresses
                   type: array
@@ -98,7 +98,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: CNAME }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
                 values:
                   title: Target Hostname
                   type: array
@@ -108,7 +108,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: TXT }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
                 values:
                   title: Text values
                   type: array
@@ -117,7 +117,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: MX }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
                 values:
                   title: MX records
                   type: array
@@ -127,7 +127,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: SRV }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
                 values:
                   title: SRV records
                   type: array
@@ -136,7 +136,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: NS }
-                ttl: { title: TTL (seconds), type: integer, default: 172800, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 172800, minimum: 60, maximum: 604800 }
                 values:
                   title: Nameservers
                   type: array
@@ -145,7 +145,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: CAA }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
                 values:
                   title: CAA records
                   type: array
@@ -154,7 +154,7 @@ spec:
               required: [values]
             - properties:
                 type: { const: PTR }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 86400 }
+                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
                 values:
                   title: Target hostname
                   type: array
