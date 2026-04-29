@@ -22,6 +22,21 @@ When making git commits in ANY repository (POC or APE repos):
 
 ---
 
+## CRITICAL: No Code Comments, No Emojis
+
+**Do not write comments in code or YAML. Do not write emojis anywhere.**
+
+Applies to every file Claude touches in any repo (lab/, prod templates, compositions, scripts, tests, configs):
+
+- No inline `#`, `//`, `/* */`, or YAML `# ...` comments. Use clear identifiers and structure to convey intent.
+- No emojis in code, YAML, JSON, shell, Python, scaffolder templates, commit messages, or anywhere committed to git.
+- This file (.local/CLAUDE.md) is the only exception for prose/markdown documentation written for Claude itself.
+- If existing comments or emojis are present in a file Claude is editing, leave them alone unless asked to clean up; don't add new ones.
+
+**This is NON-NEGOTIABLE.** Self-documenting code only.
+
+---
+
 ## 🎯 Project Overview
 
 This project provides Crossplane-based DNS management compositions aligned with APE platform standards, enabling developers to self-service Route53 zones and records through Backstage templates.
