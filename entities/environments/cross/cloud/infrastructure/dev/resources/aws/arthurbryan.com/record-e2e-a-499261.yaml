@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-e2e-a-499261.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-a-499261","type":"A","ttl":300,"values":["192.0.2.50"],"routingPolicy":"simple"}'
+spec:
+  name: record-e2e-a-499261.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 597230762851
+    accountName: dev-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: e2e-a-499261
+  type: A
+  ttl: 300
+  values:
+    - 192.0.2.50
