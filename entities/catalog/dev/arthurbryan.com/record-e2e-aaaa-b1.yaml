@@ -1,0 +1,47 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-e2e-aaaa-b1.arthurbryan.com
+  namespace: system-infrastructure-dev
+  title: e2e-aaaa-b1.arthurbryan.com
+  description: "DNS AAAA record e2e-aaaa-b1.arthurbryan.com (dev)"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-e2e-aaaa-b1.arthurbryan.com
+    dock.tech/zone-name: arthurbryan.com
+    dock.tech/zone-id: Z03010981ALJFZB4QLU8W
+    dock.tech/record-name: e2e-aaaa-b1
+    dock.tech/record-type: AAAA
+    dock.tech/record-fqdn: e2e-aaaa-b1.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: dev
+    dock.tech/managed-by: scaffolder
+    # Full original form parameters — used by the edit template to
+    # reconstruct the XR without re-reading it from GitHub (which
+    # breaks on slashed branch names).
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-aaaa-b1","type":"AAAA","ttl":300,"values":["2001:db8::100"],"routingPolicy":"simple"}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-aaaa-b1%22%2C%22type%22%3A%22AAAA%22%7D
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/arthurbryan.com/record-e2e-aaaa-b1.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - aaaa
+    - dev
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z03010981ALJFZB4QLU8W
+      icon: cloud
+    - title: Delete record (opens GitHub delete UI)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/arthurbryan.com/record-e2e-aaaa-b1.yaml
+      icon: delete
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-arthurbryan.com
