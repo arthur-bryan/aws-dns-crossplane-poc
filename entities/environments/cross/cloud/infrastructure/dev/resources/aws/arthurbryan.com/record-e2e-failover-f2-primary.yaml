@@ -1,0 +1,28 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-e2e-failover-f2-primary.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-failover-f2","type":"A","routingPolicy":"failover","setIdentifier":"primary","failoverType":"PRIMARY","ttl":300,"values":["10.0.6.10"],"healthCheckId":"c4946f06-c847-4efd-adc9-9ef03698dd8c"}'
+spec:
+  name: record-e2e-failover-f2-primary.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 597230762851
+    accountName: dev-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: e2e-failover-f2
+  type: A
+  ttl: 300
+  values:
+    - 10.0.6.10
+  setIdentifier: primary
+  failoverRoutingPolicy:
+    type: PRIMARY
+  healthCheckId: c4946f06-c847-4efd-adc9-9ef03698dd8c
