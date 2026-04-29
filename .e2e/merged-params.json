@@ -2,9 +2,9 @@
   "zone": "resource:system-infrastructure-dev/zone-arthurbryan.com",
   "recordName": "e2e-144327",
   "type": "CNAME",
-  "ttl": 7200,
+  "ttl": 300,
   "values": [
-    "teste.arthurbryan.com"
+    "e2etarget.example.com"
   ],
   "routingPolicy": "simple"
 }
