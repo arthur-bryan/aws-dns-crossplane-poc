@@ -185,28 +185,26 @@ spec:
       input:
         entityRef: resource:system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
-    # Parse the original form parameters stored on the catalog entity.
-    # The create template writes the whole user-submitted form as JSON under
-    # dock.tech/scaffolder-parameters — this gives us setIdentifier, weight,
-    # routingPolicy, and any other immutable-but-required fields without
-    # needing to touch GitHub.
-    - id: parseOriginal
-      name: Parse original form parameters
+    - id: writeOriginalParams
+      name: Stage original form parameters as JSON
+      action: roadiehq:utils:fs:write
+      input:
+        path: .e2e/merged-params.json
+        content: ${{ steps.fetchRecord.output.entity.metadata.annotations['dock.tech/scaffolder-parameters'] }}
+
+    - id: applyEdits
+      name: Merge user edits into original parameters
+      action: roadiehq:utils:json:merge
+      input:
+        path: .e2e/merged-params.json
+        content: ${{ parameters }}
+
+    - id: mergeParams
+      name: Read merged parameters back as object
       action: roadiehq:utils:jsonata:json:transform
       input:
-        data: ${{ steps.fetchRecord.output.entity.metadata.annotations['dock.tech/scaffolder-parameters'] }}
+        path: .e2e/merged-params.json
         expression: '$'
-
-    # Right side wins on conflicts: the user's edits override original for
-    # ttl/values/aliasTarget; everything else (routing policy fields) stays.
-    - id: mergeParams
-      name: Merge edits into original parameters
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          original: ${{ steps.parseOriginal.output.result }}
-          edits: ${{ parameters }}
-        expression: '$merge([original, edits])'
 
     - id: writeXR
       name: Write Record XR manifest
