@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-ns-n2.arthurbryan.com
   namespace: system-infrastructure-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-ns-n2","type":"NS","ttl":172800,"values":["ns1.example.com","ns2.example.com"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-ns-n2","type":"NS","ttl":86400,"values":["ns1.example.com","ns2.example.com","ns3.example.com"],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-ns-n2.arthurbryan.com
   domain: cross
@@ -19,7 +19,8 @@ spec:
   zoneName: arthurbryan.com
   recordName: e2e-ns-n2
   type: NS
-  ttl: 172800
+  ttl: 86400
   values:
     - ns1.example.com
     - ns2.example.com
+    - ns3.example.com
