@@ -281,6 +281,15 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
         tags.append("apex")
     title = fqdn + apex_suffix + (f" ({rec['set_identifier']})" if rec.get("set_identifier") else "")
     scaffolder_params = record_scaffolder_parameters_json(ctx, rec)
+    edit_form_data = {
+        "zone": f"resource:system-{ctx['system']}-{ctx['environment']}/zone-{rec['zone_name']}",
+        "recordName": rec["record_short"],
+        "type": rec["type"],
+    }
+    if rec.get("set_identifier"):
+        edit_form_data["setIdentifier"] = rec["set_identifier"]
+    from urllib.parse import quote as _q
+    edit_url_form = _q(json.dumps(edit_form_data, separators=(",", ":")))
     return dedent(f"""\
         ---
         apiVersion: backstage.io/v1alpha1
@@ -310,7 +319,7 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             # scaffolder form pre-filled with this record's identity. Everything
             # else (env/account/system) is derived from the picked zone, so the
             # formData only carries the three truly record-scoped fields.
-            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-{ctx['system']}-{ctx['environment']}%2Fzone-{rec['zone_name']}%22%2C%22recordName%22%3A%22{rec['record_short']}%22%2C%22type%22%3A%22{rec['type']}%22%7D"
+            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData={edit_url_form}"
             # "View Source" icon in the header → raw XR YAML on GitHub.
             backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:

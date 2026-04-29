@@ -45,6 +45,11 @@ spec:
           type: string
           description: Changing type triggers a destroy-and-recreate of the AWS record. Values below must match the new type's pattern (e.g. CNAME requires an FQDN, not an IPv4).
           enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
+        setIdentifier:
+          title: Set Identifier (immutable, weighted/failover/latency/geolocation/multivalue records only)
+          type: string
+          description: Disambiguates one variant of a routing-policy record set. Leave empty for simple records.
+          ui:disabled: true
 
       dependencies:
         type:
@@ -176,7 +181,8 @@ spec:
         data:
           recordName: ${{ parameters.recordName }}
           type: ${{ parameters.type }}
-        expression: 'recordName ? recordName : "apex-" & $lowercase(type)'
+          setIdentifier: ${{ parameters.setIdentifier }}
+        expression: '(recordName ? recordName : "apex-" & $lowercase(type)) & (setIdentifier ? "-" & setIdentifier : "")'
 
     # Fetch the existing Record catalog entity instead of reading the XR
     # from GitHub. Avoids the GithubUrlReader slashed-branch parse bug
