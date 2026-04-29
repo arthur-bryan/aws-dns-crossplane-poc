@@ -396,6 +396,13 @@ spec:
             dependsOn:
               - resource:default/zone-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
+    - id: cleanupStaging
+      name: Remove staging artifacts before publishing
+      action: fs:delete
+      input:
+        files:
+          - .e2e
+
     - id: openPR
       name: Open PR with edited record
       action: publish:github:pull-request
