@@ -91,9 +91,6 @@ spec:
                   type: string
                   description: Record type.
                   enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
-                  x-kubernetes-validations:
-                    - rule: "self == oldSelf"
-                      message: "type is immutable"
 
                 ttl:
                   type: integer

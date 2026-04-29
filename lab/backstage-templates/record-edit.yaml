@@ -16,7 +16,8 @@ spec:
 
   parameters:
     - title: Target Record
-      description: Identifies which record XR to edit. Immutable fields are disabled once the edit form opens.
+      description: |
+        Edits this record in place. TTL and values are mutable. Type is editable but changing it deletes the AWS record and creates a fresh one with the new type (brief downtime, dependent values must match the new type pattern). Zone and Record Name are part of the record identity in Route53 — they cannot be changed; submit a delete + new-record request instead.
       required:
         - zone
         - recordName
@@ -25,7 +26,7 @@ spec:
         zone:
           title: Parent Zone (immutable)
           type: string
-          description: Parent hosted zone. Environment, AWS account, domain, subdomain, and system are all inherited from the zone.
+          description: Submit a delete + new record to move across zones.
           ui:field: EntityPicker
           ui:disabled: true
           ui:options:
@@ -37,14 +38,13 @@ spec:
           type: string
           minLength: 0
           maxLength: 253
-          description: Short record name. Cannot be changed after creation.
+          description: Submit a delete + new record to rename.
           ui:disabled: true
         type:
-          title: Record Type (immutable)
+          title: Record Type
           type: string
-          description: Cannot be changed after creation. Delete and recreate to change type.
+          description: Changing type recreates the AWS record. Values below must match the new type's pattern (e.g. CNAME requires an FQDN, not an IPv4).
           enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
-          ui:disabled: true
 
       dependencies:
         type:
