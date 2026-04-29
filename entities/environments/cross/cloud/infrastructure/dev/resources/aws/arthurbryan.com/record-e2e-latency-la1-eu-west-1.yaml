@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-e2e-latency-la1-eu-west-1.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2e-latency-la1","type":"A","routingPolicy":"latency","setIdentifier":"eu-west-1","latencyRegion":"eu-west-1","ttl":300,"values":["10.0.7.20"]}'
+spec:
+  name: record-e2e-latency-la1-eu-west-1.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 597230762851
+    accountName: dev-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: e2e-latency-la1
+  type: A
+  ttl: 300
+  values:
+    - 10.0.7.20
+  setIdentifier: eu-west-1
+  latencyRoutingPolicy:
+    region: eu-west-1
