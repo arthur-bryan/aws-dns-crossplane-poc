@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-nlb.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-nlb.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: nlb
+  type: ALIAS
+  aliasTarget:
+    serviceType: NLB
+    dnsName: my-nlb-1234567890.elb.us-east-1.amazonaws.com
+    evaluateTargetHealth: true

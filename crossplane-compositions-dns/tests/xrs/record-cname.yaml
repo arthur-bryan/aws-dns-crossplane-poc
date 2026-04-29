@@ -1,0 +1,23 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-www.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-www.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: www
+  type: CNAME
+  values:
+    - app.example.com
+  ttl: 3600

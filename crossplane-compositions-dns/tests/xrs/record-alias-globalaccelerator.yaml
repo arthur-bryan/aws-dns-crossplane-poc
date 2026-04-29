@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-ga.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-ga.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: ga
+  type: ALIAS
+  aliasTarget:
+    serviceType: GlobalAccelerator
+    dnsName: a1b2c3d4e5f6.awsglobalaccelerator.com
+    evaluateTargetHealth: true

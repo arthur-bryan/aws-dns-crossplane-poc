@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-ipv6.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-ipv6.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: ipv6
+  type: AAAA
+  values:
+    - "2001:db8::1"
+    - "2001:db8::2"
+  ttl: 3600

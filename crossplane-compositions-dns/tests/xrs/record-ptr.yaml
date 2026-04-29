@@ -1,0 +1,23 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-ptr-1.0.168.192.in-addr.arpa
+  namespace: system-infrastructure-dev
+spec:
+  name: record-ptr-1.0.168.192.in-addr.arpa
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: 168.192.in-addr.arpa
+  recordName: 1.0
+  type: PTR
+  values:
+    - server.example.com
+  ttl: 3600

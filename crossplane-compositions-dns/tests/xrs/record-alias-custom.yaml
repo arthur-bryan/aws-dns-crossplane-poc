@@ -1,0 +1,25 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-custom-alias.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-custom-alias.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: custom-alias
+  type: ALIAS
+  aliasTarget:
+    serviceType: Custom
+    dnsName: my-resource.us-east-1.example-service.amazonaws.com
+    hostedZoneId: Z2FDTNDATAQYW2
+    evaluateTargetHealth: false

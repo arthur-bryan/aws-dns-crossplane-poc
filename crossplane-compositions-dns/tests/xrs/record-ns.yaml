@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-ns-sub.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: record-ns-sub.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+    region: us-east-1
+  zoneId: Z1234567890ABC
+  zoneName: example.com
+  recordName: sub
+  type: NS
+  values:
+    - ns1.example.com
+    - ns2.example.com
+    - ns3.example.com
+    - ns4.example.com
+  ttl: 172800
