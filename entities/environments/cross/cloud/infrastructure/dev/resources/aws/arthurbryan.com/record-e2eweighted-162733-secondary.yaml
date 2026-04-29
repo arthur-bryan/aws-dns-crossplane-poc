@@ -6,6 +6,7 @@ metadata:
   namespace: system-infrastructure-dev
   annotations:
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-arthurbryan.com","recordName":"e2eweighted-162733","type":"A","ttl":300,"values":["10.0.1.40"],"routingPolicy":"weighted","setIdentifier":"secondary","weight":30}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-e2eweighted-162733-secondary.arthurbryan.com
   domain: cross
