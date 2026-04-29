@@ -17,7 +17,7 @@ spec:
   parameters:
     - title: Target Record
       description: |
-        Edits this record in place. TTL and values are mutable. Type is editable but changing it deletes the AWS record and creates a fresh one with the new type (brief downtime, dependent values must match the new type pattern). Zone and Record Name are part of the record identity in Route53 — they cannot be changed; submit a delete + new-record request instead.
+        Edits this record in place. TTL and values are mutable. Zone, Record Name, and Type identify the record in Route53 and cannot be changed in-place — the AWS provider refuses replacement updates. To change any of those, submit a delete request for this record followed by a new-record request with the desired identity.
       required:
         - zone
         - recordName
@@ -41,10 +41,11 @@ spec:
           description: Submit a delete + new record to rename.
           ui:disabled: true
         type:
-          title: Record Type
+          title: Record Type (immutable)
           type: string
-          description: Changing type recreates the AWS record. Values below must match the new type's pattern (e.g. CNAME requires an FQDN, not an IPv4).
+          description: Submit a delete + new record to change type.
           enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
+          ui:disabled: true
 
       dependencies:
         type:
