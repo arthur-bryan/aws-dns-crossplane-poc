@@ -16,7 +16,7 @@ spec:
     region: us-east-1
   zoneId: Z1234567890ABC
   zoneName: 168.192.in-addr.arpa
-  recordName: 1.0
+  recordName: "1.0"
   type: PTR
   values:
     - server.example.com
