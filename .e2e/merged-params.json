@@ -1,10 +1,10 @@
 {
   "zone": "resource:system-infrastructure-dev/zone-arthurbryan.com",
   "recordName": "e2e-144327",
-  "type": "A",
-  "ttl": 900,
+  "type": "CNAME",
+  "ttl": 7200,
   "values": [
-    "192.0.2.30"
+    "teste.arthurbryan.com"
   ],
   "routingPolicy": "simple"
 }
