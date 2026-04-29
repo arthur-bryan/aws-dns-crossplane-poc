@@ -313,8 +313,8 @@ def cleanup_all_health_checks() -> None:
 def base_key(record_name: str, rtype: str, set_id: Optional[str]) -> str:
     base = record_name if record_name else f"apex-{rtype.lower()}"
     if set_id:
-        return f"{base}-{set_id}"
-    return base
+        base = f"{base}-{set_id}"
+    return base.lower()
 
 
 def xr_path(zone: str, key: str) -> str:
