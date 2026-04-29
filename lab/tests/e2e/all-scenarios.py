@@ -275,6 +275,41 @@ def aws_records_at(fqdn: str) -> list[dict]:
     return res or []
 
 
+_HEALTH_CHECK_CACHE: dict[str, str] = {}
+
+
+def ensure_health_check(label: str) -> str:
+    if label in _HEALTH_CHECK_CACHE:
+        return _HEALTH_CHECK_CACHE[label]
+    config = {
+        "Type": "HTTP",
+        "ResourcePath": "/",
+        "FullyQualifiedDomainName": "example.com",
+        "Port": 80,
+        "RequestInterval": 30,
+        "FailureThreshold": 3,
+    }
+    res = aws("route53", "create-health-check",
+              "--caller-reference", f"e2e-{label}-{int(time.time())}",
+              "--health-check-config", json.dumps(config))
+    hc_id = res["HealthCheck"]["Id"]
+    _HEALTH_CHECK_CACHE[label] = hc_id
+    return hc_id
+
+
+def delete_health_check(hc_id: str) -> None:
+    try:
+        aws("route53", "delete-health-check", "--health-check-id", hc_id)
+    except subprocess.CalledProcessError:
+        pass
+
+
+def cleanup_all_health_checks() -> None:
+    for hc_id in list(_HEALTH_CHECK_CACHE.values()):
+        delete_health_check(hc_id)
+    _HEALTH_CHECK_CACHE.clear()
+
+
 def base_key(record_name: str, rtype: str, set_id: Optional[str]) -> str:
     base = record_name if record_name else f"apex-{rtype.lower()}"
     if set_id:
@@ -704,18 +739,21 @@ def make_weighted(suffix: str, set_id: str, weight_create: int, weight_edit: int
 def make_failover(suffix: str, set_id: str, role: str, value: str, edit_value: str) -> Scenario:
     name = f"failover-{suffix}-{set_id}"
     record_name = f"e2e-failover-{suffix}"
+    create = {
+        "routingPolicy": "failover",
+        "setIdentifier": set_id,
+        "failoverType": role,
+        "ttl": 300,
+        "values": [value],
+    }
+    if role == "PRIMARY":
+        create["healthCheckId"] = ensure_health_check(f"failover-{suffix}")
     return Scenario(
         name=name,
         record_name=record_name,
         record_type="A",
         set_identifier=set_id,
-        create_values={
-            "routingPolicy": "failover",
-            "setIdentifier": set_id,
-            "failoverType": role,
-            "ttl": 300,
-            "values": [value],
-        },
+        create_values=create,
         edit_values={"ttl": 600, "values": [edit_value]},
         expected_aws=lambda rows: values_match(rows, "A", [value], 300, set_identifier=set_id),
         expected_aws_after_edit=lambda rows: values_match(rows, "A", [edit_value], 600, set_identifier=set_id),
