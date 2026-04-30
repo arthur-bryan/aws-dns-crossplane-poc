@@ -13961,6 +13961,7 @@ __metadata:
   resolution: "backend@workspace:packages/backend"
   dependencies:
     "@backstage/backend-defaults": "npm:^0.17.0"
+    "@backstage/catalog-model": "npm:^1.8.0"
     "@backstage/cli": "npm:^0.36.1"
     "@backstage/config": "npm:^1.3.7"
     "@backstage/plugin-app-backend": "npm:^0.5.13"
@@ -13971,6 +13972,7 @@ __metadata:
     "@backstage/plugin-catalog-backend": "npm:^3.6.0"
     "@backstage/plugin-catalog-backend-module-logs": "npm:^0.1.21"
     "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "npm:^0.2.19"
+    "@backstage/plugin-catalog-node": "npm:^2.2.0"
     "@backstage/plugin-kubernetes-backend": "npm:^0.21.3"
     "@backstage/plugin-mcp-actions-backend": "npm:^0.1.12"
     "@backstage/plugin-notifications-backend": "npm:^0.6.4"
@@ -13989,6 +13991,7 @@ __metadata:
     "@backstage/plugin-search-backend-node": "npm:^1.4.3"
     "@backstage/plugin-signals-backend": "npm:^0.3.14"
     "@backstage/plugin-techdocs-backend": "npm:^2.1.7"
+    "@kubernetes/client-node": "npm:1.4.0"
     "@roadiehq/scaffolder-backend-module-utils": "npm:^4.1.2"
     app: "link:../app"
     better-sqlite3: "npm:^12.0.0"
