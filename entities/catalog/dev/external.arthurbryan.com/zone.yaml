@@ -10,6 +10,7 @@ metadata:
     dock.tech/xr-kind: Zone
     dock.tech/xr-name: zone-external.arthurbryan.com
     dock.tech/zone-name: external.arthurbryan.com
+    dock.tech/zone-id: Z0245000S5MOON5ZZNHA
     dock.tech/parent-zone-id: Z03010981ALJFZB4QLU8W
     dock.tech/parent-zone-name: arthurbryan.com
     dock.tech/domain: cross
