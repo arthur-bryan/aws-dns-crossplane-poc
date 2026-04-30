@@ -126,6 +126,14 @@ spec:
                     - rule: "!has(self.zoneId) || self.existing"
                       message: "spec.import.zoneId is only valid when spec.import.existing is true"
 
+                delegatedFromZoneId:
+                  type: string
+                  description: Parent zone ID for sub-zone delegation. When set, an NS record for this zone is auto-created in the parent zone.
+                  pattern: '^Z[A-Z0-9]+$'
+                  x-kubernetes-validations:
+                    - rule: "self == oldSelf"
+                      message: "delegatedFromZoneId is immutable"
+
               required:
                 - name
                 - domain
