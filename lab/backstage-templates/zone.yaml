@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-zone
-  title: AWS Route53 DNS Zone Template
-  description: Create a Route53 hosted zone delegated from an existing platform-managed zone
+  title: AWS Route53 DNS Zone
+  description: Create a Route53 hosted zone delegated from an existing platform zone
   labels:
     category: resources
   tags:
@@ -15,15 +15,14 @@ spec:
   type: resource
 
   parameters:
-    - title: Zone Information
+    - title: Zone
       required:
         - delegatedZone
         - prefix
       properties:
         delegatedZone:
-          title: Delegated From (Parent Zone)
+          title: Delegated From
           type: string
-          description: Existing platform-managed zone that will hold the NS delegation. The new zone inherits its account, system, and environment context.
           ui:field: EntityPicker
           ui:autofocus: true
           ui:options:
@@ -32,28 +31,27 @@ spec:
                 spec.type: aws-dns-zone
             defaultKind: Resource
         prefix:
-          title: Zone Prefix
+          title: Zone Name
           type: string
           minLength: 1
           maxLength: 63
           pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'
-          description: Single DNS label (lowercase, alphanumeric, hyphens). Joined with the parent zone name to form the FQDN.
-          ui:help: "Example: prefix=infrastructure on parent=arthurbryan.com → infrastructure.arthurbryan.com"
+        fqdnPreview:
+          title: ''
+          type: string
+          ui:field: ZoneFqdnPreview
         comment:
           title: Comment
           type: string
           maxLength: 256
-          description: Optional comment attached to the Route53 hosted zone
         deletionProtection:
           title: Deletion Protection
           type: boolean
           default: false
-          description: When ON, removing this XR orphans the Route53 zone instead of deleting it. Strongly recommended for production zones.
         private:
           title: Private Zone
           type: boolean
           default: false
-          description: Private zones are only resolvable from associated VPCs.
       dependencies:
         private:
           oneOf:
@@ -62,8 +60,7 @@ spec:
             - properties:
                 private: { const: true }
                 vpcs:
-                  title: Associated VPCs
-                  description: Pick one or more VPCs from the AWS catalog. The new private zone will be associated with each.
+                  title: VPCs
                   type: array
                   minItems: 1
                   ui:field: MultiEntityPicker
@@ -73,31 +70,30 @@ spec:
                       spec.type: aws-vpc
               required: [vpcs]
 
-    - title: Additional Tags (Optional)
+    - title: Tags
       properties:
         tags:
           title: Tags
           type: object
-          description: Additional AWS tags (hierarchy tags added automatically)
           additionalProperties:
             type: string
 
   steps:
     - id: fetchParent
-      name: Fetch parent zone entity
+      name: Fetch parent zone
       action: catalog:fetch
       input:
         entityRef: ${{ parameters.delegatedZone }}
 
     - id: fetchVpcs
-      name: Fetch selected VPC entities
+      name: Fetch VPCs
       if: ${{ parameters.private }}
       action: catalog:fetch
       input:
         entityRefs: ${{ parameters.vpcs }}
 
     - id: computeZone
-      name: Compute child zone identity
+      name: Compute zone name
       action: roadiehq:utils:jsonata
       input:
         data:
@@ -106,7 +102,7 @@ spec:
         expression: '$lowercase(prefix & "." & parentZoneName)'
 
     - id: writeXR
-      name: Write Zone XR manifest
+      name: Write Zone XR
       action: roadiehq:utils:fs:write
       input:
         path: >-
@@ -159,7 +155,7 @@ spec:
             {%- endif %}
 
     - id: writeCatalogEntity
-      name: Write Backstage Resource entity
+      name: Write catalog entity
       action: roadiehq:utils:fs:write
       input:
         path: entities/catalog/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}/${{ steps.computeZone.output.result }}/zone.yaml
@@ -209,7 +205,7 @@ spec:
               - resource:default/zone-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
     - id: openPR
-      name: Open PR with new zone manifest
+      name: Open PR
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
@@ -217,15 +213,9 @@ spec:
         targetBranchName: feature/ape-platform-alignment
         title: "feat(dns): create zone ${{ steps.computeZone.output.result }}"
         description: |
-          Scaffolder-generated Zone XR + Backstage Resource entity.
-
           Parent zone: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }} (${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }})
           New zone: ${{ steps.computeZone.output.result }}
           Visibility: ${{ 'private' if parameters.private else 'public' }}
-          System: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}
-          Environment: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}
-
-          After merge: the composition creates the Route53 zone and, once nameservers are returned, automatically registers an NS record in the parent zone for delegation.
 
   output:
     links:
