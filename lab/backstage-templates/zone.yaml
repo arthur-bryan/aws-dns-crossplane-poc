@@ -62,7 +62,7 @@ spec:
                 vpcs:
                   title: VPCs
                   type: array
-                  minItems: 1
+                  default: []
                   ui:field: MultiEntityPicker
                   ui:options:
                     catalogFilter:
