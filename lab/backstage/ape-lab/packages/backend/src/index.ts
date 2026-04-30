@@ -42,6 +42,8 @@ backend.add(
 // See https://backstage.io/docs/features/software-catalog/configuration#subscribing-to-catalog-errors
 backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
+backend.add(import('./modules/zone-enrichment'));
+
 // permission plugin
 backend.add(import('@backstage/plugin-permission-backend'));
 // See https://backstage.io/docs/permissions/getting-started for how to create your own permission policy
