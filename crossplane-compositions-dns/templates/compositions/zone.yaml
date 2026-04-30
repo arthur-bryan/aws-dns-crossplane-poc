@@ -40,8 +40,11 @@ spec:
             [[- $deletionProtection := $params.deletionProtection ]]
             [[- $import        := $params.import ]]
             [[- $importing     := and $import $import.existing ]]
+            [[- $delegatedFromZoneId := $params.delegatedFromZoneId ]]
 
             [[- $zone := getComposedResource . $name ]]
+            [[- $delegationName := printf "%s-delegation" $name ]]
+            [[- $delegationRecord := getComposedResource . $delegationName ]]
 
             ---
             apiVersion: route53.aws.m.upbound.io/v1beta1
@@ -96,6 +99,30 @@ spec:
                     vpcRegion: [[ $vpc.vpcRegion ]]
                 [[- end ]]
                 [[- end ]]
+
+            [[- if and $delegatedFromZoneId $zone.status.atProvider $zone.status.atProvider.nameServers ]]
+            ---
+            apiVersion: route53.aws.m.upbound.io/v1beta1
+            kind: Record
+            metadata:
+              annotations:
+                crossplane.io/external-name: [[ printf "%s_%s_NS" $delegatedFromZoneId $zoneName ]]
+                [[ setResourceNameAnnotation $delegationName ]]
+              name: [[ $delegationName ]]
+              namespace: [[ $namespace ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+                kind: ClusterProviderConfig
+              managementPolicies:
+                {{- toYaml .Values.managementPolicies | nindent 16 }}
+              forProvider:
+                name: [[ $zoneName ]]
+                type: NS
+                zoneId: [[ $delegatedFromZoneId ]]
+                ttl: 172800
+                records: [[ $zone.status.atProvider.nameServers | toJson ]]
+            [[- end ]]
 
             ---
             [[- if $zone.status.atProvider ]]
