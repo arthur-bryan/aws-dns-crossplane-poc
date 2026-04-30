@@ -54,31 +54,36 @@ def vpc_yaml(vpc: dict, region: str) -> str:
     tags = ["aws", "vpc", region]
     if is_default:
         tags.append("default")
-    tag_lines = "\n".join(f"    - {t}" for t in tags)
-    name_annotation = f"\n            dock.tech/vpc-name: {name}" if name else ""
-    return dedent(f"""\
-        ---
-        apiVersion: backstage.io/v1alpha1
-        kind: Resource
-        metadata:
-          name: vpc-{vpc_id}
-          title: {title}
-          description: "{description}"
-          annotations:
-            dock.tech/vpc-id: {vpc_id}
-            dock.tech/vpc-region: {region}
-            dock.tech/vpc-cidr: {cidr}
-            dock.tech/vpc-is-default: "{str(is_default).lower()}"{name_annotation}
-          tags:
-        {tag_lines}
-          links:
-            - title: View in AWS Console
-              url: https://console.aws.amazon.com/vpc/home?region={region}#VpcDetails:VpcId={vpc_id}
-              icon: cloud
-        spec:
-          type: aws-vpc
-          owner: group:default/infrastructure
-        """)
+
+    lines = [
+        "---",
+        "apiVersion: backstage.io/v1alpha1",
+        "kind: Resource",
+        "metadata:",
+        f"  name: {vpc_id}",
+        f"  title: {title}",
+        f'  description: "{description}"',
+        "  annotations:",
+        f"    dock.tech/vpc-id: {vpc_id}",
+        f"    dock.tech/vpc-region: {region}",
+        f"    dock.tech/vpc-cidr: {cidr}",
+        f'    dock.tech/vpc-is-default: "{str(is_default).lower()}"',
+    ]
+    if name:
+        lines.append(f"    dock.tech/vpc-name: {name}")
+    lines.append("  tags:")
+    lines.extend(f"    - {t}" for t in tags)
+    lines.extend([
+        "  links:",
+        "    - title: View in AWS Console",
+        f"      url: https://console.aws.amazon.com/vpc/home?region={region}#VpcDetails:VpcId={vpc_id}",
+        "      icon: cloud",
+        "spec:",
+        "  type: aws-vpc",
+        "  owner: group:default/infrastructure",
+        "",
+    ])
+    return "\n".join(lines)
 
 
 class Writer:

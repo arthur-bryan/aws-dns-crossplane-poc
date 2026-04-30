@@ -1,0 +1,24 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: vpc-0410f81cfe1bba322
+  title: vpc-0410f81cfe1bba322 (us-east-1)
+  description: "VPC vpc-0410f81cfe1bba322 in us-east-1, CIDR 172.31.0.0/16, default"
+  annotations:
+    dock.tech/vpc-id: vpc-0410f81cfe1bba322
+    dock.tech/vpc-region: us-east-1
+    dock.tech/vpc-cidr: 172.31.0.0/16
+    dock.tech/vpc-is-default: "true"
+  tags:
+    - aws
+    - vpc
+    - us-east-1
+    - default
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/vpc/home?region=us-east-1#VpcDetails:VpcId=vpc-0410f81cfe1bba322
+      icon: cloud
+spec:
+  type: aws-vpc
+  owner: group:default/infrastructure
