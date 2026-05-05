@@ -1,0 +1,28 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-privatecross.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"delegatedZone":"resource:system-infrastructure-prd/zone-arthurbryan.com","prefix":"privatecross","environment":"dev","private":true,"vpcs":["resource:default/vpc-0dd3eaef2e5c11f69","resource:default/vpc-0410f81cfe1bba322"],"deletionProtection":false}'
+spec:
+  name: zone-privatecross.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  zoneName: privatecross.arthurbryan.com
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd-account
+  visibility: private
+  vpcs:
+    - vpcId: vpc-0dd3eaef2e5c11f69
+      vpcRegion: us-east-1
+      accountName: dev-account
+    - vpcId: vpc-0410f81cfe1bba322
+      vpcRegion: us-east-1
+      accountName: prd-account
