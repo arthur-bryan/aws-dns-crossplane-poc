@@ -60,6 +60,7 @@ spec:
                 vpcs:
                   title: Associated VPCs
                   type: array
+                  default: []
                   minItems: 1
                   ui:field: MultiEntityPicker
                   ui:options:
