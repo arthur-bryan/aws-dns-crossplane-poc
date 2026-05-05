@@ -41,6 +41,7 @@ spec:
             [[- $import        := $params.import ]]
             [[- $importing     := and $import $import.existing ]]
             [[- $delegatedFromZoneId := $params.delegatedFromZoneId ]]
+            [[- $delegatedFromAccountName := default $accountName $params.delegatedFromAccountName ]]
 
             [[- $zone := getComposedResource . $name ]]
             [[- $delegationName := printf "%s-delegation" $name ]]
@@ -121,7 +122,7 @@ spec:
               namespace: [[ $namespace ]]
             spec:
               providerConfigRef:
-                name: [[ $accountName ]]
+                name: [[ $delegatedFromAccountName ]]
                 kind: ClusterProviderConfig
               [[- if $importing ]]
               managementPolicies:

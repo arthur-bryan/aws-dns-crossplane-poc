@@ -134,6 +134,14 @@ spec:
                     - rule: "self == oldSelf"
                       message: "delegatedFromZoneId is immutable"
 
+                delegatedFromAccountName:
+                  type: string
+                  description: AccountName of the ClusterProviderConfig holding the parent zone. The NS delegation Record MR uses this for its providerConfigRef so the record lands in the right account when child and parent live apart. Defaults to spec.aws.accountName.
+                  minLength: 1
+                  x-kubernetes-validations:
+                    - rule: "self == oldSelf"
+                      message: "delegatedFromAccountName is immutable"
+
               required:
                 - name
                 - domain

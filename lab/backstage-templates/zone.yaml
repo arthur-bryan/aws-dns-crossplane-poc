@@ -19,6 +19,7 @@ spec:
       required:
         - delegatedZone
         - prefix
+        - environment
       properties:
         delegatedZone:
           title: Delegated From
@@ -36,6 +37,11 @@ spec:
           minLength: 1
           maxLength: 63
           pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'
+        environment:
+          title: Environment
+          type: string
+          enum: [dev, prd]
+          default: prd
         fqdnPreview:
           title: ''
           type: string
@@ -101,6 +107,17 @@ spec:
           parentZoneName: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}
         expression: '$lowercase(prefix & "." & parentZoneName)'
 
+    - id: deriveAccount
+      name: Derive account from environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          env: ${{ parameters.environment }}
+        expression: >-
+          env = "dev" ? {"accountId": "309670275661", "accountName": "dev-account"}
+          : env = "prd" ? {"accountId": "597230762851", "accountName": "prd-account"}
+          : {"accountId": "", "accountName": ""}
+
     - id: writeXR
       name: Write Zone XR
       action: roadiehq:utils:fs:write
@@ -112,14 +129,14 @@ spec:
             steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain']
           }}/${{
             steps.fetchParent.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml
+          }}/${{ parameters.environment }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml
         content: |
           ---
           apiVersion: dock.tech/v1
           kind: Zone
           metadata:
             name: zone-${{ steps.computeZone.output.result }}
-            namespace: system-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}
+            namespace: system-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
             annotations:
               dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
           spec:
@@ -127,12 +144,13 @@ spec:
             domain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}
             subdomain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}
             system: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}
-            environment: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}
+            environment: ${{ parameters.environment }}
             aws:
-              account: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-id'] | int }}
-              accountName: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
+              account: ${{ steps.deriveAccount.output.result.accountId | int }}
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             zoneName: ${{ steps.computeZone.output.result }}
             delegatedFromZoneId: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }}
+            delegatedFromAccountName: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
             {%- endif %}
@@ -158,44 +176,45 @@ spec:
       name: Write catalog entity
       action: roadiehq:utils:fs:write
       input:
-        path: entities/catalog/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}/${{ steps.computeZone.output.result }}/zone.yaml
+        path: entities/catalog/${{ parameters.environment }}/${{ steps.computeZone.output.result }}/zone.yaml
         content: |
           ---
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
             name: zone-${{ steps.computeZone.output.result }}
-            namespace: system-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}
-            title: "${{ steps.computeZone.output.result }} · ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}"
-            description: "Route53 Hosted Zone ${{ steps.computeZone.output.result }} (${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}) — delegated from ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}"
+            namespace: system-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
+            title: "${{ steps.computeZone.output.result }} · ${{ parameters.environment }}"
+            description: "Route53 Hosted Zone ${{ steps.computeZone.output.result }} (${{ parameters.environment }}) — delegated from ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}"
             annotations:
               dock.tech/xr-kind: Zone
               dock.tech/xr-name: zone-${{ steps.computeZone.output.result }}
               dock.tech/zone-name: ${{ steps.computeZone.output.result }}
               dock.tech/parent-zone-id: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }}
               dock.tech/parent-zone-name: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+              dock.tech/parent-aws-account-name: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
               dock.tech/domain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}
               dock.tech/subdomain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}
               dock.tech/system: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}
-              dock.tech/environment: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}
-              dock.tech/aws-account-id: "${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-id'] }}"
-              dock.tech/aws-account-name: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
+              dock.tech/environment: ${{ parameters.environment }}
+              dock.tech/aws-account-id: "${{ steps.deriveAccount.output.result.accountId }}"
+              dock.tech/aws-account-name: ${{ steps.deriveAccount.output.result.accountName }}
               dock.tech/visibility: ${{ 'private' if parameters.private else 'public' }}
               dock.tech/managed-by: scaffolder
-              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml"
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml"
             tags:
               - aws
               - dns
               - route53
               - zone
-              - ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}
+              - ${{ parameters.environment }}
               - ${{ 'private' if parameters.private else 'public' }}
             links:
               - title: View in AWS Console
                 url: https://console.aws.amazon.com/route53/v2/hostedzones
                 icon: cloud
               - title: Delete zone (opens GitHub delete UI)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml
                 icon: delete
           spec:
             type: aws-dns-zone
@@ -209,12 +228,14 @@ spec:
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/zone-${{ steps.computeZone.output.result }}-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/environment'] }}
+        branchName: scaffolder/zone-${{ steps.computeZone.output.result }}-${{ parameters.environment }}
         targetBranchName: feature/ape-platform-alignment
-        title: "feat(dns): create zone ${{ steps.computeZone.output.result }}"
+        title: "feat(dns): create zone ${{ steps.computeZone.output.result }} (${{ parameters.environment }})"
         description: |
-          Parent zone: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }} (${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }})
+          Parent zone: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }} (${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }}, ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }})
           New zone: ${{ steps.computeZone.output.result }}
+          Environment: ${{ parameters.environment }}
+          Account: ${{ steps.deriveAccount.output.result.accountName }} (${{ steps.deriveAccount.output.result.accountId }})
           Visibility: ${{ 'private' if parameters.private else 'public' }}
 
   output:
