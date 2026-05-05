@@ -67,11 +67,6 @@ spec:
                     - rule: "self == oldSelf"
                       message: "zoneName is immutable"
 
-                comment:
-                  type: string
-                  description: Zone comment.
-                  maxLength: 256
-
                 tags:
                   type: object
                   description: Additional AWS tags.

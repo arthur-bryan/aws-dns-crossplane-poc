@@ -29,7 +29,6 @@ spec:
             [[- $namespace     := .observed.composite.resource.metadata.namespace ]]
             [[- $accountName   := $params.aws.accountName ]]
             [[- $zoneName      := $params.zoneName ]]
-            [[- $comment       := $params.comment ]]
             [[- $domain        := $params.domain ]]
             [[- $subdomain     := $params.subdomain ]]
             [[- $system        := $params.system ]]
@@ -95,9 +94,7 @@ spec:
               [[- end ]]
               forProvider:
                 name: [[ $zoneName ]]
-                [[- if $comment ]]
-                comment: [[ $comment ]]
-                [[- else if not $importing ]]
+                [[- if not $importing ]]
                 comment: "Managed by APE Platform"
                 [[- end ]]
                 tags:
