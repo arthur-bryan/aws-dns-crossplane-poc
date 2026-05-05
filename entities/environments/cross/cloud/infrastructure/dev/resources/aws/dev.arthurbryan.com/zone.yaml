@@ -1,0 +1,21 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-dev.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"delegatedZone":"resource:system-infrastructure-prd/zone-arthurbryan.com","prefix":"dev","environment":"dev","private":false}'
+spec:
+  name: zone-dev.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  zoneName: dev.arthurbryan.com
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd-account
+  visibility: public
