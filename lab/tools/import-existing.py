@@ -27,9 +27,6 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 
-# ---------------------------------------------------------------------------
-# Hierarchy defaults (match entities/catalog-info.yaml). Override via CLI.
-# ---------------------------------------------------------------------------
 DEFAULTS = {
     "domain": "cross",
     "subdomain": "cloud",
@@ -39,25 +36,16 @@ DEFAULTS = {
     "aws_region": "us-east-1",
 }
 
-# Routing policies we support. Records with others are skipped with a warning.
 SUPPORTED_POLICIES: set[str] = {"Simple", "Weighted"}
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-# Env-first, then per-zone grouping: one folder per hosted zone holds its Zone XR
-# (zone.yaml) plus all record XRs. Filenames inside the folder drop the
-# .<zoneName> suffix since the folder already identifies the zone.
 ENV_DIR_TMPL = "entities/environments/{domain}/{subdomain}/{system}/{environment}/resources/aws/{zone_name}"
-# Catalog entities mirror the env/zone grouping.
 CATALOG_DIR_TMPL = "entities/catalog/{environment}/{zone_name}"
 
 REPO_URL = "https://github.com/arthur-bryan/aws-dns-crossplane-poc"
 REPO_BRANCH = "feature/ape-platform-alignment"
 BACKSTAGE_BASE_URL = os.environ.get("APE_BACKSTAGE_URL", "http://localhost:3000")
 
-
-# ---------------------------------------------------------------------------
-# AWS helpers
-# ---------------------------------------------------------------------------
 def aws(*args: str) -> dict:
     """Run `aws ...` and return parsed JSON output."""
     result = subprocess.run(
@@ -68,18 +56,14 @@ def aws(*args: str) -> dict:
         sys.exit(f"ERROR running `aws {' '.join(args)}`:\n{result.stderr}")
     return json.loads(result.stdout or "{}")
 
-
 def get_caller_identity() -> dict:
     return aws("sts", "get-caller-identity")
-
 
 def list_hosted_zones() -> list[dict]:
     data = aws("route53", "list-hosted-zones")
     return data.get("HostedZones", [])
 
-
 def list_record_sets(zone_id: str) -> list[dict]:
-    # paginate if needed (default list returns up to 100 records)
     records: list[dict] = []
     next_record = None
     next_type = None
@@ -95,33 +79,20 @@ def list_record_sets(zone_id: str) -> list[dict]:
         next_type = page.get("NextRecordType")
     return records
 
-
-# ---------------------------------------------------------------------------
-# YAML helpers — minimal hand-rolled writer so we don't need PyYAML.
-# ---------------------------------------------------------------------------
 def yaml_str(value: str) -> str:
     """YAML-quote a string when needed; preserve TXT quotes/backslashes."""
     if value == "":
         return '""'
-    # Always use double-quoted YAML scalars to be safe with special chars.
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
-
 
 def yaml_list(items: list[str], indent: int) -> str:
     pad = " " * indent
     return "\n".join(f"{pad}- {yaml_str(v)}" for v in items)
 
-
-# ---------------------------------------------------------------------------
-# Zone import YAMLs
-# ---------------------------------------------------------------------------
 def zone_xr_yaml(ctx: dict, zone_name: str, zone_id: str) -> str:
     return dedent(f"""\
         ---
-        # Managed by batch import ({ctx['aws_account_name']} / {zone_id}).
-        # Removing this file unadopts the zone from the platform; the Route53
-        # zone itself is NOT deleted (managementPolicies: [Observe, Update]).
         apiVersion: dock.tech/v1
         kind: Zone
         metadata:
@@ -143,7 +114,6 @@ def zone_xr_yaml(ctx: dict, zone_name: str, zone_id: str) -> str:
             existing: true
             zoneId: {zone_id}
     """)
-
 
 def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) -> str:
     return dedent(f"""\
@@ -167,7 +137,6 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
             dock.tech/aws-account-id: "{ctx['aws_account_id']}"
             dock.tech/aws-account-name: {ctx['aws_account_name']}
             dock.tech/managed-by: batch-import
-            # "View Source" icon in the header → raw XR YAML on GitHub.
             backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:
             - aws
@@ -189,19 +158,12 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
           system: {ctx['system']}
     """)
 
-
-# ---------------------------------------------------------------------------
-# Record import YAMLs
-# ---------------------------------------------------------------------------
 def record_xr_yaml(ctx: dict, rec: dict) -> str:
     """Generate a Record XR YAML that exactly matches the live AWS record so
     the first reconcile is a no-op."""
     record_name_line = f'recordName: "{rec["record_short"]}"' if not rec["record_short"] else f"recordName: {rec['record_short']}"
     head = dedent(f"""\
         ---
-        # Managed by batch import.
-        # Removing this file unadopts the record from the platform; the Route53
-        # record itself is NOT deleted (managementPolicies: [Observe, Update]).
         apiVersion: dock.tech/v1
         kind: Record
         metadata:
@@ -227,7 +189,6 @@ def record_xr_yaml(ctx: dict, rec: dict) -> str:
 
     parts = [head.rstrip()]
 
-    # ALIAS vs non-ALIAS body
     if rec["type"] == "ALIAS":
         parts.append("  aliasTarget:")
         parts.append(f"    serviceType: Custom")
@@ -247,7 +208,6 @@ def record_xr_yaml(ctx: dict, rec: dict) -> str:
     parts.append("    existing: true")
     parts.append("")  # trailing newline
     return "\n".join(parts)
-
 
 def record_scaffolder_parameters_json(ctx: dict, rec: dict) -> str:
     """Synthesize the form-input JSON that the scaffolder would have produced
@@ -271,7 +231,6 @@ def record_scaffolder_parameters_json(ctx: dict, rec: dict) -> str:
         params["setIdentifier"] = rec["set_identifier"]
         params["weight"] = rec["weight"]
     return json.dumps(params, separators=(",", ":"))
-
 
 def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
     fqdn = rec["display_fqdn"]
@@ -312,15 +271,8 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             dock.tech/system: {ctx['system']}
             dock.tech/environment: {ctx['environment']}
             dock.tech/managed-by: batch-import
-            # Read by the edit template to reconstruct the XR without a
-            # GitHub round-trip (which breaks on slashed branches).
             dock.tech/scaffolder-parameters: '{scaffolder_params}'
-            # Pencil icon in the entity header (top-right). Launches the
-            # scaffolder form pre-filled with this record's identity. Everything
-            # else (env/account/system) is derived from the picked zone, so the
-            # formData only carries the three truly record-scoped fields.
             backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData={edit_url_form}"
-            # "View Source" icon in the header → raw XR YAML on GitHub.
             backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:
         """) + "\n".join(f"    - {t}" for t in tags) + dedent(f"""
@@ -339,21 +291,14 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             - resource:default/zone-{rec['zone_name']}
         """)
 
-
-# ---------------------------------------------------------------------------
-# Record parsing — extract the shape our XR expects from AWS output.
-# ---------------------------------------------------------------------------
 def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
     """Return a normalized record dict or None to skip."""
     name = rrset["Name"].rstrip(".")  # AWS names have trailing dot
     rtype = rrset["Type"]
 
-    # Skip apex NS/SOA — Route53 manages those automatically.
     if name == zone_name and rtype in ("NS", "SOA"):
         return None
 
-    # Figure out the short name (recordName) relative to zone.
-    # Empty string = apex (zone-root record).
     if name == zone_name:
         record_short = ""
     elif name.endswith("." + zone_name):
@@ -362,7 +307,6 @@ def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
         print(f"  ! skipping {rtype} {name} — not inside zone {zone_name}", file=sys.stderr)
         return None
 
-    # Skip routing policies we don't model yet.
     routing_policies = [k for k in ("Failover", "GeoLocation", "Region", "MultiValueAnswer") if k in rrset]
     if routing_policies:
         print(f"  ! skipping {rtype} {name} — unsupported routing policy: {routing_policies}", file=sys.stderr)
@@ -394,16 +338,11 @@ def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
 
     if "SetIdentifier" in rrset:
         base["set_identifier"] = rrset["SetIdentifier"]
-        # Weighted policy?
         if "Weight" in rrset:
             base["weight"] = rrset["Weight"]
 
     return base
 
-
-# ---------------------------------------------------------------------------
-# Write helper — prints diff, writes on --write
-# ---------------------------------------------------------------------------
 class Writer:
     def __init__(self, write: bool):
         self.write = write
@@ -422,10 +361,6 @@ class Writer:
             path.write_text(content)
         self.created += 1
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true", help="actually create files (default: dry-run)")
@@ -471,7 +406,6 @@ def main() -> int:
         env_zone_dir = REPO_ROOT / ENV_DIR_TMPL.format(**zone_ctx)
         catalog_zone_dir = REPO_ROOT / CATALOG_DIR_TMPL.format(**zone_ctx)
 
-        # Zone XR + catalog entity (folder name = zone, filename = zone.yaml)
         zone_xr_path = env_zone_dir / "zone.yaml"
         zone_xr_rel = str(zone_xr_path.relative_to(REPO_ROOT))
         writer.handle(zone_xr_path, zone_xr_yaml(ctx, zone_name, zone_id), "zone XR")
@@ -479,26 +413,20 @@ def main() -> int:
                       zone_catalog_yaml(ctx, zone_name, zone_id, zone_xr_rel),
                       "zone catalog entity")
 
-        # Records
         for rrset in list_record_sets(zone_id):
             rec = parse_record(rrset, zone_name, zone_id)
             if not rec:
                 continue
-            # Resource key mirrors the scaffolder template: recordName for
-            # subdomain records, apex-<type-lower> for apex records.
             if rec["record_short"]:
                 key = rec["record_short"]
                 display_fqdn = f"{rec['record_short']}.{rec['zone_name']}"
             else:
                 key = f"apex-{rec['type'].lower()}"
                 display_fqdn = rec["zone_name"]
-            # Weighted records share recordName — disambiguate by setIdentifier.
             if rec.get("set_identifier"):
                 key = f"{key}-{rec['set_identifier']}"
-            # metadata.name stays fully qualified (global cluster identifier).
             rec["xr_name"] = f"record-{key}.{rec['zone_name']}"
             rec["display_fqdn"] = display_fqdn
-            # Filename drops the zone suffix (zone implied by folder).
             rec_xr_path = env_zone_dir / f"record-{key}.yaml"
             rec_xr_rel = str(rec_xr_path.relative_to(REPO_ROOT))
             writer.handle(rec_xr_path, record_xr_yaml(ctx, rec), f"record XR [{rec['type']}]")
@@ -512,7 +440,6 @@ def main() -> int:
         print("Re-run with --write to actually create the files.")
         print("After --write: review, commit, push, open PR. Argo will sync and Crossplane will observe.")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

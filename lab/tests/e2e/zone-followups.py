@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""End-to-end follow-ups: record on internal zone + public external zone.
-
-Validates two open gaps after the private-zone test:
-1. Records can be created against a scaffolder-built (delegated) zone.
-2. Public zones flow through the same redesigned form.
-"""
 from __future__ import annotations
 
 import json
@@ -19,7 +13,6 @@ NAMESPACE = "system-infrastructure-dev"
 BACKSTAGE = os.environ.get("BACKSTAGE_BACKEND", "http://localhost:7007")
 ARGO_APPS = ["entities", "lab-root", "crossplane-compositions-dns"]
 
-
 def http_json(url, *, method="GET", body=None, headers=None):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
@@ -31,26 +24,20 @@ def http_json(url, *, method="GET", body=None, headers=None):
         raw = resp.read()
     return json.loads(raw) if raw else None
 
-
 def token():
     return http_json(f"{BACKSTAGE}/api/auth/guest/refresh")["backstageIdentity"]["token"]
-
 
 def run(cmd, check=True, capture=True):
     return subprocess.run(cmd, check=check, capture_output=capture, text=True)
 
-
 def step(msg):
     print(f"\n>>> {msg}")
-
 
 def ok(msg):
     print(f"  PASS  {msg}")
 
-
 def fail(msg):
     print(f"  FAIL  {msg}")
-
 
 def submit(template_ref, values):
     body = {"templateRef": template_ref, "values": values}
@@ -60,7 +47,6 @@ def submit(template_ref, values):
         headers={"Authorization": f"Bearer {token()}"},
     )
     return resp["id"]
-
 
 def wait_task(task_id, deadline=240):
     elapsed = 0
@@ -74,7 +60,6 @@ def wait_task(task_id, deadline=240):
         time.sleep(3)
         elapsed += 3
     return "timeout"
-
 
 def task_pr_url(task_id):
     events = http_json(
@@ -90,7 +75,6 @@ def task_pr_url(task_id):
                 return link["url"]
     return None
 
-
 def task_log_tail(task_id, n=20):
     events = http_json(
         f"{BACKSTAGE}/api/scaffolder/v2/tasks/{task_id}/events",
@@ -104,17 +88,14 @@ def task_log_tail(task_id, n=20):
             msgs.append(f"  [{ev.get('type')}] {body.get('stepId') or '-'}: {msg.strip().splitlines()[0][:160]}")
     return msgs[-n:]
 
-
 def merge_pr(pr_url):
     pr_num = pr_url.rstrip("/").split("/")[-1]
     run(["gh", "pr", "merge", pr_num, "--merge", "--delete-branch"], capture=False)
-
 
 def git_pull_head():
     run(["git", "-C", REPO_ROOT, "fetch", "--quiet", "origin"])
     run(["git", "-C", REPO_ROOT, "pull", "--ff-only", "--quiet"])
     return run(["git", "-C", REPO_ROOT, "rev-parse", "HEAD"]).stdout.strip()
-
 
 def argo_wait(app, revision, deadline=300):
     elapsed = 0
@@ -130,13 +111,11 @@ def argo_wait(app, revision, deadline=300):
         elapsed += 5
     return False
 
-
 def get_xr(kind_resource, name):
     r = run(["kubectl", "-n", NAMESPACE, "get", f"{kind_resource}/{name}", "-o", "json"], check=False)
     if r.returncode != 0:
         return None
     return json.loads(r.stdout)
-
 
 def wait_ready(kind_resource, name, deadline=300):
     elapsed = 0
@@ -150,7 +129,6 @@ def wait_ready(kind_resource, name, deadline=300):
         elapsed += 5
     return get_xr(kind_resource, name)
 
-
 def find_delegation_mr(child_zone_name):
     r = run(["kubectl", "-n", NAMESPACE, "get", "record.route53.aws.m.upbound.io",
              "-o", "json"], check=False)
@@ -161,7 +139,6 @@ def find_delegation_mr(child_zone_name):
         if spec.get("type") == "NS" and spec.get("name") == child_zone_name:
             return it
     return None
-
 
 def wait_catalog(entity_ref, deadline=120):
     kind, rest = entity_ref.split(":", 1)
@@ -179,7 +156,6 @@ def wait_catalog(entity_ref, deadline=120):
         time.sleep(3)
         elapsed += 3
     return False
-
 
 def submit_pr_merge_sync(template_ref, values):
     task_id = submit(template_ref, values)
@@ -201,7 +177,6 @@ def submit_pr_merge_sync(template_ref, values):
         if not argo_wait(app, head):
             return None, f"argo {app} did not sync"
     return head, None
-
 
 def test_record_against_internal():
     step("create A record test.internal.arthurbryan.com -> 10.0.0.42 via the form")
@@ -251,7 +226,6 @@ def test_record_against_internal():
         fail("MR zoneId mismatch"); return 1
     ok("Route53 Record MR materialized in the right hosted zone")
     return 0
-
 
 def test_public_zone():
     step("create public zone external.arthurbryan.com via the form")
@@ -306,7 +280,6 @@ def test_public_zone():
     ok("catalog has the new zone entity")
     return 0
 
-
 def main():
     failures = 0
     failures += test_record_against_internal()
@@ -316,7 +289,6 @@ def main():
     print("=" * 60)
     print(f"failures: {failures}")
     return 1 if failures else 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

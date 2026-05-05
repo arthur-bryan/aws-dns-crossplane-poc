@@ -23,7 +23,6 @@ spec:
         zone:
           title: Parent Zone
           type: string
-          description: Hosted zone to add this record to. The zone determines environment, AWS account, domain, subdomain, and system — no need to retype those.
           ui:field: EntityPicker
           ui:autofocus: true
           ui:options:
@@ -195,11 +194,11 @@ spec:
                   title: AWS Service Type
                   type: string
                   enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, ElasticBeanstalk, Custom]
-                  description: "Route53 needs the hosted zone ID of the target. The platform resolves it from the service type + region — no need to look it up yourself."
+                  description: AWS service hosting the target. Platform resolves the hosted-zone ID from this.
                 dnsName:
                   title: Target DNS Name
                   type: string
-                  description: "DNS name of the target resource (the target typically lives in a different AWS account than this DNS account — find it in that account and paste it here)."
+                  description: DNS name of the target resource.
                   ui:help: "Example: d1234567890.cloudfront.net or my-alb-12345.us-east-1.elb.amazonaws.com"
                 evaluateTargetHealth:
                   title: Evaluate Target Health
@@ -209,11 +208,9 @@ spec:
               dependencies:
                 serviceType:
                   oneOf:
-                    # CloudFront + GlobalAccelerator are global — no region needed.
                     - properties:
                         serviceType:
                           enum: [CloudFront, GlobalAccelerator]
-                    # Regional services: user picks the region where the target resource lives.
                     - properties:
                         serviceType:
                           enum: [ALB, NLB, S3Website, APIGateway, ElasticBeanstalk]
@@ -221,25 +218,21 @@ spec:
                           title: Target Region
                           type: string
                           pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
-                          description: "Region of the target resource (the ALB/NLB/S3 website/API Gateway you're pointing at — NOT the DNS account's region)."
+                          description: Region of the target (ALB/NLB/S3-website/API-Gateway), not the DNS account's region.
                           default: us-east-1
-                          ui:help: "Cross-account: this is the region where the ALB/NLB lives, in its own account."
-                      required: [targetRegion]
+                                      required: [targetRegion]
                     - properties:
                         serviceType: { const: Custom }
                         customZoneId:
                           title: Custom Hosted Zone ID
                           type: string
                           pattern: '^Z[A-Z0-9]+$'
-                          description: "Raw Route53 hosted zone ID of the target (only needed for endpoints the platform can't auto-resolve)."
+                          description: Hosted zone ID of the target endpoint.
                       required: [customZoneId]
 
     - title: Routing Policy (Optional)
       description: |
-        Simple = single record, single value. Anything else requires a
-        setIdentifier so multiple records with the same name+type can
-        coexist. Matches AWS Console: Weighted / Failover / Latency /
-        Geolocation / Multivalue answer.
+        Anything other than 'simple' requires a setIdentifier.
       properties:
         routingPolicy:
           title: Routing Policy
@@ -280,7 +273,6 @@ spec:
                   title: Health Check ID (required for PRIMARY)
                   type: string
                   pattern: '^[a-f0-9-]+$'
-                  description: "Existing Route53 health check ID"
               required: [setIdentifier, failoverType]
             - properties:
                 routingPolicy: { const: latency }
@@ -293,7 +285,6 @@ spec:
                   title: AWS region for this record
                   type: string
                   pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
-                  description: "Route53 routes latency-sensitive clients from this region to this record"
               required: [setIdentifier, latencyRegion]
             - properties:
                 routingPolicy: { const: geolocation }
@@ -310,7 +301,7 @@ spec:
                 geoCountry:
                   title: Country code (optional)
                   type: string
-                  description: ISO 3166-1 alpha-2 (e.g. BR, DE). Use '*' for default.
+                  description: ISO 3166-1 alpha-2 (e.g. BR, DE). '*' for default.
                 geoSubdivision:
                   title: US state code (optional, only when country=US)
                   type: string
@@ -326,11 +317,9 @@ spec:
                   title: AWS Region near which to route (optional)
                   type: string
                   pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
-                  description: "For AWS-region-based routing; leave empty if using coordinates"
                 geoproxLatitude:
                   title: Latitude (optional)
                   type: string
-                  description: "For non-AWS resources; pair with longitude"
                 geoproxLongitude:
                   title: Longitude (optional)
                   type: string
@@ -340,7 +329,6 @@ spec:
                   minimum: -90
                   maximum: 90
                   default: 0
-                  description: "Negative shrinks, positive expands the match area"
               required: [setIdentifier]
             - properties:
                 routingPolicy: { const: multivalue }
@@ -356,18 +344,12 @@ spec:
               required: [setIdentifier]
 
   steps:
-    # The picked zone carries every piece of context we need — env, account,
-    # domain, subdomain, system — as annotations. We don't need a separate
-    # System picker or AWS Account form section.
     - id: fetchZone
       name: Fetch parent Zone entity
       action: catalog:fetch
       input:
         entityRef: ${{ parameters.zone }}
 
-    # Compute the resource identity once — non-apex is just <recordName>, apex
-    # is apex-<type-lowercase>. That becomes the XR metadata.name prefix and
-    # the filename stem, so subsequent steps can reference it uniformly.
     - id: computeKey
       name: Derive resource key
       action: roadiehq:utils:jsonata

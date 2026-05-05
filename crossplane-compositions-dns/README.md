@@ -61,13 +61,13 @@ Define um registro DNS individual em uma zona Route53.
 **Campos para ALIAS records:**
 
 - `aliasTarget.serviceType` - Tipo de serviço AWS (auto-preenche hostedZoneId):
-  - `CloudFront` - CloudFront distribution
-  - `ALB` - Application Load Balancer
-  - `NLB` - Network Load Balancer
-  - `S3Website` - S3 website endpoint
-  - `APIGateway` - API Gateway regional
-  - `GlobalAccelerator` - AWS Global Accelerator
-  - `Custom` - Requer `hostedZoneId` manual
+ - `CloudFront` - CloudFront distribution
+ - `ALB` - Application Load Balancer
+ - `NLB` - Network Load Balancer
+ - `S3Website` - S3 website endpoint
+ - `APIGateway` - API Gateway regional
+ - `GlobalAccelerator` - AWS Global Accelerator
+ - `Custom` - Requer `hostedZoneId` manual
 - `aliasTarget.dnsName` - Nome DNS do destino
 - `aliasTarget.hostedZoneId` - Zone ID do destino (obrigatório apenas para `Custom`)
 - `aliasTarget.evaluateTargetHealth` - Avaliar saúde do destino (padrão: false)
@@ -116,8 +116,8 @@ Características:
 
 - **Lookup de zona**: Se `zoneName` for fornecido, faz lookup automático do `zoneId` usando modo `Observe`
 - **Auto-resolução de ALIAS zone IDs**: Mapeia automaticamente o `hostedZoneId` baseado em `serviceType` e região:
-  - CloudFront: Global (Z2FDTNDATAQYW2)
-  - ALB/NLB/S3Website/APIGateway: Específico por região (70+ mapeamentos)
+ - CloudFront: Global (Z2FDTNDATAQYW2)
+ - ALB/NLB/S3Website/APIGateway: Específico por região (70+ mapeamentos)
 - **Weighted routing**: Suporte nativo para distribuição de tráfego com múltiplos registros
 - **Tipos de registro**: A, AAAA, CNAME, TXT, ALIAS
 - Validação e atualização suportadas via `managementPolicies`
@@ -130,25 +130,25 @@ Características:
 apiVersion: dock.tech/v1
 kind: Zone
 metadata:
-  name: test-zone-dev
-  namespace: cross-cloud-dns-poc
+ name: test-zone-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: test-zone-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: test-zone-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
+ aws:
+ account: 123456789012
+ accountName: dev-account
 
-  zoneName: test.dev.dock.tech
-  comment: "Zona de teste para APE platform"
+ zoneName: test.dev.dock.tech
+ comment: "Zona de teste para APE platform"
 
-  tags:
-    CostCenter: "Engineering"
-    Owner: "APE Team"
+ tags:
+ CostCenter: "Engineering"
+ Owner: "APE Team"
 ```
 
 ### Exemplo: Registro A
@@ -157,26 +157,26 @@ spec:
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: api-test-dev
-  namespace: cross-cloud-dns-poc
+ name: api-test-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: api-test-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: api-test-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
-    region: us-east-2
+ aws:
+ account: 123456789012
+ accountName: dev-account
+ region: us-east-2
 
-  zoneName: test.dev.dock.tech
-  recordName: api
-  type: A
-  ttl: 3600
-  values:
-    - "10.0.1.100"
+ zoneName: test.dev.dock.tech
+ recordName: api
+ type: A
+ ttl: 3600
+ values:
+ - "10.0.1.100"
 ```
 
 ### Exemplo: Registro CNAME
@@ -185,26 +185,26 @@ spec:
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: www-test-dev
-  namespace: cross-cloud-dns-poc
+ name: www-test-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: www-test-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: www-test-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
-    region: us-east-2
+ aws:
+ account: 123456789012
+ accountName: dev-account
+ region: us-east-2
 
-  zoneName: test.dev.dock.tech
-  recordName: www
-  type: CNAME
-  ttl: 3600
-  values:
-    - "api.test.dev.dock.tech"
+ zoneName: test.dev.dock.tech
+ recordName: www
+ type: CNAME
+ ttl: 3600
+ values:
+ - "api.test.dev.dock.tech"
 ```
 
 ### Exemplo: Registro ALIAS (CloudFront)
@@ -213,27 +213,27 @@ spec:
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: cdn-test-dev
-  namespace: cross-cloud-dns-poc
+ name: cdn-test-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: cdn-test-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: cdn-test-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
-    region: us-east-2
+ aws:
+ account: 123456789012
+ accountName: dev-account
+ region: us-east-2
 
-  zoneName: test.dev.dock.tech
-  recordName: cdn
-  type: ALIAS
-  aliasTarget:
-    serviceType: CloudFront
-    dnsName: d111111abcdef8.cloudfront.net
-    evaluateTargetHealth: false
+ zoneName: test.dev.dock.tech
+ recordName: cdn
+ type: ALIAS
+ aliasTarget:
+ serviceType: CloudFront
+ dnsName: d111111abcdef8.cloudfront.net
+ evaluateTargetHealth: false
 ```
 
 ### Exemplo: Registro ALIAS (ALB)
@@ -242,27 +242,27 @@ spec:
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: app-test-dev
-  namespace: cross-cloud-dns-poc
+ name: app-test-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: app-test-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: app-test-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
-    region: us-east-2
+ aws:
+ account: 123456789012
+ accountName: dev-account
+ region: us-east-2
 
-  zoneName: test.dev.dock.tech
-  recordName: app
-  type: ALIAS
-  aliasTarget:
-    serviceType: ALB
-    dnsName: my-alb-123456789.us-east-2.elb.amazonaws.com
-    evaluateTargetHealth: true
+ zoneName: test.dev.dock.tech
+ recordName: app
+ type: ALIAS
+ aliasTarget:
+ serviceType: ALB
+ dnsName: my-alb-123456789.us-east-2.elb.amazonaws.com
+ evaluateTargetHealth: true
 ```
 
 ### Exemplo: Weighted Routing (70% / 30%)
@@ -272,58 +272,58 @@ spec:
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: api-primary-test-dev
-  namespace: cross-cloud-dns-poc
+ name: api-primary-test-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: api-primary-test-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: api-primary-test-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
-    region: us-east-2
+ aws:
+ account: 123456789012
+ accountName: dev-account
+ region: us-east-2
 
-  zoneName: test.dev.dock.tech
-  recordName: api
-  type: A
-  ttl: 60
-  values:
-    - "10.0.1.100"
+ zoneName: test.dev.dock.tech
+ recordName: api
+ type: A
+ ttl: 60
+ values:
+ - "10.0.1.100"
 
-  setIdentifier: "primary-us-east-2"
-  weight: 70
+ setIdentifier: "primary-us-east-2"
+ weight: 70
 
 ---
 # Registro secundário - 30% do tráfego
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: api-secondary-test-dev
-  namespace: cross-cloud-dns-poc
+ name: api-secondary-test-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: api-secondary-test-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: api-secondary-test-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
-    region: us-east-2
+ aws:
+ account: 123456789012
+ accountName: dev-account
+ region: us-east-2
 
-  zoneName: test.dev.dock.tech
-  recordName: api
-  type: A
-  ttl: 60
-  values:
-    - "10.0.2.200"
+ zoneName: test.dev.dock.tech
+ recordName: api
+ type: A
+ ttl: 60
+ values:
+ - "10.0.2.200"
 
-  setIdentifier: "secondary-us-west-2"
-  weight: 30
+ setIdentifier: "secondary-us-west-2"
+ weight: 30
 ```
 
 ### Exemplo: Registro TXT
@@ -332,27 +332,27 @@ spec:
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: verification-test-dev
-  namespace: cross-cloud-dns-poc
+ name: verification-test-dev
+ namespace: cross-cloud-dns-poc
 spec:
-  name: verification-test-dev
-  domain: cross
-  subdomain: cloud
-  system: dns-poc
-  environment: dev
+ name: verification-test-dev
+ domain: cross
+ subdomain: cloud
+ system: dns-poc
+ environment: dev
 
-  aws:
-    account: 123456789012
-    accountName: dev-account
-    region: us-east-2
+ aws:
+ account: 123456789012
+ accountName: dev-account
+ region: us-east-2
 
-  zoneName: test.dev.dock.tech
-  recordName: _verification
-  type: TXT
-  ttl: 3600
-  values:
-    - "v=spf1 include:_spf.google.com ~all"
-    - "verification-token-12345"
+ zoneName: test.dev.dock.tech
+ recordName: _verification
+ type: TXT
+ ttl: 3600
+ values:
+ - "v=spf1 include:_spf.google.com ~all"
+ - "verification-token-12345"
 ```
 
 ## Configuração
@@ -361,10 +361,10 @@ spec:
 
 ```yaml
 managementPolicies:
-  - Observe
-  - Create
-  - Update
-  - Delete
+ - Observe
+ - Create
+ - Update
+ - Delete
 ```
 
 Os `managementPolicies` controlam como o Crossplane gerencia os recursos provisionados:
@@ -428,16 +428,16 @@ Este chart requer:
 
 ```
 crossplane-compositions-dns/
-├── Chart.yaml              # Metadados do chart
-├── values.yaml            # Valores padrão
-├── README.md              # Esta documentação
+├── Chart.yaml # Metadados do chart
+├── values.yaml # Valores padrão
+├── README.md # Esta documentação
 └── templates/
-    ├── compositions/      # Compositions que implementam a lógica
-    │   ├── zone.yaml
-    │   └── record.yaml
-    └── crds/              # Definição de recursos customizados
-        ├── zone.yaml
-        └── record.yaml
+ ├── compositions/ # Compositions que implementam a lógica
+ │ ├── zone.yaml
+ │ └── record.yaml
+ └── crds/ # Definição de recursos customizados
+ ├── zone.yaml
+ └── record.yaml
 ```
 
 ## Arquitetura
@@ -477,16 +477,16 @@ kubectl get zone test-zone-dev -n cross-cloud-dns-poc -o jsonpath='{.status.name
 Use TTLs baixos (60-300 segundos) para weighted routing para facilitar mudanças rápidas de distribuição:
 
 ```yaml
-ttl: 60  # Recomendado para weighted routing
+ttl: 60 # Recomendado para weighted routing
 ```
 
 ### ALIAS vs CNAME
 
 Sempre use `ALIAS` records para recursos AWS (ALB, CloudFront, S3):
 
-- ✅ Não incorre em cobranças por queries DNS
-- ✅ Pode ser usado no apex da zona (ex: `example.com`)
-- ✅ Suporta health checks
+- Não incorre em cobranças por queries DNS
+- Pode ser usado no apex da zona (ex: `example.com`)
+- Suporta health checks
 
 CNAME só é necessário para destinos não-AWS ou subdomínios.
 
@@ -495,18 +495,18 @@ CNAME só é necessário para destinos não-AWS ou subdomínios.
 Use `setIdentifier` descritivos para weighted routing:
 
 ```yaml
-setIdentifier: "primary-us-east-2"   # ✅ Descritivo
+setIdentifier: "primary-us-east-2" # Descritivo
 # Evite:
-setIdentifier: "r1"                   # ❌ Não descritivo
+setIdentifier: "r1" # Não descritivo
 ```
 
 ### Validação de Zona
 
 A composition usa `managementPolicies: [Observe, Create, Update, Delete]` que:
 
-- ✅ Detecta zonas existentes antes de criar
-- ✅ Permite atualizações de tags e comentários
-- ✅ Previne duplicação acidental
+- Detecta zonas existentes antes de criar
+- Permite atualizações de tags e comentários
+- Previne duplicação acidental
 
 ## Limitações
 

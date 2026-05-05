@@ -1,40 +1,16 @@
-# Committed template for lab/backstage/ape-lab/app-config.local.yaml
-#
-# On first run:
-#   export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxx   # PAT with `repo` scope
-#   cp lab/backstage/app-config.example.yaml lab/backstage/ape-lab/app-config.local.yaml
-#   cd lab/backstage/ape-lab && yarn dev
-#
-# app-config.local.yaml is gitignored so your PAT references stay local. Any
-# non-secret customization lives in THIS file; keep them in sync.
 
 app:
   title: APE Backstage
-  # baseUrl is embedded in the frontend bundle and is what the browser
-  # uses to call the backend. For lab-host-only use, http://localhost:3000
-  # works. For LAN access (other PCs on the network), set this to the
-  # Windows host's LAN IPv4, e.g. http://192.168.1.4:3000 — the lab host
-  # can still reach that same URL (portproxy listens on 0.0.0.0).
   baseUrl: http://localhost:3000
   listen:
     host: 0.0.0.0
     port: 3000
 
 backend:
-  # Must match the host portion of app.baseUrl (see above). When baseUrl
-  # is the LAN IP, add the CORS block below so lab-host browsers that
-  # still hit http://localhost:3000 can also talk to this backend.
   baseUrl: http://localhost:7007
   listen:
     host: 0.0.0.0
     port: 7007
-  # Uncomment when running with a LAN-IP baseUrl:
-  # cors:
-  #   origin:
-  #     - http://192.168.1.4:3000
-  #     - http://localhost:3000
-  #   methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
-  #   credentials: true
 
 organization:
   name: APE Platform
@@ -49,24 +25,16 @@ catalog:
   rules:
     - allow: [Component, System, API, Resource, Location, Template, Domain, Group, User]
   locations:
-    # Paths are relative to packages/backend/ (backend cwd when `yarn dev`).
-    # lab/backstage/ape-lab/packages/backend/ → 5 ups reaches the repo root.
-    #
-    # 1. APE hierarchy (Domain, SubDomain, System, Environment) seeded in entities/.
     - type: file
       target: ../../../../../entities/catalog-info.yaml
       rules:
         - allow: [Domain, System, Resource, Group]
 
-    # 2. The DNS scaffolder templates.
     - type: file
       target: ../../../../backstage-templates/catalog-info.yaml
       rules:
         - allow: [Location, Template]
 
-    # 3. Zone + Record Resource entities produced by the scaffolder (and by the
-    #    batch import tool). Grouped by env/zone: entities/catalog/<env>/<zone>/*.yaml.
-    #    Double-glob picks up every zone folder without needing one entry per env.
     - type: file
       target: ../../../../../entities/catalog/**/*.yaml
       rules:

@@ -135,9 +135,6 @@ spec:
                     - dnsName
                     - serviceType
 
-                # Routing policies (at most ONE of weighted/failover/latency/geolocation/multivalue).
-                # All routing policies use setIdentifier to disambiguate
-                # multiple records sharing the same name+type.
                 setIdentifier:
                   type: string
                   description: Set identifier.
@@ -256,7 +253,6 @@ spec:
                   message: "setIdentifier is required for geoproximity routing"
                 - rule: "!self.multivalueAnswerRoutingPolicy || has(self.setIdentifier)"
                   message: "setIdentifier is required for multivalue-answer routing"
-                # Only one routing policy at a time.
                 - rule: "(has(self.weight) ? 1 : 0) + (has(self.failoverRoutingPolicy) ? 1 : 0) + (has(self.latencyRoutingPolicy) ? 1 : 0) + (has(self.geolocationRoutingPolicy) ? 1 : 0) + (has(self.geoproximityRoutingPolicy) ? 1 : 0) + (self.multivalueAnswerRoutingPolicy ? 1 : 0) <= 1"
                   message: "At most one routing policy may be specified (weight / failover / latency / geolocation / geoproximity / multivalue)"
 

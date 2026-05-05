@@ -29,30 +29,23 @@ YELLOW = "\033[0;33m"
 BOLD = "\033[1m"
 NC = "\033[0m"
 
-
 def out(prefix: str, msg: str) -> None:
     print(f"{prefix}{msg}{NC}", flush=True)
-
 
 def step(msg: str) -> None:
     print(f"\n{BOLD}=== {msg} ==={NC}", flush=True)
 
-
 def info(msg: str) -> None:
     out(YELLOW, f"  [info] {msg}")
-
 
 def ok(msg: str) -> None:
     out(GREEN, f"  [ok]   {msg}")
 
-
 def fail(msg: str) -> None:
     out(RED, f"  [fail] {msg}")
 
-
 def run(cmd: list[str], check: bool = True, capture: bool = True, env: Optional[dict] = None) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, check=check, text=True, capture_output=capture, env=env or os.environ)
-
 
 def aws_env() -> dict[str, str]:
     creds_b64 = run(["kubectl", "-n", "crossplane-system", "get", "secret", "aws-creds",
@@ -70,13 +63,11 @@ def aws_env() -> dict[str, str]:
     env.setdefault("AWS_DEFAULT_REGION", "us-east-1")
     return env
 
-
 def aws(*args: str) -> dict | list:
     result = run(["aws", *args, "--output", "json"], env=aws_env())
     if not result.stdout.strip():
         return {}
     return json.loads(result.stdout)
-
 
 def http_json(url: str, *, method: str = "GET", body: Optional[dict] = None, headers: Optional[dict] = None) -> Any:
     data = json.dumps(body).encode() if body is not None else None
@@ -92,10 +83,8 @@ def http_json(url: str, *, method: str = "GET", body: Optional[dict] = None, hea
         return None
     return json.loads(raw)
 
-
 def backstage_token() -> str:
     return http_json(f"{BACKSTAGE}/api/auth/guest/refresh")["backstageIdentity"]["token"]
-
 
 def scaffolder_submit(template_ref: str, values: dict) -> str:
     token = backstage_token()
@@ -105,19 +94,16 @@ def scaffolder_submit(template_ref: str, values: dict) -> str:
                      headers={"Authorization": f"Bearer {token}"})
     return resp["id"]
 
-
 def scaffolder_task(task_id: str) -> dict:
     token = backstage_token()
     return http_json(f"{BACKSTAGE}/api/scaffolder/v2/tasks/{task_id}",
                      headers={"Authorization": f"Bearer {token}"})
-
 
 def scaffolder_events(task_id: str) -> list[dict]:
     token = backstage_token()
     resp = http_json(f"{BACKSTAGE}/api/scaffolder/v2/tasks/{task_id}/events",
                      headers={"Authorization": f"Bearer {token}"})
     return resp or []
-
 
 def scaffolder_wait(task_id: str, deadline: int = 240) -> str:
     elapsed = 0
@@ -129,7 +115,6 @@ def scaffolder_wait(task_id: str, deadline: int = 240) -> str:
         elapsed += 3
     return "timeout"
 
-
 def scaffolder_pr_url(task_id: str) -> Optional[str]:
     for ev in scaffolder_events(task_id):
         if ev.get("type") != "completion":
@@ -140,7 +125,6 @@ def scaffolder_pr_url(task_id: str) -> Optional[str]:
                 return link["url"]
     return None
 
-
 def scaffolder_log_tail(task_id: str, n: int = 12) -> list[str]:
     msgs: list[str] = []
     for ev in scaffolder_events(task_id):
@@ -150,11 +134,9 @@ def scaffolder_log_tail(task_id: str, n: int = 12) -> list[str]:
             msgs.append(f"[{ev.get('type')}] {body.get('stepId') or '-'}: {msg.strip().splitlines()[0][:160]}")
     return msgs[-n:]
 
-
 def gh_pr_merge(pr_url: str) -> None:
     pr_num = pr_url.rstrip("/").split("/")[-1]
     run(["gh", "pr", "merge", pr_num, "--merge", "--delete-branch"], capture=False)
-
 
 def gh_pr_close(pr_url: str, comment: str = "") -> None:
     pr_num = pr_url.rstrip("/").split("/")[-1]
@@ -163,12 +145,10 @@ def gh_pr_close(pr_url: str, comment: str = "") -> None:
         args += ["--comment", comment]
     run(args, capture=False)
 
-
 def git_pull() -> str:
     run(["git", "-C", REPO_ROOT, "fetch", "--quiet", "origin"])
     run(["git", "-C", REPO_ROOT, "pull", "--ff-only", "--quiet"])
     return run(["git", "-C", REPO_ROOT, "rev-parse", "HEAD"]).stdout.strip()
-
 
 def argo_wait_revision(app: str, revision: str, deadline: int = 240) -> bool:
     elapsed = 0
@@ -183,7 +163,6 @@ def argo_wait_revision(app: str, revision: str, deadline: int = 240) -> bool:
         time.sleep(5)
         elapsed += 5
     return False
-
 
 def xr_status(xr_name: str) -> dict:
     cmd = ["kubectl", "-n", NAMESPACE, "get", f"record.dock.tech/{xr_name}", "-o", "json"]
@@ -205,7 +184,6 @@ def xr_status(xr_name: str) -> dict:
         "synced_msg": conds.get("Synced", ("", "", ""))[2],
     }
 
-
 def mr_status(mr_name: str) -> dict:
     cmd = ["kubectl", "-n", NAMESPACE, "get", f"record.route53.aws.m.upbound.io/{mr_name}", "-o", "json"]
     r = run(cmd, check=False)
@@ -221,7 +199,6 @@ def mr_status(mr_name: str) -> dict:
         "external_name": obj["metadata"].get("annotations", {}).get("crossplane.io/external-name"),
     }
 
-
 def wait_xr_ready(xr_name: str, deadline: int = 240) -> bool:
     elapsed = 0
     while elapsed < deadline:
@@ -231,7 +208,6 @@ def wait_xr_ready(xr_name: str, deadline: int = 240) -> bool:
         time.sleep(5)
         elapsed += 5
     return False
-
 
 def wait_catalog_entity(entity_ref: str, deadline: int = 120) -> bool:
     parts = entity_ref.split(":", 1)[1]
@@ -250,7 +226,6 @@ def wait_catalog_entity(entity_ref: str, deadline: int = 120) -> bool:
         elapsed += 3
     return False
 
-
 def wait_catalog_entity_absent(entity_ref: str, deadline: int = 120) -> bool:
     parts = entity_ref.split(":", 1)[1]
     namespace, name = parts.split("/", 1)
@@ -267,16 +242,13 @@ def wait_catalog_entity_absent(entity_ref: str, deadline: int = 120) -> bool:
         elapsed += 3
     return False
 
-
 def aws_records_at(fqdn: str) -> list[dict]:
     res = aws("route53", "list-resource-record-sets",
               "--hosted-zone-id", ZONE_ID,
               "--query", f"ResourceRecordSets[?Name=='{fqdn}.']")
     return res or []
 
-
 _HEALTH_CHECK_CACHE: dict[str, str] = {}
-
 
 def ensure_health_check(label: str) -> str:
     if label in _HEALTH_CHECK_CACHE:
@@ -296,19 +268,16 @@ def ensure_health_check(label: str) -> str:
     _HEALTH_CHECK_CACHE[label] = hc_id
     return hc_id
 
-
 def delete_health_check(hc_id: str) -> None:
     try:
         aws("route53", "delete-health-check", "--health-check-id", hc_id)
     except subprocess.CalledProcessError:
         pass
 
-
 def cleanup_all_health_checks() -> None:
     for hc_id in list(_HEALTH_CHECK_CACHE.values()):
         delete_health_check(hc_id)
     _HEALTH_CHECK_CACHE.clear()
-
 
 def base_key(record_name: str, rtype: str, set_id: Optional[str]) -> str:
     base = record_name if record_name else f"apex-{rtype.lower()}"
@@ -316,14 +285,11 @@ def base_key(record_name: str, rtype: str, set_id: Optional[str]) -> str:
         base = f"{base}-{set_id}"
     return base.lower()
 
-
 def xr_path(zone: str, key: str) -> str:
     return f"entities/environments/cross/cloud/infrastructure/dev/resources/aws/{zone}/record-{key}.yaml"
 
-
 def catalog_path(env: str, zone: str, key: str) -> str:
     return f"entities/catalog/{env}/{zone}/record-{key}.yaml"
-
 
 @dataclass
 class Scenario:
@@ -337,7 +303,6 @@ class Scenario:
     set_identifier: Optional[str] = None
     extra_create: dict[str, Any] = field(default_factory=dict)
     extra_edit: dict[str, Any] = field(default_factory=dict)
-
 
 def submit_create(scenario: Scenario) -> tuple[Optional[str], Optional[str]]:
     values = {
@@ -361,7 +326,6 @@ def submit_create(scenario: Scenario) -> tuple[Optional[str], Optional[str]]:
         return None, None
     ok(f"create PR: {pr}")
     return task_id, pr
-
 
 def submit_edit(scenario: Scenario) -> tuple[Optional[str], Optional[str]]:
     values = {
@@ -388,7 +352,6 @@ def submit_edit(scenario: Scenario) -> tuple[Optional[str], Optional[str]]:
     ok(f"edit PR: {pr}")
     return task_id, pr
 
-
 def merge_pr(pr_url: str) -> bool:
     info(f"auto-merging {pr_url}")
     try:
@@ -397,7 +360,6 @@ def merge_pr(pr_url: str) -> bool:
         fail(f"merge failed: {exc}")
         return False
     return True
-
 
 def post_merge_validate(scenario: Scenario, after_edit: bool = False) -> bool:
     head = git_pull()
@@ -425,7 +387,6 @@ def post_merge_validate(scenario: Scenario, after_edit: bool = False) -> bool:
         return False
     ok(f"AWS: {msg}")
     return True
-
 
 def cleanup_record(scenario: Scenario) -> bool:
     key = base_key(scenario.record_name, scenario.record_type, scenario.set_identifier)
@@ -472,7 +433,6 @@ def cleanup_record(scenario: Scenario) -> bool:
     fail("AWS row still present after 180s")
     return False
 
-
 def run_scenario(scenario: Scenario, *, do_edit: bool = True, do_cleanup: bool = True) -> bool:
     step(f"SCENARIO {scenario.name} ({scenario.record_type})")
     _, pr = submit_create(scenario)
@@ -503,7 +463,6 @@ def run_scenario(scenario: Scenario, *, do_edit: bool = True, do_cleanup: bool =
             return False
     return True
 
-
 def values_match(rows: list[dict], rtype: str, expected_values: list[str], expected_ttl: int,
                  set_identifier: Optional[str] = None,
                  weight: Optional[int] = None) -> tuple[bool, str]:
@@ -528,7 +487,6 @@ def values_match(rows: list[dict], rtype: str, expected_values: list[str], expec
         pieces.append(f"weight={weight}")
     return True, " ".join(pieces)
 
-
 def alias_match(rows: list[dict], expected_dns: str, expected_zone_id: str,
                 set_identifier: Optional[str] = None) -> tuple[bool, str]:
     target = [r for r in rows if r.get("Type") in ("A", "AAAA") and r.get("AliasTarget")]
@@ -545,7 +503,6 @@ def alias_match(rows: list[dict], expected_dns: str, expected_zone_id: str,
         return False, f"alias zoneId {al.get('HostedZoneId')} != {expected_zone_id}"
     return True, f"alias dnsName={got_dns} zoneId={al.get('HostedZoneId')}"
 
-
 def make_a(suffix: str) -> Scenario:
     name = f"a-{suffix}"
     record_name = f"e2e-{name}"
@@ -560,7 +517,6 @@ def make_a(suffix: str) -> Scenario:
         expected_aws=lambda rows: values_match(rows, "A", create_v, 300),
         expected_aws_after_edit=lambda rows: values_match(rows, "A", edit_v, 600),
     )
-
 
 def make_aaaa(suffix: str) -> Scenario:
     name = f"aaaa-{suffix}"
@@ -577,7 +533,6 @@ def make_aaaa(suffix: str) -> Scenario:
         expected_aws_after_edit=lambda rows: values_match(rows, "AAAA", edit_v, 600),
     )
 
-
 def make_cname(suffix: str) -> Scenario:
     name = f"cname-{suffix}"
     record_name = f"e2e-{name}"
@@ -592,7 +547,6 @@ def make_cname(suffix: str) -> Scenario:
         expected_aws=lambda rows: values_match(rows, "CNAME", create_v, 300),
         expected_aws_after_edit=lambda rows: values_match(rows, "CNAME", edit_v, 600),
     )
-
 
 def make_txt(suffix: str) -> Scenario:
     name = f"txt-{suffix}"
@@ -609,7 +563,6 @@ def make_txt(suffix: str) -> Scenario:
         expected_aws_after_edit=lambda rows: values_match(rows, "TXT", edit_v, 600),
     )
 
-
 def make_mx(suffix: str) -> Scenario:
     name = f"mx-{suffix}"
     record_name = f"e2e-{name}"
@@ -624,7 +577,6 @@ def make_mx(suffix: str) -> Scenario:
         expected_aws=lambda rows: values_match(rows, "MX", create_v, 300),
         expected_aws_after_edit=lambda rows: values_match(rows, "MX", edit_v, 600),
     )
-
 
 def make_ptr(suffix: str) -> Scenario:
     name = f"ptr-{suffix}"
@@ -641,7 +593,6 @@ def make_ptr(suffix: str) -> Scenario:
         expected_aws_after_edit=lambda rows: values_match(rows, "PTR", edit_v, 600),
     )
 
-
 def make_srv(suffix: str) -> Scenario:
     name = f"srv-{suffix}"
     record_name = f"e2e-{name}"
@@ -656,7 +607,6 @@ def make_srv(suffix: str) -> Scenario:
         expected_aws=lambda rows: values_match(rows, "SRV", create_v, 300),
         expected_aws_after_edit=lambda rows: values_match(rows, "SRV", edit_v, 600),
     )
-
 
 def make_caa(suffix: str) -> Scenario:
     name = f"caa-{suffix}"
@@ -673,7 +623,6 @@ def make_caa(suffix: str) -> Scenario:
         expected_aws_after_edit=lambda rows: values_match(rows, "CAA", edit_v, 600),
     )
 
-
 def make_ns_subdelegation(suffix: str) -> Scenario:
     name = f"ns-{suffix}"
     record_name = f"e2e-{name}"
@@ -688,7 +637,6 @@ def make_ns_subdelegation(suffix: str) -> Scenario:
         expected_aws=lambda rows: values_match(rows, "NS", create_v, 172800),
         expected_aws_after_edit=lambda rows: values_match(rows, "NS", edit_v, 86400),
     )
-
 
 def make_alias_custom(suffix: str) -> Scenario:
     name = f"alias-custom-{suffix}"
@@ -713,7 +661,6 @@ def make_alias_custom(suffix: str) -> Scenario:
         expected_aws_after_edit=lambda rows: alias_match(rows, "d222-edit.cloudfront.net", "Z2FDTNDATAQYW2"),
     )
 
-
 def make_weighted(suffix: str, set_id: str, weight_create: int, weight_edit: int,
                   values_create: list[str], values_edit: list[str]) -> Scenario:
     name = f"weighted-{suffix}-{set_id}"
@@ -734,7 +681,6 @@ def make_weighted(suffix: str, set_id: str, weight_create: int, weight_edit: int
         expected_aws=lambda rows: values_match(rows, "A", values_create, 300, set_identifier=set_id, weight=weight_create),
         expected_aws_after_edit=lambda rows: values_match(rows, "A", values_edit, 600, set_identifier=set_id, weight=weight_edit),
     )
-
 
 def make_failover(suffix: str, set_id: str, role: str, value: str, edit_value: str) -> Scenario:
     name = f"failover-{suffix}-{set_id}"
@@ -759,7 +705,6 @@ def make_failover(suffix: str, set_id: str, role: str, value: str, edit_value: s
         expected_aws_after_edit=lambda rows: values_match(rows, "A", [edit_value], 600, set_identifier=set_id),
     )
 
-
 def make_latency(suffix: str, set_id: str, region: str, value: str, edit_value: str) -> Scenario:
     name = f"latency-{suffix}-{set_id}"
     record_name = f"e2e-latency-{suffix}"
@@ -780,7 +725,6 @@ def make_latency(suffix: str, set_id: str, region: str, value: str, edit_value: 
         expected_aws_after_edit=lambda rows: values_match(rows, "A", [edit_value], 600, set_identifier=set_id),
     )
 
-
 def make_geolocation(suffix: str, set_id: str, continent: str, value: str, edit_value: str) -> Scenario:
     name = f"geo-{suffix}-{set_id}"
     record_name = f"e2e-geo-{suffix}"
@@ -800,7 +744,6 @@ def make_geolocation(suffix: str, set_id: str, continent: str, value: str, edit_
         expected_aws=lambda rows: values_match(rows, "A", [value], 300, set_identifier=set_id),
         expected_aws_after_edit=lambda rows: values_match(rows, "A", [edit_value], 600, set_identifier=set_id),
     )
-
 
 def make_geoproximity(suffix: str, set_id: str, region: str, value: str, edit_value: str) -> Scenario:
     name = f"geoprox-{suffix}-{set_id}"
@@ -823,7 +766,6 @@ def make_geoproximity(suffix: str, set_id: str, region: str, value: str, edit_va
         expected_aws_after_edit=lambda rows: values_match(rows, "A", [edit_value], 600, set_identifier=set_id),
     )
 
-
 def make_multivalue(suffix: str, set_id: str, value: str, edit_value: str) -> Scenario:
     name = f"multi-{suffix}-{set_id}"
     record_name = f"e2e-multi-{suffix}"
@@ -842,7 +784,6 @@ def make_multivalue(suffix: str, set_id: str, value: str, edit_value: str) -> Sc
         expected_aws=lambda rows: values_match(rows, "A", [value], 300, set_identifier=set_id),
         expected_aws_after_edit=lambda rows: values_match(rows, "A", [edit_value], 600, set_identifier=set_id),
     )
-
 
 SCENARIO_BUILDERS: dict[str, Callable[[str], Scenario]] = {
     "a":          lambda s: make_a(s),
@@ -868,7 +809,6 @@ SCENARIO_BUILDERS: dict[str, Callable[[str], Scenario]] = {
     "multi-1":    lambda s: make_multivalue(s, "host-1", "10.0.10.10", "10.0.10.11"),
     "multi-2":    lambda s: make_multivalue(s, "host-2", "10.0.10.20", "10.0.10.21"),
 }
-
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -914,7 +854,6 @@ def main() -> int:
         print(f"  {marker}  {name}{extra}")
     failed = [r for r in results if not r[1]]
     return 0 if not failed else 1
-
 
 if __name__ == "__main__":
     sys.exit(main())

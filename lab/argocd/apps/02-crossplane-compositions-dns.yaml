@@ -1,5 +1,4 @@
 ---
-# Installs the DNS XRDs + Compositions (production chart, unmodified).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

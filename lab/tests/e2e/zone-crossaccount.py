@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""End-to-end cross-account zone creation.
-
-Submits the zone form with env=dev, parent=arthurbryan.com (prd). Asserts
-the child zone lands in the dev member account (309670275661) and the NS
-delegation record lands in the parent zone (prd account, 597230762851).
-"""
 from __future__ import annotations
 
 import json
@@ -31,7 +25,6 @@ CHILD_ZONE = f"{PREFIX}.{PARENT_ZONE}"
 CHILD_NAMESPACE = "system-infrastructure-dev"
 CHILD_XR = f"zone-{CHILD_ZONE}"
 
-
 def http_json(url, *, method="GET", body=None, headers=None):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
@@ -43,26 +36,20 @@ def http_json(url, *, method="GET", body=None, headers=None):
         raw = resp.read()
     return json.loads(raw) if raw else None
 
-
 def token():
     return http_json(f"{BACKSTAGE}/api/auth/guest/refresh")["backstageIdentity"]["token"]
-
 
 def run(cmd, check=True, capture=True, env=None):
     return subprocess.run(cmd, check=check, capture_output=capture, text=True, env=env)
 
-
 def step(msg):
     print(f"\n>>> {msg}")
-
 
 def ok(msg):
     print(f"  PASS  {msg}")
 
-
 def fail(msg):
     print(f"  FAIL  {msg}")
-
 
 def aws_env_prd():
     creds_b64 = run(["kubectl", "-n", "crossplane-system", "get", "secret", "aws-creds",
@@ -72,7 +59,6 @@ def aws_env_prd():
     key = next(l.split("=", 1)[1].strip() for l in creds.splitlines() if l.strip().startswith("aws_access_key_id"))
     secret = next(l.split("=", 1)[1].strip() for l in creds.splitlines() if l.strip().startswith("aws_secret_access_key"))
     return {**os.environ, "AWS_ACCESS_KEY_ID": key, "AWS_SECRET_ACCESS_KEY": secret, "AWS_DEFAULT_REGION": "us-east-1"}
-
 
 def aws_env_dev():
     base = aws_env_prd()
@@ -86,10 +72,8 @@ def aws_env_dev():
             "AWS_SECRET_ACCESS_KEY": creds["SecretAccessKey"],
             "AWS_SESSION_TOKEN": creds["SessionToken"]}
 
-
 def aws(args, env):
     return run(["aws", *args, "--output", "json"], env=env, check=False)
-
 
 def submit_form():
     values = {
@@ -106,7 +90,6 @@ def submit_form():
     )
     return resp["id"]
 
-
 def wait_task(task_id, deadline=240):
     elapsed = 0
     while elapsed < deadline:
@@ -119,7 +102,6 @@ def wait_task(task_id, deadline=240):
         time.sleep(3)
         elapsed += 3
     return "timeout"
-
 
 def task_pr_url(task_id):
     events = http_json(
@@ -135,7 +117,6 @@ def task_pr_url(task_id):
                 return link["url"]
     return None
 
-
 def task_log_tail(task_id, n=30):
     events = http_json(
         f"{BACKSTAGE}/api/scaffolder/v2/tasks/{task_id}/events",
@@ -149,17 +130,14 @@ def task_log_tail(task_id, n=30):
             msgs.append(f"  [{ev.get('type')}] {body.get('stepId') or '-'}: {msg.strip().splitlines()[0][:200]}")
     return msgs[-n:]
 
-
 def merge_pr(pr_url):
     pr_num = pr_url.rstrip("/").split("/")[-1]
     run(["gh", "pr", "merge", pr_num, "--merge", "--delete-branch"], capture=False)
-
 
 def git_pull_head():
     run(["git", "-C", REPO_ROOT, "fetch", "--quiet", "origin"])
     run(["git", "-C", REPO_ROOT, "pull", "--ff-only", "--quiet"])
     return run(["git", "-C", REPO_ROOT, "rev-parse", "HEAD"]).stdout.strip()
-
 
 def argo_wait(app, revision, deadline=300):
     elapsed = 0
@@ -175,7 +153,6 @@ def argo_wait(app, revision, deadline=300):
         elapsed += 5
     return False
 
-
 def wait_zone_ready(name, deadline=300):
     elapsed = 0
     while elapsed < deadline:
@@ -189,7 +166,6 @@ def wait_zone_ready(name, deadline=300):
         elapsed += 5
     return None
 
-
 def find_delegation_mr(child_zone_name):
     r = run(["kubectl", "-n", CHILD_NAMESPACE, "get", "record.route53.aws.m.upbound.io",
              "-o", "json"], check=False)
@@ -200,7 +176,6 @@ def find_delegation_mr(child_zone_name):
         if s.get("type") == "NS" and s.get("name") == child_zone_name:
             return it
     return None
-
 
 def main():
     failures = 0
@@ -335,7 +310,6 @@ def main():
     print("=" * 60)
     print(f"failures: {failures}")
     return 1 if failures else 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

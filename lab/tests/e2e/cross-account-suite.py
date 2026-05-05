@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-"""Gap-closing e2e tests for the cross-account flow.
-
-Three scenarios the original cross-account test left untested:
-
-  A) Parent zone in dev, child also in dev (sub-zone of a sub-zone).
-  B) Record creation against a scaffolder-built dev zone.
-  C) Private zone in dev associated with a cross-account VPC from prd
-     (via VPCAssociationAuthorization + ZoneAssociation MRs).
-"""
 from __future__ import annotations
 
 import base64
@@ -37,7 +28,6 @@ PRD_VPC_REF = "resource:default/vpc-0410f81cfe1bba322"
 DEV_VPC_ID = "vpc-0dd3eaef2e5c11f69"
 PRD_VPC_ID = "vpc-0410f81cfe1bba322"
 
-
 def http_json(url, *, method="GET", body=None, headers=None):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
@@ -49,26 +39,20 @@ def http_json(url, *, method="GET", body=None, headers=None):
         raw = resp.read()
     return json.loads(raw) if raw else None
 
-
 def token():
     return http_json(f"{BACKSTAGE}/api/auth/guest/refresh")["backstageIdentity"]["token"]
-
 
 def run(cmd, check=True, capture=True, env=None):
     return subprocess.run(cmd, check=check, capture_output=capture, text=True, env=env)
 
-
 def step(msg):
     print(f"\n>>> {msg}")
-
 
 def ok(msg):
     print(f"  PASS  {msg}")
 
-
 def fail(msg):
     print(f"  FAIL  {msg}")
-
 
 def aws_env_prd():
     out = run(["kubectl", "-n", "crossplane-system", "get", "secret", "aws-creds",
@@ -77,7 +61,6 @@ def aws_env_prd():
     key = next(l.split("=", 1)[1].strip() for l in creds.splitlines() if l.strip().startswith("aws_access_key_id"))
     secret = next(l.split("=", 1)[1].strip() for l in creds.splitlines() if l.strip().startswith("aws_secret_access_key"))
     return {**os.environ, "AWS_ACCESS_KEY_ID": key, "AWS_SECRET_ACCESS_KEY": secret, "AWS_DEFAULT_REGION": "us-east-1"}
-
 
 def aws_env_dev():
     base = aws_env_prd()
@@ -89,17 +72,14 @@ def aws_env_dev():
             "AWS_SECRET_ACCESS_KEY": creds["SecretAccessKey"],
             "AWS_SESSION_TOKEN": creds["SessionToken"]}
 
-
 def aws(args, env):
     return run(["aws", *args, "--output", "json"], env=env, check=False)
-
 
 def submit(template_ref, values):
     body = {"templateRef": template_ref, "values": values}
     resp = http_json(f"{BACKSTAGE}/api/scaffolder/v2/tasks", method="POST", body=body,
                      headers={"Authorization": f"Bearer {token()}"})
     return resp["id"]
-
 
 def wait_task(task_id, deadline=240):
     elapsed = 0
@@ -110,7 +90,6 @@ def wait_task(task_id, deadline=240):
             return info["status"]
         time.sleep(3); elapsed += 3
     return "timeout"
-
 
 def task_pr_url(task_id):
     events = http_json(f"{BACKSTAGE}/api/scaffolder/v2/tasks/{task_id}/events",
@@ -124,7 +103,6 @@ def task_pr_url(task_id):
                 return link["url"]
     return None
 
-
 def task_log_tail(task_id, n=20):
     events = http_json(f"{BACKSTAGE}/api/scaffolder/v2/tasks/{task_id}/events",
                        headers={"Authorization": f"Bearer {token()}"}) or []
@@ -136,17 +114,14 @@ def task_log_tail(task_id, n=20):
             msgs.append(f"  [{ev.get('type')}] {body.get('stepId') or '-'}: {msg.strip().splitlines()[0][:200]}")
     return msgs[-n:]
 
-
 def merge_pr(pr_url):
     pr_num = pr_url.rstrip("/").split("/")[-1]
     run(["gh", "pr", "merge", pr_num, "--merge", "--delete-branch"], capture=False)
-
 
 def git_pull_head():
     run(["git", "-C", REPO_ROOT, "fetch", "--quiet", "origin"])
     run(["git", "-C", REPO_ROOT, "pull", "--ff-only", "--quiet"])
     return run(["git", "-C", REPO_ROOT, "rev-parse", "HEAD"]).stdout.strip()
-
 
 def argo_wait(app, revision, deadline=300):
     elapsed = 0
@@ -160,7 +135,6 @@ def argo_wait(app, revision, deadline=300):
             return True
         time.sleep(5); elapsed += 5
     return False
-
 
 def submit_pr_merge_sync(template_ref, values, label):
     print(f"  submitting form: {label}")
@@ -184,13 +158,11 @@ def submit_pr_merge_sync(template_ref, values, label):
             return None, f"argo {app} did not sync"
     return head, None
 
-
 def get_xr(kind_namespace, kind_resource, name):
     r = run(["kubectl", "-n", kind_namespace, "get", f"{kind_resource}/{name}", "-o", "json"], check=False)
     if r.returncode != 0:
         return None
     return json.loads(r.stdout)
-
 
 def wait_ready(namespace, kind_resource, name, deadline=300):
     elapsed = 0
@@ -203,7 +175,6 @@ def wait_ready(namespace, kind_resource, name, deadline=300):
         time.sleep(5); elapsed += 5
     return get_xr(namespace, kind_resource, name)
 
-
 def find_mr(namespace, kind_plural, predicate):
     r = run(["kubectl", "-n", namespace, "get", kind_plural, "-o", "json"], check=False)
     if r.returncode != 0:
@@ -212,7 +183,6 @@ def find_mr(namespace, kind_plural, predicate):
         if predicate(it):
             return it
     return None
-
 
 def test_a_parent_in_dev():
     step("Test A: parent in dev, child in dev (sub-of-sub)")
@@ -270,7 +240,6 @@ def test_a_parent_in_dev():
 
     return failures
 
-
 def test_b_record_against_dev_zone():
     step("Test B: record on a scaffolder-built dev zone")
     head, err = submit_pr_merge_sync(
@@ -324,7 +293,6 @@ def test_b_record_against_dev_zone():
         fail("A record missing or wrong value"); failures += 1
 
     return failures
-
 
 def test_c_cross_account_private_zone():
     step("Test C: private zone in dev with cross-account VPC from prd")
@@ -404,7 +372,6 @@ def test_c_cross_account_private_zone():
         failures += 1
     return failures
 
-
 def main():
     failures = 0
     failures += test_a_parent_in_dev()
@@ -414,7 +381,6 @@ def main():
     print("=" * 60)
     print(f"failures: {failures}")
     return 1 if failures else 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
