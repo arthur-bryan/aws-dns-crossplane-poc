@@ -220,7 +220,7 @@ spec:
                           pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
                           description: Region of the target (ALB/NLB/S3-website/API-Gateway), not the DNS account's region.
                           default: us-east-1
-                                      required: [targetRegion]
+                      required: [targetRegion]
                     - properties:
                         serviceType: { const: Custom }
                         customZoneId:
