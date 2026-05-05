@@ -22,3 +22,5 @@ spec:
   ttl: 300
   values:
     - 10.0.0.42
+  import:
+    existing: true
