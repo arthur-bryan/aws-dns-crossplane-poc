@@ -43,6 +43,17 @@ spec:
             [[- $delegatedFromZoneId := $params.delegatedFromZoneId ]]
             [[- $delegatedFromAccountName := default $accountName $params.delegatedFromAccountName ]]
 
+            [[- $sameAccountVpcs := list ]]
+            [[- $crossAccountVpcs := list ]]
+            [[- range $vpc := $vpcs ]]
+            [[-   $vpcAccount := default $accountName $vpc.accountName ]]
+            [[-   if eq $vpcAccount $accountName ]]
+            [[-     $sameAccountVpcs = append $sameAccountVpcs $vpc ]]
+            [[-   else ]]
+            [[-     $crossAccountVpcs = append $crossAccountVpcs (dict "vpcId" $vpc.vpcId "vpcRegion" $vpc.vpcRegion "accountName" $vpcAccount) ]]
+            [[-   end ]]
+            [[- end ]]
+
             [[- $zone := getComposedResource . $name ]]
             [[- $delegationName := printf "%s-delegation" $name ]]
             [[- $delegationRecord := getComposedResource . $delegationName ]]
@@ -102,9 +113,9 @@ spec:
                   [[- range $key, $value := $tags ]]
                   [[ $key ]]: [[ $value ]]
                   [[- end ]]
-                [[- if eq $visibility "private" ]]
+                [[- if and (eq $visibility "private") $sameAccountVpcs ]]
                 vpc:
-                [[- range $vpc := $vpcs ]]
+                [[- range $vpc := $sameAccountVpcs ]]
                   - vpcId: [[ $vpc.vpcId ]]
                     vpcRegion: [[ $vpc.vpcRegion ]]
                 [[- end ]]
@@ -138,6 +149,64 @@ spec:
                 zoneId: [[ $delegatedFromZoneId ]]
                 ttl: 172800
                 records: [[ $zone.status.atProvider.nameServers | toJson ]]
+            [[- end ]]
+
+            [[- if and (eq $visibility "private") $crossAccountVpcs $zone.status.atProvider $zone.status.atProvider.zoneId ]]
+            [[- $childZoneId := $zone.status.atProvider.zoneId ]]
+            [[- range $vpc := $crossAccountVpcs ]]
+            [[- $authName := printf "%s-vpcauth-%s" $name $vpc.vpcId ]]
+            [[- $assocName := printf "%s-vpcassoc-%s" $name $vpc.vpcId ]]
+            ---
+            apiVersion: route53.aws.m.upbound.io/v1beta1
+            kind: VPCAssociationAuthorization
+            metadata:
+              annotations:
+                crossplane.io/external-name: [[ printf "%s:%s" $childZoneId $vpc.vpcId ]]
+                [[ setResourceNameAnnotation $authName ]]
+              name: [[ $authName ]]
+              namespace: [[ $namespace ]]
+            spec:
+              providerConfigRef:
+                name: [[ $vpc.accountName ]]
+                kind: ClusterProviderConfig
+              [[- if $importing ]]
+              managementPolicies:
+                - Observe
+                - Update
+              [[- else ]]
+              managementPolicies:
+                {{- toYaml .Values.managementPolicies | nindent 16 }}
+              [[- end ]]
+              forProvider:
+                vpcId: [[ $vpc.vpcId ]]
+                vpcRegion: [[ $vpc.vpcRegion ]]
+                zoneId: [[ $childZoneId ]]
+            ---
+            apiVersion: route53.aws.m.upbound.io/v1beta1
+            kind: ZoneAssociation
+            metadata:
+              annotations:
+                crossplane.io/external-name: [[ printf "%s:%s" $childZoneId $vpc.vpcId ]]
+                [[ setResourceNameAnnotation $assocName ]]
+              name: [[ $assocName ]]
+              namespace: [[ $namespace ]]
+            spec:
+              providerConfigRef:
+                name: [[ $accountName ]]
+                kind: ClusterProviderConfig
+              [[- if $importing ]]
+              managementPolicies:
+                - Observe
+                - Update
+              [[- else ]]
+              managementPolicies:
+                {{- toYaml .Values.managementPolicies | nindent 16 }}
+              [[- end ]]
+              forProvider:
+                vpcId: [[ $vpc.vpcId ]]
+                vpcRegion: [[ $vpc.vpcRegion ]]
+                zoneId: [[ $childZoneId ]]
+            [[- end ]]
             [[- end ]]
 
             ---

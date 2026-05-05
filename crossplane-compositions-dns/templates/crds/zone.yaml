@@ -107,6 +107,10 @@ spec:
                         type: string
                         pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
                         description: VPC region.
+                      accountName:
+                        type: string
+                        minLength: 1
+                        description: AccountName matching a ClusterProviderConfig that owns the VPC. When equal to spec.aws.accountName the VPC is associated inline at zone creation. When different the platform emits a VPCAssociationAuthorization in this account plus a ZoneAssociation in the zone's account so the cross-account association is built without manual intervention. Defaults to spec.aws.accountName.
 
                 import:
                   type: object

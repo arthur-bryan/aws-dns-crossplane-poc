@@ -3,17 +3,20 @@ apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
   name: vpc-0410f81cfe1bba322
-  title: vpc-0410f81cfe1bba322 (us-east-1)
-  description: "VPC vpc-0410f81cfe1bba322 in us-east-1, CIDR 172.31.0.0/16, default"
+  title: vpc-0410f81cfe1bba322 (us-east-1, prd-account)
+  description: "VPC vpc-0410f81cfe1bba322 in us-east-1 (prd-account), CIDR 172.31.0.0/16, default"
   annotations:
     dock.tech/vpc-id: vpc-0410f81cfe1bba322
     dock.tech/vpc-region: us-east-1
     dock.tech/vpc-cidr: 172.31.0.0/16
     dock.tech/vpc-is-default: "true"
+    dock.tech/aws-account-id: "597230762851"
+    dock.tech/aws-account-name: prd-account
   tags:
     - aws
     - vpc
     - us-east-1
+    - prd-account
     - default
   links:
     - title: View in AWS Console
