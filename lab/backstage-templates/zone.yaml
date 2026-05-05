@@ -46,10 +46,6 @@ spec:
           title: ''
           type: string
           ui:field: ZoneFqdnPreview
-        comment:
-          title: Comment
-          type: string
-          maxLength: 256
         private:
           title: Private Zone
           type: boolean
@@ -147,9 +143,6 @@ spec:
             zoneName: ${{ steps.computeZone.output.result }}
             delegatedFromZoneId: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }}
             delegatedFromAccountName: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
-            {%- if parameters.comment %}
-            comment: ${{ parameters.comment }}
-            {%- endif %}
             visibility: ${{ 'private' if parameters.private else 'public' }}
             {%- if parameters.private %}
             vpcs:
