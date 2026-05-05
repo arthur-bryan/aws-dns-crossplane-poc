@@ -21,3 +21,6 @@ spec:
   vpcs:
     - vpcId: vpc-0410f81cfe1bba322
       vpcRegion: us-east-1
+  import:
+    existing: true
+    zoneId: Z023605847CN76CUAJYF
