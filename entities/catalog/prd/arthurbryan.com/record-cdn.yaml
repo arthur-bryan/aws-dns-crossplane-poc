@@ -1,0 +1,46 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-cdn.arthurbryan.com
+  namespace: system-infrastructure-prd
+  title: cdn.arthurbryan.com
+  description: "DNS ALIAS record cdn.arthurbryan.com (prd) — imported"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-cdn.arthurbryan.com
+    dock.tech/zone-name: arthurbryan.com
+    dock.tech/zone-id: Z03010981ALJFZB4QLU8W
+    dock.tech/record-name: cdn
+    dock.tech/record-type: ALIAS
+    dock.tech/record-fqdn: cdn.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: prd
+    dock.tech/managed-by: batch-import
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"cdn","type":"ALIAS","serviceType":"Custom","dnsName":"d111111abcdef8.cloudfront.net","evaluateTargetHealth":false,"customZoneId":"Z2FDTNDATAQYW2","routingPolicy":"simple"}'
+    backstage.io/edit-url: "http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22cdn%22%2C%22type%22%3A%22ALIAS%22%7D"
+
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-cdn.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - alias
+    - imported
+    - prd
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z03010981ALJFZB4QLU8W
+      icon: cloud
+    - title: Delete record (opens GitHub delete UI)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-cdn.yaml
+      icon: delete
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-arthurbryan.com

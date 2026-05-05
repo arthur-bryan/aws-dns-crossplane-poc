@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: system-infrastructure-prd
+  labels:
+    ape.dock.tech/domain: cross
+    ape.dock.tech/subdomain: cloud
+    ape.dock.tech/system: infrastructure
+    ape.dock.tech/environment: prd

@@ -1,0 +1,23 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-external.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"delegatedZone":"resource:system-infrastructure-prd/zone-arthurbryan.com","prefix":"external","private":false,"deletionProtection":false}'
+spec:
+  name: zone-external.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneName: external.arthurbryan.com
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  visibility: public
+  import:
+    existing: true
+    zoneId: Z0245000S5MOON5ZZNHA
