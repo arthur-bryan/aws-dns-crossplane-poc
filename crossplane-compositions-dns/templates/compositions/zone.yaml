@@ -46,13 +46,22 @@ spec:
             [[- $delegationName := printf "%s-delegation" $name ]]
             [[- $delegationRecord := getComposedResource . $delegationName ]]
 
+            [[- $effectiveZoneId := "" ]]
+            [[- if $importing ]]
+            [[-   $effectiveZoneId = $import.zoneId ]]
+            [[- else if and $zone.status.atProvider $zone.status.atProvider.zoneId ]]
+            [[-   $effectiveZoneId = $zone.status.atProvider.zoneId ]]
+            [[- else if and .observed.composite.resource.status .observed.composite.resource.status.zoneId ]]
+            [[-   $effectiveZoneId = .observed.composite.resource.status.zoneId ]]
+            [[- end ]]
+
             ---
             apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: Zone
             metadata:
               annotations:
-                [[- if $importing ]]
-                crossplane.io/external-name: [[ $import.zoneId ]]
+                [[- if $effectiveZoneId ]]
+                crossplane.io/external-name: [[ $effectiveZoneId ]]
                 [[- end ]]
                 [[ setResourceNameAnnotation $name ]]
               name: [[ $name ]]
