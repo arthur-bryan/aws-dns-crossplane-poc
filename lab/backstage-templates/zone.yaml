@@ -61,13 +61,11 @@ spec:
                   title: Associated VPCs
                   type: array
                   default: []
-                  minItems: 1
                   ui:field: MultiEntityPicker
                   ui:options:
                     catalogFilter:
                       - kind: Resource
                         spec.type: aws-vpc
-              required: [vpcs]
 
     - title: Tags
       properties:
@@ -78,6 +76,15 @@ spec:
             type: string
 
   steps:
+    - id: validateVpcs
+      name: Validate VPC selection
+      if: ${{ parameters.private }}
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          count: ${{ parameters.vpcs | length }}
+        expression: '$assert(count >= 1, "Private zones require at least one VPC. Pick one in the Associated VPCs picker.")'
+
     - id: fetchParent
       name: Fetch parent zone
       action: catalog:fetch
