@@ -1,7 +1,4 @@
 ---
-# Installs the AWS providers. This is the production chart, unmodified.
-# On kind the IRSA pod-annotation is a no-op; providers load creds from the
-# ClusterProviderConfig (source: Secret) applied by 03-lab-provider-config.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

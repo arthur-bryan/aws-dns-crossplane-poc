@@ -1,7 +1,4 @@
 ---
-# Applies the lab-only ClusterProviderConfig (source: Secret) + EnvironmentConfig.
-# Replaces crossplane-provider-config-aws/ (production chart) for local use,
-# since that chart hardcodes source: IRSA which cannot run on a kind cluster.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

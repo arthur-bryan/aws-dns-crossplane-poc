@@ -17,7 +17,7 @@ spec:
   parameters:
     - title: Target Record
       description: |
-        TTL and values can be edited in place. Type can also be edited; the platform handles it as a destroy-and-recreate at AWS (the old record is deleted and a fresh one is created with the new type — brief gap during the swap). Zone and Record Name are part of the Route53 record identity and cannot be changed: submit a delete request and a new-record request to change them.
+        TTL and values are editable in place. Type changes trigger a destroy-and-recreate at AWS (brief gap). Zone and Record Name are immutable.
       required:
         - zone
         - recordName
@@ -26,7 +26,6 @@ spec:
         zone:
           title: Parent Zone (immutable)
           type: string
-          description: Submit a delete + new record to move across zones.
           ui:field: EntityPicker
           ui:disabled: true
           ui:options:
@@ -38,37 +37,33 @@ spec:
           type: string
           minLength: 0
           maxLength: 253
-          description: Submit a delete + new record to rename.
           ui:disabled: true
         type:
           title: Record Type
           type: string
-          description: Changing type triggers a destroy-and-recreate of the AWS record. Values below must match the new type's pattern (e.g. CNAME requires an FQDN, not an IPv4).
+          description: Changing type triggers destroy-and-recreate.
           enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
         setIdentifier:
           title: Set Identifier (immutable, weighted/failover/latency/geolocation/multivalue records only)
           type: string
-          description: Disambiguates one variant of a routing-policy record set. Leave empty for simple records.
+          description: Required for routing-policy variants.
           ui:disabled: true
         weight:
           title: Weight (weighted records only, 0-255)
           type: integer
           minimum: 0
           maximum: 255
-          description: Relative traffic weight in a weighted record set. Leave empty for non-weighted records.
+          description: Weighted records only.
         failoverType:
           title: Failover Role (failover records only)
           type: string
           enum: [PRIMARY, SECONDARY]
-          description: Leave empty for non-failover records.
         healthCheckId:
           title: Health Check ID (failover/multivalue records only)
           type: string
-          description: Leave empty if not applicable.
         latencyRegion:
           title: Latency Region (latency records only)
           type: string
-          description: Leave empty for non-latency records.
 
       dependencies:
         type:
@@ -178,12 +173,6 @@ spec:
                   default: false
               required: [serviceType, dnsName]
 
-    # Routing policy fields (setIdentifier / weight / failover / latency /
-    # geolocation / multivalue / healthCheckId) are NOT editable here — they
-    # are immutable in AWS Route53 without delete+recreate. The edit flow
-    # reads the record's original scaffolder-parameters from the catalog
-    # entity annotation and carries those fields through untouched.
-
   steps:
     - id: fetchZone
       name: Fetch parent Zone entity
@@ -191,8 +180,6 @@ spec:
       input:
         entityRef: ${{ parameters.zone }}
 
-    # Resource key mirrors the create template: recordName for subdomain
-    # records, apex-<type-lower> for apex records.
     - id: computeKey
       name: Derive resource key
       action: roadiehq:utils:jsonata
@@ -203,9 +190,6 @@ spec:
           setIdentifier: ${{ parameters.setIdentifier }}
         expression: '$lowercase((recordName ? recordName : "apex-" & type) & (setIdentifier ? "-" & setIdentifier : ""))'
 
-    # Fetch the existing Record catalog entity instead of reading the XR
-    # from GitHub. Avoids the GithubUrlReader slashed-branch parse bug
-    # (ref "feature/ape-platform-alignment" gets truncated to "feature").
     - id: fetchRecord
       name: Fetch existing Record entity
       action: catalog:fetch

@@ -2,7 +2,7 @@
 
 Este diretório contém templates do Backstage Scaffolder para provisionamento de recursos DNS via APE Platform.
 
-## ⚠️ Importante
+## ️ Importante
 
 **Estes templates são para referência local durante desenvolvimento do POC.**
 
@@ -15,22 +15,22 @@ Para integração com a plataforma APE:
 
 ```
 backstage-templates/
-├── shared/                        # Partials reutilizáveis (DRY)
-│   ├── entities/                  # Steps relacionados ao catálogo
-│   │   ├── clone.yaml             # Clona ape-platform-entities
-│   │   ├── commit.yaml            # Commit das alterações
-│   │   ├── push.yaml              # Push para master
-│   │   ├── fetch-system.yaml      # Busca entidade System
-│   │   ├── fetch-system-domain.yaml # Busca Domain do System
-│   │   └── refresh-entities.yaml  # Força refresh do catálogo
-│   └── notify.yaml                # Notifica usuário
+├── shared/ # Partials reutilizáveis (DRY)
+│ ├── entities/ # Steps relacionados ao catálogo
+│ │ ├── clone.yaml # Clona ape-platform-entities
+│ │ ├── commit.yaml # Commit das alterações
+│ │ ├── push.yaml # Push para master
+│ │ ├── fetch-system.yaml # Busca entidade System
+│ │ ├── fetch-system-domain.yaml # Busca Domain do System
+│ │ └── refresh-entities.yaml # Força refresh do catálogo
+│ └── notify.yaml # Notifica usuário
 
 └── templates/
-    └── resources/
-        └── aws/
-            ├── zone.yaml          # Cria zona DNS (Route53 Hosted Zone)
-            ├── record.yaml        # Cria registro DNS
-            └── record-edit.yaml   # Edita registro DNS existente
+ └── resources/
+ └── aws/
+ ├── zone.yaml # Cria zona DNS (Route53 Hosted Zone)
+ ├── record.yaml # Cria registro DNS
+ └── record-edit.yaml # Edita registro DNS existente
 ```
 
 ## Templates Disponíveis
@@ -62,17 +62,17 @@ backstage-templates/
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: my-zone
-  namespace: cross-cloud-dns-poc
+ name: my-zone
+ namespace: cross-cloud-dns-poc
 spec:
-  type: Zone
-  cloud: aws
-  owner: team-name
-  system: dns-poc
-  zoneName: test.dev.dock.tech
-  comment: "My DNS zone"
-  tags:
-    CostCenter: Engineering
+ type: Zone
+ cloud: aws
+ owner: team-name
+ system: dns-poc
+ zoneName: test.dev.dock.tech
+ comment: "My DNS zone"
+ tags:
+ CostCenter: Engineering
 ```
 
 ---
@@ -123,22 +123,22 @@ spec:
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: my-record
-  namespace: cross-cloud-dns-poc
-  annotations:
-    dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"my-record",...}'
+ name: my-record
+ namespace: cross-cloud-dns-poc
+ annotations:
+ dock.tech/scaffolder-editable-template: dns-record-edit
+ dock.tech/scaffolder-parameters: '{"name":"my-record",...}'
 spec:
-  type: Record
-  cloud: aws
-  owner: team-name
-  system: dns-poc
-  zone: resource:cross-cloud-dns-poc/my-zone
-  recordName: api
-  recordType: A
-  ttl: 3600
-  values:
-    - 10.0.1.100
+ type: Record
+ cloud: aws
+ owner: team-name
+ system: dns-poc
+ zone: resource:cross-cloud-dns-poc/my-zone
+ recordName: api
+ recordType: A
+ ttl: 3600
+ values:
+ - 10.0.1.100
 ```
 
 ---
@@ -231,25 +231,25 @@ spec:
 
 ```
 1. Usuário preenche formulário no Backstage
-   ↓
+ ↓
 2. Template clona ape-platform-entities
-   ↓
+ ↓
 3. Busca System e Domain do catálogo
-   ↓
+ ↓
 4. Resolve path hierárquico (ex: cross/cloud/dns-poc)
-   ↓
+ ↓
 5. Escreve arquivo Resource YAML
-   ↓
+ ↓
 6. Commit + Push para master
-   ↓
+ ↓
 7. Backstage ingere nova entidade
-   ↓
+ ↓
 8. ArgoCD detecta mudança (branch: master)
-   ↓
+ ↓
 9. Aplica Resource como CR no Kubernetes
-   ↓
+ ↓
 10. Crossplane lê CR e cria Route53 Zone na AWS
-    ↓
+ ↓
 11. Status atualizado com zoneId e nameServers
 ```
 
@@ -257,23 +257,23 @@ spec:
 
 ```
 1. Usuário clica "Edit" na entidade Record no Backstage
-   ↓
+ ↓
 2. Backstage lê anotação dock.tech/scaffolder-editable-template
-   ↓
+ ↓
 3. Abre template dns-record-edit
-   ↓
+ ↓
 4. Pré-preenche com dock.tech/scaffolder-parameters
-   ↓
+ ↓
 5. Usuário altera values/ttl/weight
-   ↓
+ ↓
 6. Template usa roadiehq:utils:merge
-   ↓
+ ↓
 7. Atualiza apenas campos alterados (preserva imutáveis)
-   ↓
+ ↓
 8. Commit + Push
-   ↓
+ ↓
 9. ArgoCD sync
-   ↓
+ ↓
 10. Crossplane atualiza Route53 Record
 ```
 
@@ -284,38 +284,38 @@ spec:
 Para integrar com APE Platform:
 
 1. **Mover templates para repo APE:**
-   ```bash
-   # Copiar para ape-platform-backstage-templates
-   cp templates/resources/aws/zone.yaml \
-      ../ape-platform-backstage-templates/templates/resources/aws/
+ ```bash
+ # Copiar para ape-platform-backstage-templates
+ cp templates/resources/aws/zone.yaml \
+ ../ape-platform-backstage-templates/templates/resources/aws/
 
-   cp templates/resources/aws/record.yaml \
-      ../ape-platform-backstage-templates/templates/resources/aws/
+ cp templates/resources/aws/record.yaml \
+ ../ape-platform-backstage-templates/templates/resources/aws/
 
-   cp templates/resources/aws/record-edit.yaml \
-      ../ape-platform-backstage-templates/templates/resources/aws/
-   ```
+ cp templates/resources/aws/record-edit.yaml \
+ ../ape-platform-backstage-templates/templates/resources/aws/
+ ```
 
 2. **Validar shared partials:**
-   - `shared/entities/*` já existem no repo APE
-   - Não duplicar, usar os existentes via `$yaml`
+ - `shared/entities/*` já existem no repo APE
+ - Não duplicar, usar os existentes via `$yaml`
 
 3. **Testar no Backstage dev:**
-   - Criar zona de teste
-   - Criar registro A
-   - Editar registro (alterar IP)
-   - Verificar se CR foi criado no cluster
-   - Verificar se zona/registro apareceu no Route53
+ - Criar zona de teste
+ - Criar registro A
+ - Editar registro (alterar IP)
+ - Verificar se CR foi criado no cluster
+ - Verificar se zona/registro apareceu no Route53
 
 4. **Documentar no APE:**
-   - Atualizar README do ape-platform-backstage-templates
-   - Adicionar exemplos de uso
-   - Documentar campos obrigatórios
+ - Atualizar README do ape-platform-backstage-templates
+ - Adicionar exemplos de uso
+ - Documentar campos obrigatórios
 
 5. **Merge para master:**
-   - PR para branch master
-   - Review do time APE
-   - Merge e deploy
+ - PR para branch master
+ - Review do time APE
+ - Merge e deploy
 
 ---
 
@@ -340,23 +340,23 @@ Estas actions já estão instaladas no Backstage APE:
 ## Validações Implementadas
 
 ### Zone Template
-- ✅ Verifica se arquivo já existe (previne duplicação)
-- ✅ Valida pattern do zoneName (FQDN sem dot final)
-- ✅ MaxLength em comment (256 chars)
+- Verifica se arquivo já existe (previne duplicação)
+- Valida pattern do zoneName (FQDN sem dot final)
+- MaxLength em comment (256 chars)
 
 ### Record Template
-- ✅ Valida tipo de registro (A, AAAA, CNAME, TXT, ALIAS)
-- ✅ Campos condicionais corretos por tipo
-- ✅ ALIAS: serviceType obrigatório
-- ✅ Custom: customZoneId obrigatório
-- ✅ Weighted: setIdentifier + weight juntos
-- ✅ Pattern de IPv4 para A records
+- Valida tipo de registro (A, AAAA, CNAME, TXT, ALIAS)
+- Campos condicionais corretos por tipo
+- ALIAS: serviceType obrigatório
+- Custom: customZoneId obrigatório
+- Weighted: setIdentifier + weight juntos
+- Pattern de IPv4 para A records
 
 ### Record Edit Template
-- ✅ Campos imutáveis marcados como disabled
-- ✅ Usa merge em vez de overwrite
-- ✅ Preserva estrutura original
-- ✅ Atualiza apenas campos editáveis
+- Campos imutáveis marcados como disabled
+- Usa merge em vez de overwrite
+- Preserva estrutura original
+- Atualiza apenas campos editáveis
 
 ---
 

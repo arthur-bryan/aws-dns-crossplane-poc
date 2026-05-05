@@ -20,7 +20,6 @@ LAB_ACCOUNTS = [
     },
 ]
 
-
 def run_aws(args: list[str], env: dict[str, str]) -> dict | list:
     result = subprocess.run(
         ["aws", *args, "--output", "json"],
@@ -30,12 +29,10 @@ def run_aws(args: list[str], env: dict[str, str]) -> dict | list:
         sys.exit(f"ERROR running `aws {' '.join(args)}`:\n{result.stderr}")
     return json.loads(result.stdout or "{}")
 
-
 def base_env() -> dict[str, str]:
     env = dict(os.environ)
     env.setdefault("AWS_DEFAULT_REGION", "us-east-1")
     return env
-
 
 def assume_role(env: dict[str, str], role_arn: str, session: str) -> dict[str, str]:
     out = run_aws(
@@ -51,21 +48,17 @@ def assume_role(env: dict[str, str], role_arn: str, session: str) -> dict[str, s
     })
     return new_env
 
-
 def list_regions(env: dict[str, str]) -> list[str]:
     return run_aws(["ec2", "describe-regions", "--query", "Regions[].RegionName"], env=env) or []
 
-
 def list_vpcs(region: str, env: dict[str, str]) -> list[dict]:
     return run_aws(["ec2", "describe-vpcs", "--region", region, "--query", "Vpcs"], env=env) or []
-
 
 def vpc_name(vpc: dict) -> str:
     for tag in vpc.get("Tags", []) or []:
         if tag.get("Key") == "Name" and tag.get("Value"):
             return tag["Value"]
     return ""
-
 
 def vpc_yaml(vpc: dict, region: str, account: dict) -> str:
     vpc_id = vpc["VpcId"]
@@ -114,7 +107,6 @@ def vpc_yaml(vpc: dict, region: str, account: dict) -> str:
     ])
     return "\n".join(lines)
 
-
 class Writer:
     def __init__(self, write: bool):
         self.write = write
@@ -136,7 +128,6 @@ class Writer:
         path.write_text(content)
         print(f"  WRITE  {label}                {path.relative_to(REPO_ROOT)}")
         self.created += 1
-
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -181,7 +172,6 @@ def main() -> int:
     if not args.write and writer.created:
         print("re-run with --write to apply.")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
