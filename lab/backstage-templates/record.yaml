@@ -35,8 +35,11 @@ spec:
           type: string
           minLength: 0
           maxLength: 253
-          description: Short name; joined with the parent zone to form the FQDN. Leave empty for apex (zone root).
-          ui:help: "Example: api-test → api-test.example.com. Leave empty for apex / zone root records (e.g. MX, apex ALIAS)."
+          description: Leave empty for apex.
+        fqdnPreview:
+          title: ''
+          type: string
+          ui:field: RecordFqdnPreview
         type:
           title: Record Type
           type: string
