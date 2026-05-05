@@ -123,8 +123,14 @@ spec:
               providerConfigRef:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig
+              [[- if $importing ]]
+              managementPolicies:
+                - Observe
+                - Update
+              [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
+              [[- end ]]
               forProvider:
                 name: [[ $zoneName ]]
                 type: NS
