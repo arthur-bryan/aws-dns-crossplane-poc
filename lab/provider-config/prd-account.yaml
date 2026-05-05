@@ -1,0 +1,28 @@
+---
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
+metadata:
+  name: prd-account
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-creds
+      key: credentials
+---
+apiVersion: apiextensions.crossplane.io/v1beta1
+kind: EnvironmentConfig
+metadata:
+  name: prd-account
+  labels:
+    accountName: prd-account
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  aws:
+    account: 597230762851
+    accountName: prd-account
+    region: us-east-1
