@@ -50,10 +50,6 @@ spec:
           title: Comment
           type: string
           maxLength: 256
-        deletionProtection:
-          title: Deletion Protection
-          type: boolean
-          default: false
         private:
           title: Private Zone
           type: boolean
@@ -66,14 +62,15 @@ spec:
             - properties:
                 private: { const: true }
                 vpcs:
-                  title: Additional VPCs
+                  title: Associated VPCs
                   type: array
-                  default: []
+                  minItems: 1
                   ui:field: MultiEntityPicker
                   ui:options:
                     catalogFilter:
-                      kind: Resource
-                      spec.type: aws-vpc
+                      - kind: Resource
+                        spec.type: aws-vpc
+              required: [vpcs]
 
     - title: Tags
       properties:
@@ -152,9 +149,6 @@ spec:
             delegatedFromAccountName: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
-            {%- endif %}
-            {%- if parameters.deletionProtection %}
-            deletionProtection: true
             {%- endif %}
             visibility: ${{ 'private' if parameters.private else 'public' }}
             {%- if parameters.private %}
