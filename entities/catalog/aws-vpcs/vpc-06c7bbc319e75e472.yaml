@@ -1,0 +1,27 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: vpc-06c7bbc319e75e472
+  title: vpc-06c7bbc319e75e472 (us-east-1, prd-account) — prd-app-vpc
+  description: "VPC vpc-06c7bbc319e75e472 in us-east-1 (prd-account), CIDR 10.10.0.0/16"
+  annotations:
+    dock.tech/vpc-id: vpc-06c7bbc319e75e472
+    dock.tech/vpc-region: us-east-1
+    dock.tech/vpc-cidr: 10.10.0.0/16
+    dock.tech/vpc-is-default: "false"
+    dock.tech/aws-account-id: "597230762851"
+    dock.tech/aws-account-name: prd-account
+    dock.tech/vpc-name: prd-app-vpc
+  tags:
+    - aws
+    - vpc
+    - us-east-1
+    - prd-account
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/vpc/home?region=us-east-1#VpcDetails:VpcId=vpc-06c7bbc319e75e472
+      icon: cloud
+spec:
+  type: aws-vpc
+  owner: group:default/infrastructure

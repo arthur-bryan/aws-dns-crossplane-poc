@@ -66,7 +66,7 @@ spec:
             - properties:
                 private: { const: true }
                 vpcs:
-                  title: VPCs
+                  title: Additional VPCs
                   type: array
                   default: []
                   ui:field: MultiEntityPicker
@@ -74,7 +74,6 @@ spec:
                     catalogFilter:
                       kind: Resource
                       spec.type: aws-vpc
-              required: [vpcs]
 
     - title: Tags
       properties:
@@ -114,8 +113,8 @@ spec:
         data:
           env: ${{ parameters.environment }}
         expression: >-
-          env = "dev" ? {"accountId": "309670275661", "accountName": "dev-account"}
-          : env = "prd" ? {"accountId": "597230762851", "accountName": "prd-account"}
+          env = "dev" ? {"accountId": "309670275661", "accountName": "dev-account", "defaultVpcId": "vpc-0dd3eaef2e5c11f69", "defaultVpcRegion": "us-east-1"}
+          : env = "prd" ? {"accountId": "597230762851", "accountName": "prd-account", "defaultVpcId": "vpc-0410f81cfe1bba322", "defaultVpcRegion": "us-east-1"}
           : {"accountId": "", "accountName": ""}
 
     - id: writeXR
@@ -160,6 +159,9 @@ spec:
             visibility: ${{ 'private' if parameters.private else 'public' }}
             {%- if parameters.private %}
             vpcs:
+              - vpcId: ${{ steps.deriveAccount.output.result.defaultVpcId }}
+                vpcRegion: ${{ steps.deriveAccount.output.result.defaultVpcRegion }}
+                accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- for vpc in steps.fetchVpcs.output.entities %}
               - vpcId: ${{ vpc.metadata.annotations['dock.tech/vpc-id'] }}
                 vpcRegion: ${{ vpc.metadata.annotations['dock.tech/vpc-region'] }}
