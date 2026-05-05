@@ -1,0 +1,32 @@
+---
+# Managed by batch import.
+# Removing this file unadopts the record from the platform; the Route53
+# record itself is NOT deleted (managementPolicies: [Observe, Update]).
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-api-api-secondary.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/managed-by: batch-import
+spec:
+  name: record-api-api-secondary.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+    region: us-east-1
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: api
+  type: A
+  ttl: 300
+  values:
+    - "10.0.1.21"
+  setIdentifier: "api-secondary"
+  weight: 30
+  import:
+    existing: true

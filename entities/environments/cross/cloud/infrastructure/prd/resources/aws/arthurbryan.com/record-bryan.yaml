@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-bryan.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"bryan","type":"A","ttl":3600,"values":["192.168.0.10"],"routingPolicy":"simple"}'
+spec:
+  name: record-bryan.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: bryan
+  type: A
+  ttl: 3600
+  values:
+    - 192.168.0.10
+  import:
+    existing: true

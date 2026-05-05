@@ -1,0 +1,47 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-app.internal.arthurbryan.com
+  namespace: system-infrastructure-prd
+  title: app.internal.arthurbryan.com
+  description: "DNS A record app.internal.arthurbryan.com (prd)"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-app.internal.arthurbryan.com
+    dock.tech/zone-name: internal.arthurbryan.com
+    dock.tech/zone-id: Z023605847CN76CUAJYF
+    dock.tech/record-name: app
+    dock.tech/record-type: A
+    dock.tech/record-fqdn: app.internal.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: prd
+    dock.tech/managed-by: scaffolder
+    # Full original form parameters — used by the edit template to
+    # reconstruct the XR without re-reading it from GitHub (which
+    # breaks on slashed branch names).
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-internal.arthurbryan.com","recordName":"app","type":"A","ttl":300,"values":["10.0.0.99"],"routingPolicy":"simple"}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-internal.arthurbryan.com%22%2C%22recordName%22%3A%22app%22%2C%22type%22%3A%22A%22%7D
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/internal.arthurbryan.com/record-app.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - a
+    - prd
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z023605847CN76CUAJYF
+      icon: cloud
+    - title: Delete record (opens GitHub delete UI)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/internal.arthurbryan.com/record-app.yaml
+      icon: delete
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-internal.arthurbryan.com

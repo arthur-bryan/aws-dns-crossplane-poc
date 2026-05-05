@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-app.internal.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-internal.arthurbryan.com","recordName":"app","type":"A","ttl":300,"values":["10.0.0.99"],"routingPolicy":"simple"}'
+spec:
+  name: record-app.internal.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneId: Z023605847CN76CUAJYF
+  zoneName: internal.arthurbryan.com
+  recordName: app
+  type: A
+  ttl: 300
+  values:
+    - 10.0.0.99
+  import:
+    existing: true
