@@ -1,0 +1,21 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-sub.crossacct-test.arthurbryan.com
+  namespace: system-infrastructure-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"delegatedZone":"resource:system-infrastructure-dev/zone-crossacct-test.arthurbryan.com","prefix":"sub","environment":"dev","private":false,"deletionProtection":false}'
+spec:
+  name: zone-sub.crossacct-test.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  zoneName: sub.crossacct-test.arthurbryan.com
+  delegatedFromZoneId: Z07795812PF4S7RMQ7LW3
+  delegatedFromAccountName: dev-account
+  visibility: public
