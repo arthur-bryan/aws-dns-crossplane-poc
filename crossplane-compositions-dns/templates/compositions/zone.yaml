@@ -167,7 +167,7 @@ spec:
               namespace: [[ $namespace ]]
             spec:
               providerConfigRef:
-                name: [[ $vpc.accountName ]]
+                name: [[ $accountName ]]
                 kind: ClusterProviderConfig
               [[- if $importing ]]
               managementPolicies:
@@ -192,7 +192,7 @@ spec:
               namespace: [[ $namespace ]]
             spec:
               providerConfigRef:
-                name: [[ $accountName ]]
+                name: [[ $vpc.accountName ]]
                 kind: ClusterProviderConfig
               [[- if $importing ]]
               managementPolicies:
