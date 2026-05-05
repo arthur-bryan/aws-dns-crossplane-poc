@@ -362,12 +362,12 @@ def test_c_cross_account_private_zone():
         pc = auth["spec"]["providerConfigRef"]["name"]
         conds = {c["type"]: c["status"] for c in auth.get("status", {}).get("conditions") or []}
         print(f"  Authorization MR pcRef={pc} ready={conds.get('Ready')} synced={conds.get('Synced')}")
-        if pc != "prd-account":
-            fail("Authorization MR not using prd-account"); failures += 1
+        if pc != "dev-account":
+            fail("Authorization MR not using dev-account (zone owner)"); failures += 1
         if conds.get("Ready") != "True" or conds.get("Synced") != "True":
             fail("Authorization MR not Ready/Synced"); failures += 1
         else:
-            ok("VPCAssociationAuthorization Ready in prd account")
+            ok("VPCAssociationAuthorization Ready (zone owner = dev-account)")
 
     assoc = find_mr("system-infrastructure-dev", "zoneassociation.route53.aws.m.upbound.io",
                     lambda it: it.get("spec", {}).get("forProvider", {}).get("vpcId") == PRD_VPC_ID
@@ -378,24 +378,30 @@ def test_c_cross_account_private_zone():
         pc = assoc["spec"]["providerConfigRef"]["name"]
         conds = {c["type"]: c["status"] for c in assoc.get("status", {}).get("conditions") or []}
         print(f"  ZoneAssociation MR pcRef={pc} ready={conds.get('Ready')} synced={conds.get('Synced')}")
-        if pc != "dev-account":
-            fail("ZoneAssociation MR not using dev-account"); failures += 1
+        if pc != "prd-account":
+            fail("ZoneAssociation MR not using prd-account (VPC owner)"); failures += 1
         if conds.get("Ready") != "True" or conds.get("Synced") != "True":
             fail("ZoneAssociation MR not Ready/Synced"); failures += 1
         else:
-            ok("ZoneAssociation Ready in dev account")
+            ok("ZoneAssociation Ready (VPC owner = prd-account)")
 
     dev_env = aws_env_dev()
-    zone_info = aws(["route53", "get-hosted-zone", "--id", obj.get("status", {}).get("zoneId", "")], env=dev_env)
-    if zone_info.returncode == 0:
-        info = json.loads(zone_info.stdout)
-        vpcs = sorted(v["VPCId"] for v in info.get("VPCs", []))
-        print(f"  AWS hosted zone reports VPCs: {vpcs}")
-        if DEV_VPC_ID in vpcs and PRD_VPC_ID in vpcs:
-            ok("both VPCs associated to the dev-account zone (cross-account works)")
-        else:
-            fail(f"missing VPCs in zone associations: dev={DEV_VPC_ID in vpcs} prd={PRD_VPC_ID in vpcs}")
-            failures += 1
+    zone_id = obj.get("status", {}).get("zoneId", "")
+    elapsed = 0
+    vpcs = []
+    while elapsed < 180:
+        zone_info = aws(["route53", "get-hosted-zone", "--id", zone_id], env=dev_env)
+        if zone_info.returncode == 0:
+            vpcs = sorted(v["VPCId"] for v in json.loads(zone_info.stdout).get("VPCs", []))
+            if DEV_VPC_ID in vpcs and PRD_VPC_ID in vpcs:
+                break
+        time.sleep(10); elapsed += 10
+    print(f"  AWS hosted zone reports VPCs: {vpcs}")
+    if DEV_VPC_ID in vpcs and PRD_VPC_ID in vpcs:
+        ok("both VPCs associated to the dev-account zone (cross-account works)")
+    else:
+        fail(f"missing VPCs in zone associations: dev={DEV_VPC_ID in vpcs} prd={PRD_VPC_ID in vpcs}")
+        failures += 1
     return failures
 
 
