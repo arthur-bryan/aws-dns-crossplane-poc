@@ -1,0 +1,27 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: vpc-0be51ad70cd373b81
+  title: vpc-0be51ad70cd373b81 (us-east-1, dev-account) — dev-app-vpc
+  description: "VPC vpc-0be51ad70cd373b81 in us-east-1 (dev-account), CIDR 10.20.0.0/16"
+  annotations:
+    dock.tech/vpc-id: vpc-0be51ad70cd373b81
+    dock.tech/vpc-region: us-east-1
+    dock.tech/vpc-cidr: 10.20.0.0/16
+    dock.tech/vpc-is-default: "false"
+    dock.tech/aws-account-id: "309670275661"
+    dock.tech/aws-account-name: dev-account
+    dock.tech/vpc-name: dev-app-vpc
+  tags:
+    - aws
+    - vpc
+    - us-east-1
+    - dev-account
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/vpc/home?region=us-east-1#VpcDetails:VpcId=vpc-0be51ad70cd373b81
+      icon: cloud
+spec:
+  type: aws-vpc
+  owner: group:default/infrastructure

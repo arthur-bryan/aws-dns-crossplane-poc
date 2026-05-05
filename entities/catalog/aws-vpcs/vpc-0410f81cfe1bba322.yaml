@@ -23,5 +23,5 @@ metadata:
       url: https://console.aws.amazon.com/vpc/home?region=us-east-1#VpcDetails:VpcId=vpc-0410f81cfe1bba322
       icon: cloud
 spec:
-  type: aws-vpc
+  type: aws-vpc-default
   owner: group:default/infrastructure

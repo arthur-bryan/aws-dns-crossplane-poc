@@ -95,13 +95,14 @@ def vpc_yaml(vpc: dict, region: str, account: dict) -> str:
         lines.append(f"    dock.tech/vpc-name: {name}")
     lines.append("  tags:")
     lines.extend(f"    - {t}" for t in tags)
+    spec_type = "aws-vpc-default" if is_default else "aws-vpc"
     lines.extend([
         "  links:",
         "    - title: View in AWS Console",
         f"      url: https://console.aws.amazon.com/vpc/home?region={region}#VpcDetails:VpcId={vpc_id}",
         "      icon: cloud",
         "spec:",
-        "  type: aws-vpc",
+        f"  type: {spec_type}",
         "  owner: group:default/infrastructure",
         "",
     ])
