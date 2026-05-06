@@ -1,0 +1,387 @@
+<mxfile host="app.diagrams.net" agent="ape-platform-diagrams" version="24.7.7">
+  <diagram name="1. End-to-end DNS Request Flow" id="page-flow">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title-1" value="DNS Request — End-to-End Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="20" width="500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="user" value="User" style="shape=umlActor;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;html=1;outlineConnect=0;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="660" y="80" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="backstage" value="Backstage Frontend&#10;(Scaffolder UI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#01579B;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="180" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="backstage-note" value="• Zone form (env, prefix, parent, private+VPCs)&#10;• Record form (zone, name, type, values)&#10;• Live FQDN preview" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="180" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="scaffolder" value="Scaffolder Backend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#01579B;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="280" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="scaffolder-note" value="Steps run server-side:&#10;1. catalog:fetch  (parent zone, VPCs)&#10;2. jsonata  (deriveAccount, computeZone)&#10;3. fs:write  (XR + catalog entity YAML)&#10;4. publish:github:pull-request" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="270" width="320" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="github" value="GitHub PR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#24292E;strokeColor=#000000;fontColor=#ffffff;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="400" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="github-note" value="Manifests committed:&#10;• entities/environments/.../zone.yaml&#10;• entities/catalog/&lt;env&gt;/.../zone.yaml" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="395" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="reviewer" value="Reviewer" style="shape=umlActor;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;html=1;outlineConnect=0;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="500" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="reviewer-note" value="Only manual step.&#10;GitOps review gate." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="500" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="argocd" value="ArgoCD" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="600" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="argocd-note" value="App entities watches the path,&#10;syncs HEAD into the cluster." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="595" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="k8sapi" value="Kubernetes API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="700" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="k8sapi-note" value="Persists the XR object&#10;in the system-&lt;system&gt;-&lt;env&gt; namespace." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="695" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="xrd" value="Crossplane XRD&#10;zones.dock.tech v1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="800" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="xrd-note" value="Schema + CEL validation:&#10;name pattern, env enum, immutable&#10;fields, private requires VPCs..." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="790" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="composition" value="Composition (Pipeline)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="900" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="composition-fns" value="fn-go-templating&#10;(Inline template with [[ ]] delims)&#10;&#10;fn-auto-ready&#10;(rolls composed status into XR)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9C27B0;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="560" y="930" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="composition-note" value="Reads spec + observed composed&#10;resources, emits MRs and writes back&#10;XR.status (zoneId, nameServers, ready)." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="840" y="900" width="320" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="mrs" value="Composed Managed Resources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1040" width="360" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="mr-zone" value="Zone&#10;route53.aws.m.upbound.io" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1075" width="170" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="mr-record" value="Record&#10;route53.aws.m.upbound.io" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="690" y="1075" width="160" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="mr-vpcauth" value="VPCAssociationAuthorization" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1115" width="170" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="mr-zoneassoc" value="ZoneAssociation" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="690" y="1115" width="160" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="mrs-note" value="Each MR carries:&#10;• providerConfigRef → which AWS account&#10;• crossplane.io/external-name → AWS resource ID&#10;• managementPolicies → Observe / Create / Update / Delete" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="880" y="1040" width="370" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="provider" value="Upbound provider-aws-route53" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="1200" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="provider-note" value="For each MR: Observe → diff →&#10;Create / Update / Delete via AWS SDK.&#10;Loads creds from ClusterProviderConfig&#10;(static Secret or assumeRoleChain)." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="840" y="1190" width="370" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="route53" value="Route 53" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.route_53;" vertex="1" parent="1">
+          <mxGeometry x="640" y="1300" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="route53-note" value="Hosted zones and record sets.&#10;Account chosen by the MR's&#10;providerConfigRef." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1300" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="processor" value="zone-enrichment&#10;CatalogProcessor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#01579B;fontSize=11;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1080" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="processor-note" value="Backstage backend module.&#10;Reads Zone XR status from K8s every 25s&#10;and injects dock.tech/zone-id,&#10;zone-nameservers, zone-ready into the&#10;catalog Resource entity." style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1140" width="290" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="user" target="backstage">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="submits" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="backstage" target="scaffolder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="opens PR" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="scaffolder" target="github">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="github" target="reviewer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="merges" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="reviewer" target="argocd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="kubectl apply" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="argocd" target="k8sapi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="validates" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="k8sapi" target="xrd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="reconciles" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="xrd" target="composition">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="emits" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="composition" target="mrs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="watches" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="mrs" target="provider">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="AWS API" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="provider" target="route53">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-loop" value="status feedback (atProvider → XR.status)" style="endArrow=classic;html=1;fontSize=11;dashed=1;curved=1;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="route53" target="composition">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="1340" />
+              <mxPoint x="380" y="950" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-proc" value="every 25s" style="endArrow=classic;html=1;fontSize=10;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="processor" target="mrs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-proc2" value="enriches catalog" style="endArrow=classic;html=1;fontSize=10;dashed=1;curved=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="processor" target="backstage">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="100" y="1100" />
+              <mxPoint x="100" y="240" />
+              <mxPoint x="680" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="2. Public Zone — Cross-Account NS Delegation" id="page-public">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title-2" value="Public Zone Creation — Cross-Account NS Delegation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="800" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="example" value="example: env=dev, prefix=dev, parent=arthurbryan.com (prd) → dev.arthurbryan.com" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=13;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="350" y="60" width="800" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-prd" value="prd account&#10;597230762851" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#E65100;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="640" height="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-dev" value="dev account&#10;309670275661" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="780" y="100" width="640" height="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="user2" value="User" style="shape=umlActor;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="140" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="form" value="Zone form&#10;env=dev, prefix=dev,&#10;parent=arthurbryan.com" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#01579B;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="980" y="220" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="xr2" value="Zone XR&#10;system-infrastructure-dev" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="330" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="xr2-spec" value="spec.aws.accountName: dev-account&#10;spec.delegatedFromZoneId: Z03010981...&#10;spec.delegatedFromAccountName: prd-account" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9C27B0;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="395" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="comp1" value="Composition pass 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="475" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-mr" value="Zone MR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="540" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-mr-spec" value="providerConfigRef: dev-account&#10;forProvider.name: dev.arthurbryan.com&#10;no external-name yet" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="585" width="280" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="r53-dev" value="dev.arthurbryan.com" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.route_53;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="690" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r53-dev-note" value="zoneId allocated&#10;nameServers returned" style="text;html=1;align=center;fontSize=10;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="980" y="770" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="comp2" value="Composition pass 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="820" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="comp2-detail" value="Reads zone.status.atProvider:&#10;• stamps external-name on Zone MR&#10;• emits NS delegation Record MR&#10;  (records = child nameServers)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9C27B0;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="865" width="280" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="ns-mr" value="NS Record MR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="540" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ns-mr-spec" value="providerConfigRef: prd-account&#10;forProvider.zoneId: Z03010981...&#10;forProvider.name: dev.arthurbryan.com&#10;forProvider.type: NS&#10;forProvider.records: [child NSes]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="180" y="585" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="r53-parent" value="arthurbryan.com" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.route_53;" vertex="1" parent="1">
+          <mxGeometry x="270" y="220" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r53-parent-note" value="(parent zone — pre-existing, imported)" style="text;html=1;align=center;fontSize=10;fillColor=none;strokeColor=none;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="180" y="290" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ns-record-final" value="NS record set in arthurbryan.com&#10;dev.arthurbryan.com → child NSes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#F9A825;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="730" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="resolution-note" value="DNS resolution chain:&#10;arthurbryan.com → NS dev → dev.arthurbryan.com authoritative" style="text;html=1;align=center;fontSize=11;fillColor=none;strokeColor=none;fontStyle=2;fontColor=#0277BD;" vertex="1" parent="1">
+          <mxGeometry x="100" y="900" width="540" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="provider-prd" value="provider-aws-route53&#10;loaded with prd-account creds" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=11;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="430" width="240" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="provider-dev" value="provider-aws-route53&#10;assumes role into dev account" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=11;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="650" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-1" value="submit" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="user2" target="form">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-2" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="form" target="xr2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-3" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="xr2-spec" target="comp1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-4" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="comp1" target="zone-mr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-5" value="Create" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="zone-mr-spec" target="provider-dev">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-6" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="provider-dev" target="r53-dev">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-7" value="status&#10;atProvider" style="endArrow=classic;html=1;fontSize=10;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="r53-dev-note" target="comp2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-8" value="emit (cross-account)" style="endArrow=classic;html=1;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="comp2-detail" target="ns-mr-spec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-9" value="Create NS" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="ns-mr" target="provider-prd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-10" style="endArrow=classic;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="provider-prd" target="r53-parent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-2-11" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="r53-parent" target="ns-record-final">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="3. Private Zone — Cross-Account VPC Association" id="page-private">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title-3" value="Private Zone Creation — Cross-Account VPC Association" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="800" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="example3" value="example: env=dev, private=true, picked VPC = prd-app-vpc → zone in dev with default-dev + prd-app-vpc associated" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=13;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="220" y="60" width="1060" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lane3-prd" value="prd account&#10;597230762851 (VPC owner)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#E65100;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="640" height="1140" as="geometry" />
+        </mxCell>
+        <mxCell id="lane3-dev" value="dev account&#10;309670275661 (zone owner)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=14;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="780" y="100" width="640" height="1140" as="geometry" />
+        </mxCell>
+        <mxCell id="user3" value="User" style="shape=umlActor;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="140" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="form3" value="Zone form&#10;env=dev, private=true&#10;Associated VPCs = [prd-app-vpc]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#01579B;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="980" y="220" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="form3-note" value="MultiEntityPicker filters spec.type=aws-vpc&#10;(default VPCs marked aws-vpc-default,&#10;hidden from the dropdown)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fillColor=none;strokeColor=none;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="220" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="derive" value="deriveAccount step (jsonata)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#01579B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="980" y="320" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="derive-out" value="Returns:&#10;accountId, accountName,&#10;defaultVpcId, defaultVpcRegion" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#01579B;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="365" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="xr3" value="Zone XR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="440" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="xr3-spec" value="spec.visibility: private&#10;spec.aws.accountName: dev-account&#10;spec.vpcs:&#10;  - {vpc-dev-default,  dev-account}  (auto-prepended)&#10;  - {prd-app-vpc,  prd-account}      (user-picked)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9C27B0;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="485" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="comp3" value="Composition splits VPCs by account" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0F0;strokeColor=#9C27B0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="585" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="comp3-out" value="sameAccountVpcs = [vpc-dev-default]&#10;crossAccountVpcs = [prd-app-vpc]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9C27B0;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="630" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-mr3" value="Zone MR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="690" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-mr3-spec" value="providerConfigRef: dev-account&#10;forProvider.name: internal.dev.arthurbryan.com&#10;forProvider.vpc: [{vpc-dev-default}]   ← inline" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="735" width="380" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="r53-private" value="private zone&#10;in dev account" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.route_53;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="820" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dev-vpc" value="vpc-dev-default" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.virtual_private_cloud_VPC;" vertex="1" parent="1">
+          <mxGeometry x="990" y="830" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="vpcauth-mr" value="VPCAssociationAuthorization MR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="935" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="vpcauth-mr-spec" value="providerConfigRef: dev-account     ← zone owner&#10;forProvider.zoneId: &lt;dev zoneId&gt;&#10;forProvider.vpcId: prd-app-vpc&#10;external-name: zoneId:vpcId" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="980" y="980" width="380" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="zoneassoc-mr" value="ZoneAssociation MR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#6A1B9A;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="935" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="zoneassoc-mr-spec" value="providerConfigRef: prd-account     ← VPC owner&#10;forProvider.zoneId: &lt;dev zoneId&gt;&#10;forProvider.vpcId: prd-app-vpc&#10;external-name: zoneId:vpcId" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6A1B9A;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="180" y="980" width="380" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="prd-vpc" value="prd-app-vpc" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.virtual_private_cloud_VPC;" vertex="1" parent="1">
+          <mxGeometry x="280" y="220" width="50" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="prd-vpc-note" value="(VPC lives in prd)" style="text;html=1;align=center;fontSize=10;fillColor=none;strokeColor=none;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="220" y="280" width="180" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="final-state" value="Final AWS state — internal.dev.arthurbryan.com (in dev) is associated with:&#10;• vpc-dev-default  (same-account, inlined at zone creation)&#10;• prd-app-vpc      (cross-account, via Auth + Assoc handshake)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#F9A825;fontSize=12;fontStyle=1;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="220" y="1080" width="1000" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="iam-note" value="Route 53 cross-account contract:&#10;CreateVPCAssociationAuthorization called by zone owner&#10;AssociateVPCWithHostedZone called by VPC owner" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontSize=10;align=left;spacingLeft=8;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="180" y="800" width="380" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-1" value="submit" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="user3" target="form3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-2" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="form3" target="derive">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-3" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="derive-out" target="xr3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-4" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="xr3-spec" target="comp3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-5" style="endArrow=classic;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="comp3-out" target="zone-mr3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-6" value="Create with VPC" style="endArrow=classic;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="zone-mr3-spec" target="r53-private">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-7" value="when zoneId&#10;available" style="endArrow=classic;html=1;fontSize=10;dashed=1;exitX=0;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="zone-mr3-spec" target="vpcauth-mr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-8" value="Authorization (in dev account)" style="endArrow=classic;html=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="vpcauth-mr-spec" target="iam-note">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-9" value="emit (cross-account)" style="endArrow=classic;html=1;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="vpcauth-mr-spec" target="zoneassoc-mr-spec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-3-10" value="AssociateVPCWithHostedZone (from prd)" style="endArrow=classic;html=1;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=1;curved=1;" edge="1" parent="1" source="zoneassoc-mr-spec" target="r53-private">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="900" />
+              <mxPoint x="1110" y="900" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-3-11" style="endArrow=classic;html=1;dashed=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="prd-vpc" target="zoneassoc-mr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
