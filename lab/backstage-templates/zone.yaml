@@ -163,7 +163,7 @@ spec:
                 accountName: ${{ vpc.metadata.annotations['dock.tech/aws-account-name'] }}
             {%- endfor %}
             {%- endif %}
-            {%- if parameters.tags %}
+            {%- if parameters.tags and (parameters.tags | length) %}
             tags:
               {%- for key, value in parameters.tags %}
               ${{ key }}: ${{ value }}
