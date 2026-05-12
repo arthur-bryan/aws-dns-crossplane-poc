@@ -68,17 +68,11 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: getDetails
-      name: Get Path Of the System
-      action: hierarchy:details:get
-      input:
-        entityRef: ${{ parameters.system }}
-
     - id: checkIffileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/${{ steps.getDetails.output.path }}/resources/dev/zone-${{ parameters.name }}-dev.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/dev/zone-${{ parameters.name }}-dev.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -91,13 +85,13 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/${{ steps.getDetails.output.path }}/resources/dev/zone-${{ parameters.name }}-dev.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/dev/zone-${{ parameters.name }}-dev.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
             name: ${{ parameters.name }}
-            namespace: ${{ steps.getDetails.output.namespace }}
+            namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: AWS Route53 DNS Zone created by template
           spec:
             type: Zone
@@ -122,7 +116,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.getDetails.output.namespace }}/${{ parameters.name }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

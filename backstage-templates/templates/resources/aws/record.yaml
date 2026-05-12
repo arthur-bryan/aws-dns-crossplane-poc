@@ -401,23 +401,17 @@ spec:
         entityRef: ${{ parameters.zone }}
         defaultKind: Resource
 
-    - id: getDetails
-      name: Get Path Of the System
-      action: hierarchy:details:get
-      input:
-        entityRef: ${{ parameters.system }}
-
     - id: writeFile
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/${{ steps.getDetails.output.path }}/resources/dev/record-${{ parameters.name }}-dev.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/dev/record-${{ parameters.name }}-dev.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
             name: ${{ parameters.name }}
-            namespace: ${{ steps.getDetails.output.namespace }}
+            namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: AWS Route53 DNS Record created by template
             annotations:
               dock.tech/scaffolder-editable-template: dns-record-edit
@@ -457,7 +451,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.getDetails.output.namespace }}/${{ parameters.name }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

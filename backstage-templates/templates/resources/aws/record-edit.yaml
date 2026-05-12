@@ -250,17 +250,11 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: getDetails
-      name: Get Path Of the System
-      action: hierarchy:details:get
-      input:
-        entityRef: ${{ parameters.system }}
-
     - id: writeFile
       name: Update Resource File
       action: roadiehq:utils:merge
       input:
-        path: ./entities/${{ steps.getDetails.output.path }}/resources/dev/record-${{ parameters.name }}-dev.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/dev/record-${{ parameters.name }}-dev.yaml
         content: |
           metadata:
             annotations:
@@ -293,7 +287,7 @@ spec:
       action: activity-log:publish
       input:
         action: updated
-        entityRef: ${{ parameters.entityRef }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/notify.yaml
