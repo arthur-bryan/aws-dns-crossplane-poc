@@ -20,6 +20,7 @@ metadata:
     dock.tech/aws-account-name: prd-account
     dock.tech/visibility: private
     dock.tech/managed-by: scaffolder
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-zone-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-internal.arthurbryan.com%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/internal.arthurbryan.com/zone.yaml"
   tags:
     - aws

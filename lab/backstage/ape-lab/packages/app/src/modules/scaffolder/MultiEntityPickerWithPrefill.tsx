@@ -1,14 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
-  Chip,
   CircularProgress,
   FormHelperText,
   TextField,
   makeStyles,
 } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
-import LockIcon from '@material-ui/icons/Lock';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { parseEntityRef, stringifyEntityRef } from '@backstage/catalog-model';
@@ -24,10 +22,6 @@ type Options = {
 
 const useStyles = makeStyles(theme => ({
   helper: { marginTop: theme.spacing(0.5) },
-  lockedChip: {
-    backgroundColor: theme.palette.action.disabledBackground,
-    color: theme.palette.text.secondary,
-  },
 }));
 
 const refOf = (entity: Entity): string =>
@@ -103,7 +97,6 @@ export const MultiEntityPickerWithPrefill = (
   const [byRef, setByRef] = useState<Map<string, Entity>>(new Map());
   const [loading, setLoading] = useState<boolean>(true);
   const [prefilled, setPrefilled] = useState<boolean>(false);
-  const [creationVpcRef, setCreationVpcRef] = useState<string | undefined>(undefined);
 
   // Load the VPC option list once.
   useEffect(() => {
@@ -153,7 +146,6 @@ export const MultiEntityPickerWithPrefill = (
           setPrefilled(true);
           return;
         }
-        setCreationVpcRef(refs[0]);
         // Only set if formData is still empty (avoid clobbering user edits or
         // a URL-supplied formData prefill).
         const currentLen = Array.isArray(formData) ? formData.length : 0;
@@ -172,18 +164,9 @@ export const MultiEntityPickerWithPrefill = (
 
   const handleChange = useCallback(
     (_: unknown, newValue: Entity[]) => {
-      const refs = newValue.map(refOf);
-      // Guard: the creation VPC (first in the *prefilled* list) is immutable.
-      // If the user removed it via the X button on its chip, we silently keep
-      // it. The XRD CEL rule is the final enforcement; this just avoids a
-      // confusing apply-time error.
-      if (creationVpcRef && !refs.includes(creationVpcRef)) {
-        onChange([creationVpcRef, ...refs]);
-        return;
-      }
-      onChange(refs);
+      onChange(newValue.map(refOf));
     },
-    [creationVpcRef, onChange],
+    [onChange],
   );
 
   if (loading) {
@@ -209,29 +192,6 @@ export const MultiEntityPickerWithPrefill = (
         value={selectedEntities}
         onChange={handleChange}
         disableCloseOnSelect
-        renderTags={(value, getTagProps) =>
-          value.map((entity, index) => {
-            const ref = refOf(entity);
-            const locked = ref === creationVpcRef;
-            const { onDelete: _onDelete, ...rest } = getTagProps({ index });
-            return (
-              <Chip
-                {...rest}
-                key={ref}
-                label={labelOf(entity)}
-                size="small"
-                icon={locked ? <LockIcon style={{ fontSize: 14 }} /> : undefined}
-                onDelete={locked ? undefined : _onDelete}
-                className={locked ? classes.lockedChip : undefined}
-                title={
-                  locked
-                    ? 'Creation VPC — immutable. The XRD rejects edits that change the first VPC.'
-                    : undefined
-                }
-              />
-            );
-          })
-        }
         renderInput={params => (
           <TextField
             {...params}
@@ -244,9 +204,8 @@ export const MultiEntityPickerWithPrefill = (
         )}
       />
       <FormHelperText className={classes.helper}>
-        {creationVpcRef
-          ? 'The locked chip is the creation VPC. Add additional VPCs to expand the private zone\'s resolver scope, or remove non-locked VPCs to retract it.'
-          : 'Pick the zone above to load its current VPC list.'}
+        Add or remove any VPC. AWS will reject an edit that would leave the
+        zone with zero associations (the last VPC cannot be disassociated).
         {rawErrors && rawErrors.length ? ` · ${rawErrors[0]}` : ''}
       </FormHelperText>
     </Box>

@@ -42,25 +42,38 @@ spec:
             [[- $delegatedFromZoneId := $params.delegatedFromZoneId ]]
             [[- $delegatedFromAccountName := default $accountName $params.delegatedFromAccountName ]]
 
-            [[- $firstSameAccountVpc := dict ]]
-            [[- $additionalSameAccountVpcs := list ]]
-            [[- $crossAccountVpcs := list ]]
-            [[- range $vpc := $vpcs ]]
-            [[-   $vpcAccount := default $accountName $vpc.accountName ]]
-            [[-   if eq $vpcAccount $accountName ]]
-            [[-     if not $firstSameAccountVpc.vpcId ]]
-            [[-       $firstSameAccountVpc = dict "vpcId" $vpc.vpcId "vpcRegion" $vpc.vpcRegion "accountName" $vpcAccount ]]
-            [[-     else ]]
-            [[-       $additionalSameAccountVpcs = append $additionalSameAccountVpcs (dict "vpcId" $vpc.vpcId "vpcRegion" $vpc.vpcRegion "accountName" $vpcAccount) ]]
-            [[-     end ]]
-            [[-   else ]]
-            [[-     $crossAccountVpcs = append $crossAccountVpcs (dict "vpcId" $vpc.vpcId "vpcRegion" $vpc.vpcRegion "accountName" $vpcAccount) ]]
-            [[-   end ]]
-            [[- end ]]
-
             [[- $zone := getComposedResource . $name ]]
             [[- $delegationName := printf "%s-delegation" $name ]]
             [[- $delegationRecord := getComposedResource . $delegationName ]]
+
+            [[- $firstSameAccountVpc := dict ]]
+            [[- $normalizedVpcs := list ]]
+            [[- range $vpc := $vpcs ]]
+            [[-   $vpcAccount := default $accountName $vpc.accountName ]]
+            [[-   $entry := dict "vpcId" $vpc.vpcId "vpcRegion" $vpc.vpcRegion "accountName" $vpcAccount ]]
+            [[-   $normalizedVpcs = append $normalizedVpcs $entry ]]
+            [[-   if and (eq $vpcAccount $accountName) (not $firstSameAccountVpc.vpcId) ]]
+            [[-     $firstSameAccountVpc = $entry ]]
+            [[-   end ]]
+            [[- end ]]
+
+            [[- $inlineVpcId := "" ]]
+            [[- $inlineVpcRegion := "" ]]
+            [[- if and $zone.spec.forProvider.vpc (gt (len $zone.spec.forProvider.vpc) 0) ]]
+            [[-   $existingVpc := index $zone.spec.forProvider.vpc 0 ]]
+            [[-   $inlineVpcId = $existingVpc.vpcId ]]
+            [[-   $inlineVpcRegion = $existingVpc.vpcRegion ]]
+            [[- else if $firstSameAccountVpc.vpcId ]]
+            [[-   $inlineVpcId = $firstSameAccountVpc.vpcId ]]
+            [[-   $inlineVpcRegion = $firstSameAccountVpc.vpcRegion ]]
+            [[- end ]]
+
+            [[- $associationVpcs := list ]]
+            [[- range $vpc := $normalizedVpcs ]]
+            [[-   if ne $vpc.vpcId $inlineVpcId ]]
+            [[-     $associationVpcs = append $associationVpcs $vpc ]]
+            [[-   end ]]
+            [[- end ]]
 
             [[- $effectiveZoneId := "" ]]
             [[- if $importing ]]
@@ -115,10 +128,10 @@ spec:
                   [[- range $key, $value := $tags ]]
                   [[ $key ]]: [[ $value ]]
                   [[- end ]]
-                [[- if and (eq $visibility "private") $firstSameAccountVpc.vpcId ]]
+                [[- if and (eq $visibility "private") $inlineVpcId ]]
                 vpc:
-                  - vpcId: [[ $firstSameAccountVpc.vpcId ]]
-                    vpcRegion: [[ $firstSameAccountVpc.vpcRegion ]]
+                  - vpcId: [[ $inlineVpcId ]]
+                    vpcRegion: [[ $inlineVpcRegion ]]
                 [[- end ]]
 
             [[- if and $delegatedFromZoneId $zone.status.atProvider $zone.status.atProvider.nameServers ]]
@@ -151,43 +164,13 @@ spec:
                 records: [[ $zone.status.atProvider.nameServers | toJson ]]
             [[- end ]]
 
-            [[- if and (eq $visibility "private") $additionalSameAccountVpcs $zone.status.atProvider $zone.status.atProvider.zoneId ]]
+            [[- if and (eq $visibility "private") $associationVpcs $zone.status.atProvider $zone.status.atProvider.zoneId ]]
             [[- $childZoneId := $zone.status.atProvider.zoneId ]]
-            [[- range $vpc := $additionalSameAccountVpcs ]]
-            [[- $assocName := printf "%s-vpcassoc-%s" $name $vpc.vpcId ]]
-            ---
-            apiVersion: route53.aws.m.upbound.io/v1beta1
-            kind: ZoneAssociation
-            metadata:
-              annotations:
-                crossplane.io/external-name: [[ printf "%s:%s" $childZoneId $vpc.vpcId ]]
-                [[ setResourceNameAnnotation $assocName ]]
-              name: [[ $assocName ]]
-              namespace: [[ $namespace ]]
-            spec:
-              providerConfigRef:
-                name: [[ $vpc.accountName ]]
-                kind: ClusterProviderConfig
-              [[- if $importing ]]
-              managementPolicies:
-                - Observe
-                - Update
-              [[- else ]]
-              managementPolicies:
-                {{- toYaml .Values.managementPolicies | nindent 16 }}
-              [[- end ]]
-              forProvider:
-                vpcId: [[ $vpc.vpcId ]]
-                vpcRegion: [[ $vpc.vpcRegion ]]
-                zoneId: [[ $childZoneId ]]
-            [[- end ]]
-            [[- end ]]
-
-            [[- if and (eq $visibility "private") $crossAccountVpcs $zone.status.atProvider $zone.status.atProvider.zoneId ]]
-            [[- $childZoneId := $zone.status.atProvider.zoneId ]]
-            [[- range $vpc := $crossAccountVpcs ]]
+            [[- range $vpc := $associationVpcs ]]
+            [[- $isCrossAccount := ne $vpc.accountName $accountName ]]
             [[- $authName := printf "%s-vpcauth-%s" $name $vpc.vpcId ]]
             [[- $assocName := printf "%s-vpcassoc-%s" $name $vpc.vpcId ]]
+            [[- if $isCrossAccount ]]
             ---
             apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: VPCAssociationAuthorization
@@ -213,6 +196,7 @@ spec:
                 vpcId: [[ $vpc.vpcId ]]
                 vpcRegion: [[ $vpc.vpcRegion ]]
                 zoneId: [[ $childZoneId ]]
+            [[- end ]]
             ---
             apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: ZoneAssociation

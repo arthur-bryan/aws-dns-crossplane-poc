@@ -158,9 +158,7 @@ spec:
                 - rule: "!self.zoneName.contains('..')"
                   message: "zoneName must not contain consecutive dots"
                 - rule: "!has(self.visibility) || self.visibility != 'private' || (has(self.vpcs) && size(self.vpcs) >= 1)"
-                  message: "visibility=private requires at least one vpcs entry"
-                - rule: "!has(oldSelf.vpcs) || size(oldSelf.vpcs) == 0 || size(self.vpcs) == 0 || self.vpcs[0].vpcId == oldSelf.vpcs[0].vpcId"
-                  message: "the creation VPC (first entry in spec.vpcs) is immutable; additional VPCs can be added or removed"
+                  message: "visibility=private requires at least one vpcs entry (AWS Route 53 rejects DisassociateVPCFromHostedZone on the last association)"
 
             status:
               type: object
