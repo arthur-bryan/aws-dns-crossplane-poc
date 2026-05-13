@@ -19,8 +19,8 @@ metadata:
     dock.tech/system: infrastructure
     dock.tech/environment: prd
     dock.tech/managed-by: scaffolder
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-geoprox-694854","type":"A","routingPolicy":"geoproximity","setIdentifier":"eu-west-1","geoproxAwsRegion":"eu-west-1","geoproxBias":0,"ttl":300,"values":["10.0.9.20"]}'
-    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-geoprox-694854%22%2C%22type%22%3A%22A%22%2C%22routingPolicy%22%3A%22geoproximity%22%2C%22setIdentifier%22%3A%22eu-west-1%22%2C%22geoproxAwsRegion%22%3A%22eu-west-1%22%2C%22geoproxBias%22%3A0%2C%22ttl%22%3A300%2C%22values%22%3A%5B%2210.0.9.20%22%5D%7D
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-geoprox-694854","type":"A","routingPolicy":"geoproximity","setIdentifier":"eu-west-1","geoproxAwsRegion":"eu-west-1","geoproxBias":0,"ttl":600,"values":["10.0.9.21"]}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-geoprox-694854%22%2C%22type%22%3A%22A%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-geoprox-694854-eu-west-1.yaml"
   tags:
     - aws
