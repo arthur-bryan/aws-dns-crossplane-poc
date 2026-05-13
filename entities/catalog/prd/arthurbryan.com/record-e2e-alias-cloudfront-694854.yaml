@@ -19,8 +19,8 @@ metadata:
     dock.tech/system: infrastructure
     dock.tech/environment: prd
     dock.tech/managed-by: scaffolder
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-alias-cloudfront-694854","type":"ALIAS","routingPolicy":"simple","serviceType":"CloudFront","dnsName":"d111-create.cloudfront.net","evaluateTargetHealth":false}'
-    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-alias-cloudfront-694854%22%2C%22type%22%3A%22ALIAS%22%2C%22routingPolicy%22%3A%22simple%22%2C%22serviceType%22%3A%22CloudFront%22%2C%22dnsName%22%3A%22d111-create.cloudfront.net%22%2C%22evaluateTargetHealth%22%3Afalse%7D
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-alias-cloudfront-694854","type":"ALIAS","routingPolicy":"simple","serviceType":"CloudFront","dnsName":"d222-edit.cloudfront.net","evaluateTargetHealth":false}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-alias-cloudfront-694854%22%2C%22type%22%3A%22ALIAS%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-alias-cloudfront-694854.yaml"
   tags:
     - aws
