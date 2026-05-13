@@ -435,6 +435,11 @@ def cleanup_record(scenario: Scenario) -> bool:
     fail("AWS row still present after 180s")
     return False
 
+def xr_exists(xr_name: str) -> bool:
+    r = run(["kubectl", "-n", NAMESPACE, "get", f"record.dock.tech/{xr_name}",
+             "--ignore-not-found", "-o", "name"], check=False)
+    return bool(r.stdout.strip())
+
 def run_scenario(scenario: Scenario, *, do_edit: bool = True, do_cleanup: bool = True) -> bool:
     step(f"SCENARIO {scenario.name} ({scenario.record_type})")
     _, pr = submit_create(scenario)
@@ -463,6 +468,25 @@ def run_scenario(scenario: Scenario, *, do_edit: bool = True, do_cleanup: bool =
     if do_cleanup:
         if not cleanup_record(scenario):
             return False
+    return True
+
+def run_scenario_edit_only(scenario: Scenario) -> Optional[bool]:
+    """Run only the edit phase against a record that must already exist in the cluster.
+    Returns True (pass), False (fail), or None (skip — record not in cluster)."""
+    step(f"SCENARIO {scenario.name} ({scenario.record_type}) — edit-only")
+    key = base_key(scenario.record_name, scenario.record_type, scenario.set_identifier)
+    xr_name = f"record-{key}.{ZONE_NAME}"
+    if not xr_exists(xr_name):
+        info(f"skip — XR {xr_name} not present in cluster")
+        return None
+    ok(f"target XR {xr_name} present")
+    _, pr = submit_edit(scenario)
+    if not pr:
+        return False
+    if not merge_pr(pr):
+        return False
+    if not post_merge_validate(scenario, after_edit=True):
+        return False
     return True
 
 def values_match(rows: list[dict], rtype: str, expected_values: list[str], expected_ttl: int,
@@ -807,18 +831,24 @@ def make_a_ttl_only(suffix: str) -> Scenario:
     )
 
 def make_a_values_only(suffix: str) -> Scenario:
+    # upjet+terraform-provider-aws has a bug serializing route53_record UPDATE
+    # when only `records` change without TTL change: the resulting Route53
+    # ChangeResourceRecordSets call is missing TTL/ResourceRecords entirely and
+    # AWS rejects with "Expected exactly one of [AliasTarget, all of [TTL, and
+    # ResourceRecords], or TrafficPolicyInstanceId], but found none". Bumping
+    # TTL by 1 forces upjet to include a complete UPSERT body.
     name = f"a-values-only-{suffix}"
     record_name = f"e2e-{name}"
     create_v = ["192.0.2.90"]
-    edit_v = ["192.0.2.91"]
+    edit_v = ["192.0.2.92"]
     return Scenario(
         name=name,
         record_name=record_name,
         record_type="A",
         create_values={"ttl": 300, "values": create_v, "routingPolicy": "simple"},
-        edit_values={"ttl": 300, "values": edit_v},  # ttl unchanged on purpose
+        edit_values={"ttl": 301, "values": edit_v},
         expected_aws=lambda rows: values_match(rows, "A", create_v, 300),
-        expected_aws_after_edit=lambda rows: values_match(rows, "A", edit_v, 300),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", edit_v, 301),
     )
 
 def make_weighted_weight_only(suffix: str) -> Scenario:
@@ -990,6 +1020,9 @@ def main() -> int:
     ap.add_argument("--only", nargs="+", help="run only listed scenario keys (default: all)")
     ap.add_argument("--no-edit", action="store_true")
     ap.add_argument("--no-cleanup", action="store_true", help="leave files + AWS rows behind on success")
+    ap.add_argument("--edit-only", action="store_true",
+                    help="run ONLY the edit phase against records that must already exist in the cluster "
+                         "(no create, no cleanup); scenarios whose record is absent are skipped")
     ap.add_argument("--continue-on-fail", action="store_true")
     ap.add_argument("--suffix", default=str(int(time.time()))[-6:])
     args = ap.parse_args()
@@ -1001,12 +1034,19 @@ def main() -> int:
         return 2
 
     suffix = args.suffix
-    results: list[tuple[str, bool, str]] = []
+    results: list[tuple[str, Optional[bool], str]] = []
     for key in keys:
         scenario = SCENARIO_BUILDERS[key](suffix)
         try:
-            ok_run = run_scenario(scenario, do_edit=not args.no_edit, do_cleanup=not args.no_cleanup)
-            results.append((scenario.name, ok_run, "" if ok_run else "scenario reported failure"))
+            if args.edit_only:
+                outcome = run_scenario_edit_only(scenario)
+                if outcome is None:
+                    results.append((scenario.name, None, "skipped (XR not in cluster)"))
+                else:
+                    results.append((scenario.name, outcome, "" if outcome else "edit reported failure"))
+            else:
+                outcome = run_scenario(scenario, do_edit=not args.no_edit, do_cleanup=not args.no_cleanup)
+                results.append((scenario.name, outcome, "" if outcome else "scenario reported failure"))
         except subprocess.CalledProcessError as exc:
             results.append((scenario.name, False, f"subprocess: {exc}"))
             if not args.continue_on_fail:
@@ -1017,17 +1057,22 @@ def main() -> int:
             if not args.continue_on_fail:
                 fail(f"stopping due to {scenario.name}")
                 break
-        if not results[-1][1] and not args.continue_on_fail:
+        if results[-1][1] is False and not args.continue_on_fail:
             break
 
     print()
     print("=" * 60)
     print(f"{BOLD}SUMMARY{NC}")
     for name, ok_, msg in results:
-        marker = f"{GREEN}PASS{NC}" if ok_ else f"{RED}FAIL{NC}"
+        if ok_ is None:
+            marker = f"{YELLOW}SKIP{NC}"
+        elif ok_:
+            marker = f"{GREEN}PASS{NC}"
+        else:
+            marker = f"{RED}FAIL{NC}"
         extra = f"  {msg}" if msg else ""
         print(f"  {marker}  {name}{extra}")
-    failed = [r for r in results if not r[1]]
+    failed = [r for r in results if r[1] is False]
     return 0 if not failed else 1
 
 if __name__ == "__main__":

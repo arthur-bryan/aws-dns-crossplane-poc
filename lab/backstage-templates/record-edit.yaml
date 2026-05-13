@@ -348,7 +348,7 @@ spec:
               dock.tech/xr-name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
               dock.tech/zone-name: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
               dock.tech/zone-id: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
-              dock.tech/record-name: ${{ parameters.recordName }}
+              dock.tech/record-name: "${{ parameters.recordName }}"
               dock.tech/record-type: ${{ parameters.type }}
               dock.tech/record-fqdn: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
               dock.tech/domain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}
