@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-cname-694854.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-cname-694854","type":"CNAME","ttl":300,"values":["e2e-target.example.com"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-cname-694854","type":"CNAME","ttl":600,"values":["e2e-target-2.example.com"],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-cname-694854.arthurbryan.com
   domain: cross
@@ -17,8 +17,8 @@ spec:
     accountName: prd-account
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
-  recordName: e2e-cname-694854
+  recordName: "e2e-cname-694854"
   type: CNAME
-  ttl: 300
+  ttl: 600
   values:
-    - e2e-target.example.com
+    - e2e-target-2.example.com

@@ -19,8 +19,8 @@ metadata:
     dock.tech/system: infrastructure
     dock.tech/environment: prd
     dock.tech/managed-by: scaffolder
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-cname-694854","type":"CNAME","ttl":300,"values":["e2e-target.example.com"],"routingPolicy":"simple"}'
-    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-cname-694854%22%2C%22type%22%3A%22CNAME%22%2C%22ttl%22%3A300%2C%22values%22%3A%5B%22e2e-target.example.com%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-cname-694854","type":"CNAME","ttl":600,"values":["e2e-target-2.example.com"],"routingPolicy":"simple"}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-cname-694854%22%2C%22type%22%3A%22CNAME%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-cname-694854.yaml"
   tags:
     - aws
