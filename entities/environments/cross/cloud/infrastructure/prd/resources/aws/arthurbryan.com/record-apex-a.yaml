@@ -5,7 +5,7 @@ metadata:
   name: record-apex-a.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"","type":"A","ttl":300,"values":["192.0.2.200"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"","type":"A","ttl":600,"values":["192.0.2.201"],"routingPolicy":"simple"}'
 spec:
   name: record-apex-a.arthurbryan.com
   domain: cross
@@ -19,6 +19,6 @@ spec:
   zoneName: arthurbryan.com
   recordName: ""
   type: A
-  ttl: 300
+  ttl: 600
   values:
-    - 192.0.2.200
+    - 192.0.2.201
