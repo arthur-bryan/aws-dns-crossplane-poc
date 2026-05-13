@@ -6,6 +6,7 @@ import {
 import { z } from 'zod';
 import { ZoneFqdnPreview } from './ZoneFqdnPreview';
 import { RecordFqdnPreview } from './RecordFqdnPreview';
+import { MultiEntityPickerWithPrefill } from './MultiEntityPickerWithPrefill';
 
 const zoneFqdnPreviewField = FormFieldBlueprint.make({
   name: 'zone-fqdn-preview',
@@ -35,7 +36,25 @@ const recordFqdnPreviewField = FormFieldBlueprint.make({
   },
 });
 
+const multiEntityPickerWithPrefillField = FormFieldBlueprint.make({
+  name: 'multi-entity-picker-with-prefill',
+  params: {
+    field: async () =>
+      createFormField({
+        name: 'MultiEntityPickerWithPrefill',
+        component: MultiEntityPickerWithPrefill,
+        schema: {
+          returnValue: z.array(z.string()),
+        },
+      }),
+  },
+});
+
 export const scaffolderModule = createFrontendModule({
   pluginId: 'scaffolder',
-  extensions: [zoneFqdnPreviewField, recordFqdnPreviewField],
+  extensions: [
+    zoneFqdnPreviewField,
+    recordFqdnPreviewField,
+    multiEntityPickerWithPrefillField,
+  ],
 });

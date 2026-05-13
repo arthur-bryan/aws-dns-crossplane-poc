@@ -142,15 +142,50 @@ if render_zone zone-create-protected "$XRS/zone-create-protected.yaml" "$OUT"; t
   assert_eq "$doc" '.spec.deletionPolicy' 'Orphan' "deletionPolicy=Orphan emitted"
 fi
 
-case_header "zone-private"
+case_header "zone-private (multi same-account VPCs, first-reconcile partitioning)"
 OUT="$WORK/zone-private.out"
 if render_zone zone-private "$XRS/zone-private.yaml" "$OUT"; then
   doc=$(mr_zone "$OUT")
-  assert_eq      "$doc" '.spec.forProvider.vpc | length' '2'                "vpc block has two associations"
-  assert_eq      "$doc" '.spec.forProvider.vpc[0].vpcId'        'vpc-0123456789abcdef0' "first vpcId propagated"
-  assert_eq      "$doc" '.spec.forProvider.vpc[0].vpcRegion'    'us-east-1'             "first vpcRegion propagated"
-  assert_eq      "$doc" '.spec.forProvider.vpc[1].vpcId'        'vpc-fedcba9876543210f' "second vpcId propagated"
+  # AWS Route 53 CreateHostedZone accepts exactly ONE VPC: the composition
+  # now inlines the first same-account VPC on the Zone MR and emits any
+  # additional same-account VPCs as separate ZoneAssociation MRs (visible
+  # only after the zone is observed). On the first reconcile we should see
+  # exactly one inline VPC.
+  assert_eq      "$doc" '.spec.forProvider.vpc | length' '1'                "vpc block has exactly one association (the creation VPC)"
+  assert_eq      "$doc" '.spec.forProvider.vpc[0].vpcId'        'vpc-0123456789abcdef0' "first vpcId is the creation VPC"
+  assert_eq      "$doc" '.spec.forProvider.vpc[0].vpcRegion'    'us-east-1'             "creation VPC region propagated"
   assert_eq      "$doc" '.spec.forProvider.tags.visibility'     'private'               "tag visibility=private set"
+  # second same-account VPC must NOT appear inline on the Zone MR
+  assert_yq_true "$doc" '[.spec.forProvider.vpc[].vpcId] | contains(["vpc-fedcba9876543210f"]) | not' "second VPC not inlined"
+  # without observed status no ZoneAssociation is emitted yet (verified
+  # end-to-end by lab/tests/e2e/zone-edit-vpcs.py once the zone is alive)
+  zaCount=$(grep -c '^kind: ZoneAssociation$' "$OUT" || true)
+  if [ "$zaCount" = "0" ]; then
+    pass_line "no ZoneAssociation MR on first reconcile (needs observed status)"
+  else
+    fail_line "no ZoneAssociation MR on first reconcile" "grep -c '^kind: ZoneAssociation$'" "0" "$zaCount"
+  fi
+fi
+
+case_header "zone-private (mixed same-account + cross-account VPCs)"
+OUT="$WORK/zone-private-mixed.out"
+if render_zone zone-private-mixed "$XRS/zone-private-mixed-accounts.yaml" "$OUT"; then
+  doc=$(mr_zone "$OUT")
+  assert_eq      "$doc" '.spec.forProvider.vpc | length'  '1'                "only the same-account VPC is inlined on Zone MR"
+  assert_eq      "$doc" '.spec.forProvider.vpc[0].vpcId'  'vpc-0aaaa11111aaaa111' "inline VPC = the same-account VPC"
+  # cross-account Auth + Assoc need observed zoneId on the Zone MR — not emitted on first reconcile
+  authCount=$(grep -c '^kind: VPCAssociationAuthorization$' "$OUT" || true)
+  assocCount=$(grep -c '^kind: ZoneAssociation$' "$OUT" || true)
+  if [ "$authCount" = "0" ]; then
+    pass_line "no VPCAssociationAuthorization MR on first reconcile"
+  else
+    fail_line "no VPCAssociationAuthorization MR on first reconcile" "grep -c" "0" "$authCount"
+  fi
+  if [ "$assocCount" = "0" ]; then
+    pass_line "no ZoneAssociation MR on first reconcile"
+  else
+    fail_line "no ZoneAssociation MR on first reconcile" "grep -c" "0" "$assocCount"
+  fi
 fi
 
 case_header "zone-import"

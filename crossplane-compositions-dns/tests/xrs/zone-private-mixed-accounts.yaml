@@ -1,0 +1,29 @@
+---
+# Private hosted zone with one same-account and one cross-account VPC.
+# Used to verify that the composition partitions VPCs correctly:
+#   * first same-account VPC -> inline on Zone MR (creation VPC)
+#   * cross-account VPC      -> VPCAssociationAuthorization + ZoneAssociation
+#                               pair, only emitted once the zone is observed
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-mixed-vpcs.example.com
+  namespace: system-infrastructure-dev
+spec:
+  name: zone-mixed-vpcs.example.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: dev
+  aws:
+    account: 100000000000
+    accountName: dev-account
+  zoneName: mixed-vpcs.example.com
+  visibility: private
+  vpcs:
+    - vpcId: vpc-0aaaa11111aaaa111
+      vpcRegion: us-east-1
+      accountName: dev-account
+    - vpcId: vpc-0bbbb22222bbbb222
+      vpcRegion: us-east-1
+      accountName: prd-account

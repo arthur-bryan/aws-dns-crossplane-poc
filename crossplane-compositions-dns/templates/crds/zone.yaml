@@ -159,6 +159,8 @@ spec:
                   message: "zoneName must not contain consecutive dots"
                 - rule: "!has(self.visibility) || self.visibility != 'private' || (has(self.vpcs) && size(self.vpcs) >= 1)"
                   message: "visibility=private requires at least one vpcs entry"
+                - rule: "!has(oldSelf.vpcs) || size(oldSelf.vpcs) == 0 || size(self.vpcs) == 0 || self.vpcs[0].vpcId == oldSelf.vpcs[0].vpcId"
+                  message: "the creation VPC (first entry in spec.vpcs) is immutable; additional VPCs can be added or removed"
 
             status:
               type: object
