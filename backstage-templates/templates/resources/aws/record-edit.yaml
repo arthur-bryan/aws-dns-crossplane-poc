@@ -201,7 +201,7 @@ spec:
                           title: Custom Hosted Zone ID
                           type: string
                           description: Hosted zone ID for custom alias target
-                          pattern: '^Z[A-Z0-9]+$'
+                          pattern: "^Z[A-Z0-9]+$"
                       required:
                         - customZoneId
                     - properties:
