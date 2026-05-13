@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-e2e-latency-694854-us-east-1.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-latency-694854","type":"A","routingPolicy":"latency","setIdentifier":"us-east-1","latencyRegion":"us-east-1","ttl":300,"values":["10.0.7.10"]}'
+spec:
+  name: record-e2e-latency-694854-us-east-1.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: e2e-latency-694854
+  type: A
+  ttl: 300
+  values:
+    - 10.0.7.10
+  setIdentifier: us-east-1
+  latencyRoutingPolicy:
+    region: us-east-1
