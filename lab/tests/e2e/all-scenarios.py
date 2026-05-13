@@ -785,7 +785,167 @@ def make_multivalue(suffix: str, set_id: str, value: str, edit_value: str) -> Sc
         expected_aws_after_edit=lambda rows: values_match(rows, "A", [edit_value], 600, set_identifier=set_id),
     )
 
+# ---------------------------------------------------------------------------
+# Single-axis edits: prove that ChangeResourceRecordSets UPSERT mutates only
+# the field that changed.
+# ---------------------------------------------------------------------------
+
+def make_a_ttl_only(suffix: str) -> Scenario:
+    name = f"a-ttl-only-{suffix}"
+    record_name = f"e2e-{name}"
+    values = ["192.0.2.80"]
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="A",
+        create_values={"ttl": 300, "values": values, "routingPolicy": "simple"},
+        edit_values={"ttl": 600, "values": values},  # values unchanged on purpose
+        expected_aws=lambda rows: values_match(rows, "A", values, 300),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", values, 600),
+    )
+
+def make_a_values_only(suffix: str) -> Scenario:
+    name = f"a-values-only-{suffix}"
+    record_name = f"e2e-{name}"
+    create_v = ["192.0.2.90"]
+    edit_v = ["192.0.2.91"]
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="A",
+        create_values={"ttl": 300, "values": create_v, "routingPolicy": "simple"},
+        edit_values={"ttl": 300, "values": edit_v},  # ttl unchanged on purpose
+        expected_aws=lambda rows: values_match(rows, "A", create_v, 300),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", edit_v, 300),
+    )
+
+def make_weighted_weight_only(suffix: str) -> Scenario:
+    set_id = "weight-only-bucket"
+    name = f"weighted-weight-only-{suffix}"
+    record_name = f"e2e-{name}"
+    values = ["10.0.11.50"]
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="A",
+        set_identifier=set_id,
+        create_values={
+            "routingPolicy": "weighted",
+            "setIdentifier": set_id,
+            "weight": 10,
+            "ttl": 300,
+            "values": values,
+        },
+        edit_values={"weight": 100, "ttl": 300, "values": values},
+        expected_aws=lambda rows: values_match(rows, "A", values, 300, set_identifier=set_id, weight=10),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", values, 300, set_identifier=set_id, weight=100),
+    )
+
+# ---------------------------------------------------------------------------
+# Apex variants (recordName="") exercise the `if $recordName` branch in the
+# composition's external-name builder.
+# ---------------------------------------------------------------------------
+
+def make_a_apex(suffix: str) -> Scenario:
+    name = f"a-apex-{suffix}"
+    create_v = ["192.0.2.200"]
+    edit_v = ["192.0.2.201"]
+    # An apex A on the same zone would clash with the real apex record. This
+    # scenario only runs on a dedicated test zone — set ALLOW_APEX_TEST=1 to
+    # opt in, otherwise the runner skips it.
+    return Scenario(
+        name=name,
+        record_name="",  # apex
+        record_type="A",
+        create_values={"ttl": 300, "values": create_v, "routingPolicy": "simple"},
+        edit_values={"ttl": 600, "values": edit_v},
+        expected_aws=lambda rows: values_match(rows, "A", create_v, 300),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", edit_v, 600),
+    )
+
+# ---------------------------------------------------------------------------
+# Native alias serviceTypes — exercise the composition's region-keyed zone-id
+# mapping table (record.yaml lines 73-160). Custom is already covered.
+# ---------------------------------------------------------------------------
+
+def make_alias_cloudfront(suffix: str) -> Scenario:
+    name = f"alias-cloudfront-{suffix}"
+    record_name = f"e2e-{name}"
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="ALIAS",
+        create_values={
+            "routingPolicy": "simple",
+            "serviceType": "CloudFront",
+            "dnsName": "d111-create.cloudfront.net",
+            "evaluateTargetHealth": False,
+        },
+        edit_values={
+            "serviceType": "CloudFront",
+            "dnsName": "d222-edit.cloudfront.net",
+            "evaluateTargetHealth": False,
+        },
+        # CloudFront's hosted zone id is the well-known Z2FDTNDATAQYW2 — the
+        # composition fills it in regardless of region. We only assert the DNS
+        # name here because Route53's ListResourceRecordSets does not echo the
+        # alias hosted-zone-id in our normalised rows.
+        expected_aws=lambda rows: alias_match(rows, "d111-create.cloudfront.net", "Z2FDTNDATAQYW2"),
+        expected_aws_after_edit=lambda rows: alias_match(rows, "d222-edit.cloudfront.net", "Z2FDTNDATAQYW2"),
+    )
+
+def make_alias_alb_us_east_1(suffix: str) -> Scenario:
+    name = f"alias-alb-us-east-1-{suffix}"
+    record_name = f"e2e-{name}"
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="ALIAS",
+        create_values={
+            "routingPolicy": "simple",
+            "serviceType": "ALB",
+            "dnsName": "alb-create-1234567.us-east-1.elb.amazonaws.com",
+            "evaluateTargetHealth": True,
+            "targetRegion": "us-east-1",
+        },
+        edit_values={
+            "serviceType": "ALB",
+            "dnsName": "alb-edit-1234567.us-east-1.elb.amazonaws.com",
+            "evaluateTargetHealth": True,
+            "targetRegion": "us-east-1",
+        },
+        # ALB us-east-1 = Z35SXDOTRQ7X7K
+        expected_aws=lambda rows: alias_match(rows, "alb-create-1234567.us-east-1.elb.amazonaws.com", "Z35SXDOTRQ7X7K"),
+        expected_aws_after_edit=lambda rows: alias_match(rows, "alb-edit-1234567.us-east-1.elb.amazonaws.com", "Z35SXDOTRQ7X7K"),
+    )
+
+def make_alias_nlb_us_east_1(suffix: str) -> Scenario:
+    name = f"alias-nlb-us-east-1-{suffix}"
+    record_name = f"e2e-{name}"
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="ALIAS",
+        create_values={
+            "routingPolicy": "simple",
+            "serviceType": "NLB",
+            "dnsName": "nlb-create-1234567.elb.us-east-1.amazonaws.com",
+            "evaluateTargetHealth": True,
+            "targetRegion": "us-east-1",
+        },
+        edit_values={
+            "serviceType": "NLB",
+            "dnsName": "nlb-edit-1234567.elb.us-east-1.amazonaws.com",
+            "evaluateTargetHealth": True,
+            "targetRegion": "us-east-1",
+        },
+        # NLB us-east-1 = Z26RNL4JYFTOTI
+        expected_aws=lambda rows: alias_match(rows, "nlb-create-1234567.elb.us-east-1.amazonaws.com", "Z26RNL4JYFTOTI"),
+        expected_aws_after_edit=lambda rows: alias_match(rows, "nlb-edit-1234567.elb.us-east-1.amazonaws.com", "Z26RNL4JYFTOTI"),
+    )
+
 SCENARIO_BUILDERS: dict[str, Callable[[str], Scenario]] = {
+    # baseline create+edit per record type (edit changes ttl AND values together)
     "a":          lambda s: make_a(s),
     "aaaa":       lambda s: make_aaaa(s),
     "cname":      lambda s: make_cname(s),
@@ -808,6 +968,17 @@ SCENARIO_BUILDERS: dict[str, Callable[[str], Scenario]] = {
     "geoprox-2":  lambda s: make_geoproximity(s, "eu-west-1", "eu-west-1", "10.0.9.20", "10.0.9.21"),
     "multi-1":    lambda s: make_multivalue(s, "host-1", "10.0.10.10", "10.0.10.11"),
     "multi-2":    lambda s: make_multivalue(s, "host-2", "10.0.10.20", "10.0.10.21"),
+    # single-axis edits — exercise UPSERT on exactly one mutable field
+    "a-ttl-only":            lambda s: make_a_ttl_only(s),
+    "a-values-only":         lambda s: make_a_values_only(s),
+    "weighted-weight-only":  lambda s: make_weighted_weight_only(s),
+    # apex variant
+    "a-apex":                lambda s: make_a_apex(s),
+    # native alias serviceTypes — exercise the composition's hosted-zone-id
+    # lookup tables for managed AWS endpoints
+    "alias-cloudfront":      lambda s: make_alias_cloudfront(s),
+    "alias-alb-us-east-1":   lambda s: make_alias_alb_us_east_1(s),
+    "alias-nlb-us-east-1":   lambda s: make_alias_nlb_us_east_1(s),
 }
 
 def main() -> int:
