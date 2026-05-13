@@ -8,11 +8,11 @@ and writes them under entities/. Idempotent: files that already exist are
 left alone.
 
 Usage:
-  lab/tools/import-existing.py                 # dry-run: print what would change
-  lab/tools/import-existing.py --write         # write the files
+  lab/tools/import-existing.py                                    # dry-run
+  lab/tools/import-existing.py --write                            # write files
   lab/tools/import-existing.py --write --filter arthurbryan.com
 
-After --write, review the generated files (`git status`, `git diff`), commit,
+After --write, review the generated files (git status, git diff), commit,
 push, and open a PR. Argo sync + Crossplane observe then adopts everything.
 
 Requires: aws CLI authenticated for Route53 read, python 3.9+.
@@ -26,6 +26,7 @@ import subprocess
 import sys
 from pathlib import Path
 from textwrap import dedent
+from urllib.parse import quote as _urlencode
 
 DEFAULTS = {
     "domain": "cross",
@@ -36,8 +37,6 @@ DEFAULTS = {
     "aws_region": "us-east-1",
 }
 
-SUPPORTED_POLICIES: set[str] = {"Simple", "Weighted"}
-
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 ENV_DIR_TMPL = "entities/environments/{domain}/{subdomain}/{system}/{environment}/resources/aws/{zone_name}"
 CATALOG_DIR_TMPL = "entities/catalog/{environment}/{zone_name}"
@@ -46,8 +45,8 @@ REPO_URL = "https://github.com/arthur-bryan/aws-dns-crossplane-poc"
 REPO_BRANCH = "feature/ape-platform-alignment"
 BACKSTAGE_BASE_URL = os.environ.get("APE_BACKSTAGE_URL", "http://localhost:3000")
 
+
 def aws(*args: str) -> dict:
-    """Run `aws ...` and return parsed JSON output."""
     result = subprocess.run(
         ["aws", *args, "--output", "json"],
         capture_output=True, text=True, check=False,
@@ -56,12 +55,15 @@ def aws(*args: str) -> dict:
         sys.exit(f"ERROR running `aws {' '.join(args)}`:\n{result.stderr}")
     return json.loads(result.stdout or "{}")
 
+
 def get_caller_identity() -> dict:
     return aws("sts", "get-caller-identity")
+
 
 def list_hosted_zones() -> list[dict]:
     data = aws("route53", "list-hosted-zones")
     return data.get("HostedZones", [])
+
 
 def list_record_sets(zone_id: str) -> list[dict]:
     records: list[dict] = []
@@ -79,16 +81,18 @@ def list_record_sets(zone_id: str) -> list[dict]:
         next_type = page.get("NextRecordType")
     return records
 
+
 def yaml_str(value: str) -> str:
-    """YAML-quote a string when needed; preserve TXT quotes/backslashes."""
     if value == "":
         return '""'
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
 
+
 def yaml_list(items: list[str], indent: int) -> str:
     pad = " " * indent
     return "\n".join(f"{pad}- {yaml_str(v)}" for v in items)
+
 
 def zone_xr_yaml(ctx: dict, zone_name: str, zone_id: str) -> str:
     return dedent(f"""\
@@ -97,7 +101,7 @@ def zone_xr_yaml(ctx: dict, zone_name: str, zone_id: str) -> str:
         kind: Zone
         metadata:
           name: zone-{zone_name}
-          namespace: system-{ctx['system']}-{ctx['environment']}
+          namespace: {ctx['namespace']}
           annotations:
             dock.tech/managed-by: batch-import
         spec:
@@ -115,6 +119,7 @@ def zone_xr_yaml(ctx: dict, zone_name: str, zone_id: str) -> str:
             zoneId: {zone_id}
     """)
 
+
 def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) -> str:
     return dedent(f"""\
         ---
@@ -122,7 +127,7 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
         kind: Resource
         metadata:
           name: zone-{zone_name}
-          namespace: system-{ctx['system']}-{ctx['environment']}
+          namespace: {ctx['namespace']}
           title: "{zone_name} · {ctx['environment']}"
           description: "Route53 Hosted Zone {zone_name} ({ctx['environment']}) — imported"
           annotations:
@@ -158,17 +163,20 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
           system: {ctx['system']}
     """)
 
+
 def record_xr_yaml(ctx: dict, rec: dict) -> str:
-    """Generate a Record XR YAML that exactly matches the live AWS record so
-    the first reconcile is a no-op."""
-    record_name_line = f'recordName: "{rec["record_short"]}"' if not rec["record_short"] else f"recordName: {rec['record_short']}"
+    record_name_line = (
+        f'recordName: "{rec["record_short"]}"'
+        if not rec["record_short"]
+        else f"recordName: {rec['record_short']}"
+    )
     head = dedent(f"""\
         ---
         apiVersion: dock.tech/v1
         kind: Record
         metadata:
           name: {rec['xr_name']}
-          namespace: system-{ctx['system']}-{ctx['environment']}
+          namespace: {ctx['namespace']}
           annotations:
             dock.tech/managed-by: batch-import
         spec:
@@ -191,7 +199,7 @@ def record_xr_yaml(ctx: dict, rec: dict) -> str:
 
     if rec["type"] == "ALIAS":
         parts.append("  aliasTarget:")
-        parts.append(f"    serviceType: Custom")
+        parts.append("    serviceType: Custom")
         parts.append(f"    hostedZoneId: {rec['alias_zone_id']}")
         parts.append(f"    dnsName: {yaml_str(rec['alias_dns_name'])}")
         parts.append(f"    evaluateTargetHealth: {str(rec['alias_eval_target_health']).lower()}")
@@ -206,15 +214,13 @@ def record_xr_yaml(ctx: dict, rec: dict) -> str:
 
     parts.append("  import:")
     parts.append("    existing: true")
-    parts.append("")  # trailing newline
+    parts.append("")
     return "\n".join(parts)
 
+
 def record_scaffolder_parameters_json(ctx: dict, rec: dict) -> str:
-    """Synthesize the form-input JSON that the scaffolder would have produced
-    if this record had been created via Backstage — used by the edit template
-    to reconstruct the XR without re-reading it from GitHub."""
     params: dict = {
-        "zone": f"resource:system-{ctx['system']}-{ctx['environment']}/zone-{rec['zone_name']}",
+        "zone": f"resource:{ctx['namespace']}/zone-{rec['zone_name']}",
         "recordName": rec["record_short"],
         "type": rec["type"],
     }
@@ -232,6 +238,7 @@ def record_scaffolder_parameters_json(ctx: dict, rec: dict) -> str:
         params["weight"] = rec["weight"]
     return json.dumps(params, separators=(",", ":"))
 
+
 def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
     fqdn = rec["display_fqdn"]
     apex_suffix = " (apex)" if not rec["record_short"] else ""
@@ -241,21 +248,20 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
     title = fqdn + apex_suffix + (f" ({rec['set_identifier']})" if rec.get("set_identifier") else "")
     scaffolder_params = record_scaffolder_parameters_json(ctx, rec)
     edit_form_data = {
-        "zone": f"resource:system-{ctx['system']}-{ctx['environment']}/zone-{rec['zone_name']}",
+        "zone": f"resource:{ctx['namespace']}/zone-{rec['zone_name']}",
         "recordName": rec["record_short"],
         "type": rec["type"],
     }
     if rec.get("set_identifier"):
         edit_form_data["setIdentifier"] = rec["set_identifier"]
-    from urllib.parse import quote as _q
-    edit_url_form = _q(json.dumps(edit_form_data, separators=(",", ":")))
+    edit_url_form = _urlencode(json.dumps(edit_form_data, separators=(",", ":")))
     return dedent(f"""\
         ---
         apiVersion: backstage.io/v1alpha1
         kind: Resource
         metadata:
           name: {rec['xr_name']}
-          namespace: system-{ctx['system']}-{ctx['environment']}
+          namespace: {ctx['namespace']}
           title: {title}
           description: "DNS {rec['type']} record {fqdn} ({ctx['environment']}) — imported"
           annotations:
@@ -288,12 +294,12 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
           owner: group:default/infrastructure
           system: {ctx['system']}
           dependsOn:
-            - resource:default/zone-{rec['zone_name']}
+            - resource:{ctx['namespace']}/zone-{rec['zone_name']}
         """)
 
+
 def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
-    """Return a normalized record dict or None to skip."""
-    name = rrset["Name"].rstrip(".")  # AWS names have trailing dot
+    name = rrset["Name"].rstrip(".")
     rtype = rrset["Type"]
 
     if name == zone_name and rtype in ("NS", "SOA"):
@@ -322,7 +328,7 @@ def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
     if "AliasTarget" in rrset:
         at = rrset["AliasTarget"]
         base.update({
-            "type": "ALIAS",   # our XRD flattens A/AAAA + alias into a single ALIAS type
+            "type": "ALIAS",
             "alias_zone_id": at["HostedZoneId"],
             "alias_dns_name": at["DNSName"].rstrip("."),
             "alias_eval_target_health": at.get("EvaluateTargetHealth", False),
@@ -343,6 +349,7 @@ def parse_record(rrset: dict, zone_name: str, zone_id: str) -> dict | None:
 
     return base
 
+
 class Writer:
     def __init__(self, write: bool):
         self.write = write
@@ -361,6 +368,7 @@ class Writer:
             path.write_text(content)
         self.created += 1
 
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--write", action="store_true", help="actually create files (default: dry-run)")
@@ -369,23 +377,29 @@ def main() -> int:
     ap.add_argument("--subdomain", default=DEFAULTS["subdomain"])
     ap.add_argument("--system", default=DEFAULTS["system"])
     ap.add_argument("--environment", default=DEFAULTS["environment"])
+    ap.add_argument("--namespace", default=None,
+                    help="backstage system namespace (metadata.namespace of the System entity). "
+                         "defaults to system-{system}-{environment} if not provided")
     ap.add_argument("--aws-account-name", default=DEFAULTS["aws_account_name"])
     ap.add_argument("--aws-region", default=DEFAULTS["aws_region"])
     args = ap.parse_args()
 
     identity = get_caller_identity()
+    namespace = args.namespace or f"system-{args.system}-{args.environment}"
     ctx = {
         "domain": args.domain,
         "subdomain": args.subdomain,
         "system": args.system,
         "environment": args.environment,
+        "namespace": namespace,
         "aws_account_id": identity["Account"],
         "aws_account_name": args.aws_account_name,
         "aws_region": args.aws_region,
     }
-    print(f"AWS Account : {ctx['aws_account_id']} ({ctx['aws_account_name']})")
-    print(f"Target path : entities/environments/{ctx['domain']}/{ctx['subdomain']}/{ctx['system']}/{ctx['environment']}/resources/aws/<zone>/")
-    print(f"Mode        : {'WRITE' if args.write else 'DRY-RUN (use --write to apply)'}")
+    print(f"AWS account  : {ctx['aws_account_id']} ({ctx['aws_account_name']})")
+    print(f"Namespace    : {ctx['namespace']}")
+    print(f"Target path  : entities/environments/{ctx['domain']}/{ctx['subdomain']}/{ctx['system']}/{ctx['environment']}/resources/aws/<zone>/")
+    print(f"Mode         : {'WRITE' if args.write else 'DRY-RUN (use --write to apply)'}")
     print()
 
     writer = Writer(write=args.write)
@@ -440,6 +454,7 @@ def main() -> int:
         print("Re-run with --write to actually create the files.")
         print("After --write: review, commit, push, open PR. Argo will sync and Crossplane will observe.")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
