@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-e2e-alias-custom-694854.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-alias-custom-694854","type":"ALIAS","routingPolicy":"simple","serviceType":"Custom","dnsName":"d111-create.cloudfront.net","evaluateTargetHealth":false,"customZoneId":"Z2FDTNDATAQYW2"}'
+spec:
+  name: record-e2e-alias-custom-694854.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: e2e-alias-custom-694854
+  type: ALIAS
+  aliasTarget:
+    serviceType: Custom
+    dnsName: d111-create.cloudfront.net
+    evaluateTargetHealth: false
+    hostedZoneId: Z2FDTNDATAQYW2
