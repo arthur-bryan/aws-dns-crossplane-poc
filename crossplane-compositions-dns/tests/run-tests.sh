@@ -127,7 +127,7 @@ if render_zone zone-create "$XRS/zone-create.yaml" "$OUT"; then
   doc=$(mr_zone "$OUT")
   assert_eq    "$doc" '.apiVersion'                           "$ZONE_API"               "apiVersion is modern v2"
   assert_eq    "$doc" '.spec.forProvider.name'                'example.com'             "forProvider.name = example.com"
-  assert_eq    "$doc" '.spec.forProvider.comment'             'Corporate website DNS zone' "comment propagated"
+  assert_eq    "$doc" '.spec.forProvider.comment'             'Zona example.com - managed by Infrastructure team' "comment rendered with zone name"
   assert_yq_true "$doc" '.spec.managementPolicies | contains(["Create"])' "managementPolicies includes Create"
   assert_yq_true "$doc" '.spec.managementPolicies | contains(["Delete"])' "managementPolicies includes Delete"
   assert_null  "$doc" '.metadata.annotations["crossplane.io/external-name"]' "external-name omitted on create"

@@ -113,7 +113,7 @@ spec:
               forProvider:
                 name: [[ $zoneName ]]
                 [[- if not $importing ]]
-                comment: "Managed by APE Platform"
+                comment: "Zona [[ $zoneName ]] - managed by Infrastructure team"
                 [[- end ]]
                 tags:
                   createdBy: ape-platform
