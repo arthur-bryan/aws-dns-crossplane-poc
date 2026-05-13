@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-txt-694854.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-txt-694854","type":"TXT","ttl":300,"values":["\"hello-e2e\""],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-txt-694854","type":"TXT","ttl":600,"values":["\"hello-e2e-edited\""],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-txt-694854.arthurbryan.com
   domain: cross
@@ -17,8 +17,8 @@ spec:
     accountName: prd-account
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
-  recordName: e2e-txt-694854
+  recordName: "e2e-txt-694854"
   type: TXT
-  ttl: 300
+  ttl: 600
   values:
-    - "hello-e2e"
+    - "hello-e2e-edited"
