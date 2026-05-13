@@ -16,8 +16,10 @@ from typing import Any, Callable, Optional
 REPO_ROOT = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
 ZONE_NAME = os.environ.get("E2E_ZONE_NAME", "arthurbryan.com")
 ZONE_ID = os.environ.get("E2E_ZONE_ID", "Z03010981ALJFZB4QLU8W")
-ZONE_REF = f"resource:system-infrastructure-dev/zone-{ZONE_NAME}"
-NAMESPACE = "system-infrastructure-dev"
+ZONE_NAMESPACE = os.environ.get("E2E_ZONE_NAMESPACE", "system-infrastructure-prd")
+ZONE_ENVIRONMENT = ZONE_NAMESPACE.split("-")[-1]  # "prd" or "dev" (matches dock.tech/environment annotation on the parent zone)
+ZONE_REF = f"resource:{ZONE_NAMESPACE}/zone-{ZONE_NAME}"
+NAMESPACE = ZONE_NAMESPACE
 BACKSTAGE = os.environ.get("BACKSTAGE_BACKEND", "http://localhost:7007")
 GH_OWNER = "arthur-bryan"
 GH_REPO = "aws-dns-crossplane-poc"
@@ -286,7 +288,7 @@ def base_key(record_name: str, rtype: str, set_id: Optional[str]) -> str:
     return base.lower()
 
 def xr_path(zone: str, key: str) -> str:
-    return f"entities/environments/cross/cloud/infrastructure/dev/resources/aws/{zone}/record-{key}.yaml"
+    return f"entities/environments/cross/cloud/infrastructure/{ZONE_ENVIRONMENT}/resources/aws/{zone}/record-{key}.yaml"
 
 def catalog_path(env: str, zone: str, key: str) -> str:
     return f"entities/catalog/{env}/{zone}/record-{key}.yaml"
@@ -391,7 +393,7 @@ def post_merge_validate(scenario: Scenario, after_edit: bool = False) -> bool:
 def cleanup_record(scenario: Scenario) -> bool:
     key = base_key(scenario.record_name, scenario.record_type, scenario.set_identifier)
     xr_rel = xr_path(ZONE_NAME, key)
-    cat_rel = catalog_path("dev", ZONE_NAME, key)
+    cat_rel = catalog_path(ZONE_ENVIRONMENT, ZONE_NAME, key)
 
     if not os.path.exists(os.path.join(REPO_ROOT, xr_rel)):
         info("nothing to cleanup (file already removed)")
