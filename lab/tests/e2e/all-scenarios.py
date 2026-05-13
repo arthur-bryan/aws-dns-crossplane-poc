@@ -822,7 +822,9 @@ def make_a_values_only(suffix: str) -> Scenario:
     )
 
 def make_weighted_weight_only(suffix: str) -> Scenario:
-    set_id = "weight-only-bucket"
+    # set_id stays short — total length of metadata.name on the resulting
+    # Record MR (record-<recordName>-<setId>.<zoneName>) must fit in 63 bytes
+    set_id = "wo"
     name = f"weighted-weight-only-{suffix}"
     record_name = f"e2e-{name}"
     values = ["10.0.11.50"]

@@ -395,7 +395,7 @@ spec:
               accountName: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
             zoneId: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
             zoneName: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-            recordName: ${{ parameters.recordName }}
+            recordName: "${{ parameters.recordName }}"
             type: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
