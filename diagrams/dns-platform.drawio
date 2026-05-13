@@ -142,7 +142,7 @@
         <mxCell id="route53" parent="1" style="sketch=0;outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.route_53;fillColor=#3399FF;" value="Amazon&#xa;Route 53" vertex="1">
           <mxGeometry height="80" width="80" x="1220" y="970" as="geometry" />
         </mxCell>
-        <mxCell id="aws-cl" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=2;fontColor=#827717;spacingLeft=12;" value="«hosted zones &amp; record sets — account selected per-MR via providerConfigRef»&#xa;«static creds for prod-account, assumeRoleChain for dev-account / others»" vertex="1">
+        <mxCell id="aws-cl" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=2;fontColor=#827717;spacingLeft=12;" value="«hosted zones &amp; record sets — account selected per-MR via providerConfigRef → ClusterProviderConfig»&#xa;«every ClusterProviderConfig uses credentials.source: IRSA, with assumeRoleChain into the target AWS account when needed»" vertex="1">
           <mxGeometry height="60" width="1080" x="120" y="990" as="geometry" />
         </mxCell>
         <mxCell id="e1" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="backstage">
@@ -267,7 +267,7 @@
         <mxCell id="r53-dev2" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.route_53;" value="" vertex="1">
           <mxGeometry height="48" width="48" x="120" y="468" as="geometry" />
         </mxCell>
-        <mxCell id="aws-step5-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#827717;spacingLeft=10;" value="Provider authenticates via the &lt;b&gt;dev-account&lt;/b&gt; ProviderConfig (assumeRoleChain) and calls &lt;b&gt;CreateHostedZone&lt;/b&gt; →&#xa;AWS allocates a new zoneId (ZCHILD456) and 4 nameServers ; populates the Zone MR&#39;s status.atProvider" vertex="1">
+        <mxCell id="aws-step5-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#827717;spacingLeft=10;" value="Provider authenticates via the &lt;b&gt;dev-account&lt;/b&gt; ClusterProviderConfig (credentials.source: IRSA + assumeRoleChain into dev-account) and calls &lt;b&gt;CreateHostedZone&lt;/b&gt; →&#xa;AWS allocates a new zoneId (ZCHILD456) and 4 nameServers ; populates the Zone MR&#39;s status.atProvider" vertex="1">
           <mxGeometry height="48" width="1276" x="184" y="468" as="geometry" />
         </mxCell>
         <mxCell id="t6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1976D2;strokeColor=#0D47A1;fontColor=#ffffff;fontSize=14;fontStyle=1;" value="6" vertex="1">
@@ -303,7 +303,7 @@
         <mxCell id="r53-parent2" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.route_53;" value="" vertex="1">
           <mxGeometry height="48" width="48" x="120" y="754" as="geometry" />
         </mxCell>
-        <mxCell id="aws-step8-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#827717;spacingLeft=10;" value="Provider authenticates via the &lt;b&gt;prod-account&lt;/b&gt; ProviderConfig (static creds) and calls &lt;b&gt;ChangeResourceRecordSets&lt;/b&gt; →&#xa;an NS record set is added inside the example.com parent zone, delegating dev.example.com to its 4 nameServers" vertex="1">
+        <mxCell id="aws-step8-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#827717;spacingLeft=10;" value="Provider authenticates via the &lt;b&gt;prod-account&lt;/b&gt; ClusterProviderConfig (credentials.source: IRSA) and calls &lt;b&gt;ChangeResourceRecordSets&lt;/b&gt; →&#xa;an NS record set is added inside the example.com parent zone, delegating dev.example.com to its 4 nameServers" vertex="1">
           <mxGeometry height="48" width="1276" x="184" y="754" as="geometry" />
         </mxCell>
         <mxCell id="t9" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#43A047;strokeColor=#1B5E20;fontColor=#ffffff;fontSize=14;fontStyle=1;" value="9" vertex="1">
@@ -377,7 +377,7 @@
         <mxCell id="s4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1976D2;strokeColor=#0D47A1;fontColor=#ffffff;fontSize=14;fontStyle=1;" value="4" vertex="1">
           <mxGeometry height="32" width="32" x="20" y="396" as="geometry" />
         </mxCell>
-        <mxCell id="comp-priv" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#36BAA2;strokeColor=#247966;fontColor=#ffffff;fontSize=11;fontStyle=1;align=left;spacingLeft=14;" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; Composition splits VPCs by account → emits one Zone MR (with same-account VPC inlined) + a paired (Auth + Assoc) MR per cross-account VPC" vertex="1">
+        <mxCell id="comp-priv" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#36BAA2;strokeColor=#247966;fontColor=#ffffff;fontSize=11;fontStyle=1;align=left;spacingLeft=14;" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; Composition reconcile #1 — emits the Zone MR only. Auth + Assoc MRs are gated on the zone being observed (status.atProvider.zoneId), so they wait for reconcile #2 after AWS responds." vertex="1">
           <mxGeometry height="48" width="1380" x="80" y="390" as="geometry" />
         </mxCell>
         <mxCell id="s5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1976D2;strokeColor=#0D47A1;fontColor=#ffffff;fontSize=14;fontStyle=1;" value="5" vertex="1">
@@ -407,7 +407,7 @@
         <mxCell id="vpc-dev3" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ffffff;strokeColor=#232F3E;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.virtual_private_cloud_VPC;" value="" vertex="1">
           <mxGeometry height="40" width="40" x="178" y="576" as="geometry" />
         </mxCell>
-        <mxCell id="aws-step6-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#827717;spacingLeft=10;" value="Provider authenticates via the &lt;b&gt;dev-account&lt;/b&gt; ProviderConfig (assumeRoleChain) and calls &lt;b&gt;CreateHostedZone&lt;/b&gt; with the same-account VPC inline →&#xa;AWS creates the private hosted zone internal.example.com (new zoneId, ZCHILD789) and attaches vpc-default-dev immediately" vertex="1">
+        <mxCell id="aws-step6-text" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#827717;spacingLeft=10;" value="Provider authenticates via the &lt;b&gt;dev-account&lt;/b&gt; ClusterProviderConfig (credentials.source: IRSA + assumeRoleChain into dev-account) and calls &lt;b&gt;CreateHostedZone&lt;/b&gt; with the same-account VPC inline →&#xa;AWS creates the private hosted zone internal.example.com (new zoneId, ZCHILD789) and attaches vpc-default-dev immediately" vertex="1">
           <mxGeometry height="48" width="1228" x="232" y="572" as="geometry" />
         </mxCell>
         <mxCell id="s7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1976D2;strokeColor=#0D47A1;fontColor=#ffffff;fontSize=14;fontStyle=1;" value="7" vertex="1">
@@ -520,7 +520,7 @@
         <mxCell id="r4-xr-l" value="XR" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#ffffff;" vertex="1" parent="1">
           <mxGeometry x="96" y="485" width="48" height="24" as="geometry" />
         </mxCell>
-        <mxCell id="r4-xr-spec" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; XR (Record) updated &lt;b&gt;in-place&lt;/b&gt; (same metadata.name, same UID)&#xa;forProvider.ttl: 300 → 60   ·   forProvider.records: [10.0.0.1] → [10.0.0.2]&#xa;Composition re-runs function-go-templating ; external-name annotation (zoneId:fqdn:type[:setIdentifier]) is unchanged" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#5E35B1;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" vertex="1" parent="1">
+        <mxCell id="r4-xr-spec" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; XR (Record) updated &lt;b&gt;in-place&lt;/b&gt; (same metadata.name, same UID)&#xa;forProvider.ttl: 300 → 60   ·   forProvider.records: [10.0.0.1] → [10.0.0.2]&#xa;Composition re-runs function-go-templating ; external-name annotation (zoneId_fqdn_type[_setIdentifier]) is unchanged" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#5E35B1;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" vertex="1" parent="1">
           <mxGeometry x="180" y="468" width="1280" height="58" as="geometry" />
         </mxCell>
         <mxCell id="r4-t6" value="6" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1976D2;strokeColor=#0D47A1;fontColor=#ffffff;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -532,7 +532,7 @@
         <mxCell id="r4-mr-l" value="MR" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#ffffff;" vertex="1" parent="1">
           <mxGeometry x="94" y="563" width="50" height="24" as="geometry" />
         </mxCell>
-        <mxCell id="r4-mr-spec" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; Record MR (route53.aws.m.upbound.io/v1beta1) — &lt;b&gt;same object&lt;/b&gt; as before&#xa;providerConfigRef.name: dev-account   ·   external-name unchanged: ZCHILD456:api.dev.example.com:A&#xa;forProvider.ttl &amp; forProvider.records re-rendered with merged values ; managementPolicies = [&amp;quot;*&amp;quot;] so the MR is fully managed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#00838F;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" vertex="1" parent="1">
+        <mxCell id="r4-mr-spec" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; Record MR (route53.aws.m.upbound.io/v1beta1) — &lt;b&gt;same object&lt;/b&gt; as before&#xa;providerConfigRef.name: dev-account (kind: ClusterProviderConfig)   ·   external-name unchanged: ZCHILD456_api.dev.example.com_A&#xa;forProvider.ttl &amp; forProvider.records re-rendered with merged values ; managementPolicies = [&amp;quot;*&amp;quot;] so the MR is fully managed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#00838F;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" vertex="1" parent="1">
           <mxGeometry x="180" y="546" width="1280" height="58" as="geometry" />
         </mxCell>
         <mxCell id="r4-t7" value="7" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F57C00;strokeColor=#BF360C;fontColor=#ffffff;fontSize=14;fontStyle=1;" vertex="1" parent="1">
@@ -660,7 +660,7 @@
         <mxCell id="r5-xrB-l" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#ffffff;" value="XR" vertex="1">
           <mxGeometry height="24" width="48" x="96" y="717" as="geometry" />
         </mxCell>
-        <mxCell id="r5-xrB-spec" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#5E35B1;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; New XR (Record) is created with the merged spec ( new type / routing policy )&#xa;Composition emits a new Record MR ; if type changed, the new MR&#39;s external-name key is different ( zoneId:fqdn:&lt;newType&gt;[:setIdentifier] )" vertex="1">
+        <mxCell id="r5-xrB-spec" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#5E35B1;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; New XR (Record) is created with the merged spec ( new type / routing policy )&#xa;Composition emits a new Record MR ; if type changed, the new MR&#39;s external-name key is different ( zoneId_fqdn_&lt;newType&gt;[_setIdentifier] )" vertex="1">
           <mxGeometry height="58" width="1280" x="180" y="700" as="geometry" />
         </mxCell>
         <mxCell id="r5-s8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1976D2;strokeColor=#0D47A1;fontColor=#ffffff;fontSize=14;fontStyle=1;" value="8" vertex="1">
@@ -672,7 +672,7 @@
         <mxCell id="r5-mrB-l" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#ffffff;" value="MR" vertex="1">
           <mxGeometry height="24" width="50" x="94" y="795" as="geometry" />
         </mxCell>
-        <mxCell id="r5-mrB-spec" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#00838F;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; New Record MR (route53.aws.m.upbound.io/v1beta1)&#xa;providerConfigRef.name: dev-account   ·   external-name: ZCHILD456:api.dev.example.com:CNAME&#xa;forProvider.records / forProvider.aliasTarget / routing-policy fields populated from the merged params" vertex="1">
+        <mxCell id="r5-mrB-spec" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#00838F;fontSize=10;align=left;spacingLeft=10;spacingTop=4;" value="&lt;b&gt;Platform&lt;/b&gt; &amp;nbsp;·&amp;nbsp; New Record MR (route53.aws.m.upbound.io/v1beta1)&#xa;providerConfigRef.name: dev-account (kind: ClusterProviderConfig)   ·   external-name: ZCHILD456_api.dev.example.com_CNAME&#xa;forProvider.records / forProvider.aliasTarget / routing-policy fields populated from the merged params" vertex="1">
           <mxGeometry height="58" width="1280" x="180" y="778" as="geometry" />
         </mxCell>
         <mxCell id="r5-s9" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F57C00;strokeColor=#BF360C;fontColor=#ffffff;fontSize=14;fontStyle=1;" value="9" vertex="1">
