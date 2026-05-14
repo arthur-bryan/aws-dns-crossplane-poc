@@ -7,14 +7,21 @@ data:
   recoverer.py: |
     # Watches route53.aws.m.upbound.io/records and recovers MRs stuck on the
     # upjet+terraform-provider-aws records-only UPDATE bug
-    # (crossplane-contrib/provider-upjet-aws#1806): when only `records` change,
-    # Upjet fails to populate RawPlan with companion fields, and AWS rejects
-    # the resulting empty UPSERT with "Expected exactly one of [AliasTarget,
-    # all of [TTL, and ResourceRecords], or TrafficPolicyInstanceId], but
-    # found none". Recovery strips the Crossplane finalizer and deletes the
-    # MR; Crossplane re-composes a fresh MR from the unchanged XR and the
-    # CREATE path uses a complete UPSERT body which AWS accepts.
+    # (crossplane-contrib/provider-upjet-aws#1806). When only `records` change
+    # in an UPDATE, Upjet fails to populate RawPlan with companion fields and
+    # AWS rejects with "Expected exactly one of [AliasTarget, all of [TTL, and
+    # ResourceRecords], or TrafficPolicyInstanceId], but found none".
+    #
+    # Recovery strategy: delete the wrong Route 53 record via the AWS API.
+    # Crossplane's next Observe will detect the resource missing and route
+    # through the CREATE path (upjet populates RawPlan fully on Create), which
+    # AWS accepts. Deleting the MR object alone does NOT work because the new
+    # MR re-imports via external-name and goes straight back into the broken
+    # Update path.
     import datetime, json, logging, os, ssl, time, urllib.error, urllib.request
+
+    import boto3
+    from botocore.exceptions import ClientError
 
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s %(message)s")
@@ -27,10 +34,6 @@ data:
         "Authorization": f"Bearer {TOKEN}",
         "Accept": "application/json",
     }
-    HEADERS_MERGE_PATCH = {
-        **HEADERS_JSON,
-        "Content-Type": "application/merge-patch+json",
-    }
     HEADERS_JSON_POST = {
         **HEADERS_JSON,
         "Content-Type": "application/json",
@@ -38,11 +41,38 @@ data:
 
     RECOVER_AFTER = int(os.environ.get("RECOVER_AFTER_SECONDS", "60"))
     POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL_SECONDS", "30"))
+    AWS_CREDS_PATH = os.environ.get(
+        "AWS_CREDS_PATH", "/var/run/aws-creds/credentials"
+    )
     ERROR_SIGNATURE = (
         "Expected exactly one of [AliasTarget, all of [TTL, and ResourceRecords]"
     )
 
     ctx = ssl.create_default_context(cafile=CA_PATH)
+
+
+    def _read_aws_creds(path):
+        access_key = secret_key = None
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("aws_access_key_id"):
+                    access_key = line.split("=", 1)[1].strip()
+                elif line.startswith("aws_secret_access_key"):
+                    secret_key = line.split("=", 1)[1].strip()
+        if not (access_key and secret_key):
+            raise RuntimeError(f"could not parse AWS credentials from {path}")
+        return access_key, secret_key
+
+
+    AWS_KEY, AWS_SECRET = _read_aws_creds(AWS_CREDS_PATH)
+    route53 = boto3.client(
+        "route53",
+        aws_access_key_id=AWS_KEY,
+        aws_secret_access_key=AWS_SECRET,
+        region_name="us-east-1",
+    )
+
 
     def k8s(method, path, headers=None, body=None):
         data = json.dumps(body).encode() if body is not None else None
@@ -59,36 +89,37 @@ data:
             log.error(f"{method} {path} -> {e.code} {e.reason}: {e.read().decode()[:300]}")
             raise
 
+
     def list_records():
         return k8s("GET", "/apis/route53.aws.m.upbound.io/v1beta1/records").get("items", [])
 
-    def parse_ts(ts):
-        for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"):
-            try:
-                return datetime.datetime.strptime(ts, fmt)
-            except ValueError:
-                continue
-        raise ValueError(f"unparseable timestamp: {ts}")
+
+    # uid -> first time the recoverer observed this MR stuck on the signature.
+    # We can't rely on the Synced condition's lastTransitionTime: Crossplane
+    # bumps it on every failed retry, so it never ages past RECOVER_AFTER.
+    first_seen = {}
+
 
     def is_stuck(mr):
+        uid = mr["metadata"]["uid"]
         conditions = mr.get("status", {}).get("conditions", [])
         synced = next((c for c in conditions if c.get("type") == "Synced"), None)
-        if not synced or synced.get("status") != "False":
-            return False, None
-        msg = synced.get("message", "") or ""
-        if ERROR_SIGNATURE not in msg:
-            return False, msg
-        try:
-            age = (datetime.datetime.utcnow()
-                   - parse_ts(synced["lastTransitionTime"])).total_seconds()
-        except Exception:
-            age = RECOVER_AFTER  # err on the side of recovering
-        if age < RECOVER_AFTER:
-            return False, msg
-        return True, msg
+        signature_match = (
+            synced is not None
+            and synced.get("status") == "False"
+            and ERROR_SIGNATURE in (synced.get("message", "") or "")
+        )
+        if not signature_match:
+            first_seen.pop(uid, None)
+            return False
+        now = datetime.datetime.now(datetime.timezone.utc)
+        first = first_seen.setdefault(uid, now)
+        age = (now - first).total_seconds()
+        return age >= RECOVER_AFTER
+
 
     def emit_event(ns, name, uid, reason, message):
-        now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         body = {
             "apiVersion": "v1",
             "kind": "Event",
@@ -116,36 +147,102 @@ data:
         except Exception as e:
             log.warning(f"emit_event failed for {ns}/{name}: {e}")
 
+
+    def _aws_record_set(at_provider):
+        """Build a ResourceRecordSet payload that exactly matches the AWS record
+        currently observed in atProvider, so we can issue a DELETE."""
+        rrs = {"Name": at_provider["fqdn"], "Type": at_provider["type"]}
+        sid = at_provider.get("setIdentifier")
+        if sid:
+            rrs["SetIdentifier"] = sid
+
+        alias = at_provider.get("alias") or []
+        if alias:
+            a = alias[0] if isinstance(alias, list) else alias
+            rrs["AliasTarget"] = {
+                "DNSName": a["name"],
+                "HostedZoneId": a["zoneId"],
+                "EvaluateTargetHealth": a.get("evaluateTargetHealth", False),
+            }
+        else:
+            rrs["TTL"] = at_provider["ttl"]
+            rrs["ResourceRecords"] = [{"Value": v} for v in at_provider["records"]]
+
+        # Carry routing-policy-specific fields verbatim.
+        for k_at, k_aws in (
+            ("weight", "Weight"),
+            ("failover", "Failover"),
+            ("region", "Region"),
+            ("healthCheckId", "HealthCheckId"),
+            ("multivalueAnswerRoutingPolicy", "MultiValueAnswer"),
+        ):
+            if at_provider.get(k_at) not in (None, "", False):
+                rrs[k_aws] = at_provider[k_at]
+
+        geo = at_provider.get("geolocationRoutingPolicy") or []
+        if geo:
+            g = geo[0] if isinstance(geo, list) else geo
+            rrs["GeoLocation"] = {
+                k: g[v] for k, v in (
+                    ("ContinentCode", "continent"),
+                    ("CountryCode", "country"),
+                    ("SubdivisionCode", "subdivision"),
+                ) if g.get(v)
+            }
+        return rrs
+
+
+    def delete_aws_record(mr):
+        at = mr.get("status", {}).get("atProvider") or {}
+        if not at.get("fqdn") or not at.get("type"):
+            raise RuntimeError("atProvider has no fqdn/type to delete")
+        zone_id = at.get("zoneId") or mr["spec"]["forProvider"]["zoneId"]
+        rrs = _aws_record_set(at)
+        change_batch = {
+            "Changes": [
+                {"Action": "DELETE", "ResourceRecordSet": rrs},
+            ]
+        }
+        log.info(
+            f"AWS Route53 DELETE zone={zone_id} name={rrs['Name']} "
+            f"type={rrs['Type']} setId={rrs.get('SetIdentifier','')}"
+        )
+        try:
+            route53.change_resource_record_sets(
+                HostedZoneId=zone_id, ChangeBatch=change_batch
+            )
+        except ClientError as e:
+            # If AWS says the record doesn't exist, we're effectively done.
+            err = e.response.get("Error", {})
+            if err.get("Code") == "InvalidChangeBatch" and "not found" in err.get("Message", "").lower():
+                log.info(f"AWS record already absent; nothing to delete")
+                return
+            raise
+
+
     def recover(mr):
         meta = mr["metadata"]
         ns, name, uid = meta["namespace"], meta["name"], meta["uid"]
-        path = f"/apis/route53.aws.m.upbound.io/v1beta1/namespaces/{ns}/records/{name}"
-
-        if meta.get("deletionTimestamp"):
-            log.info(f"{ns}/{name} already terminating; stripping finalizer only")
-        else:
-            log.info(f"{ns}/{name} stuck on upjet records-only UPDATE bug; recovering")
-
+        log.info(
+            f"{ns}/{name} stuck on upjet records-only UPDATE bug "
+            f"(provider-upjet-aws#1806); deleting AWS record so Crossplane "
+            f"re-Creates via the working CREATE path"
+        )
         emit_event(
             ns, name, uid, "StuckMRRecovery",
             "Detected records-only UPDATE bug (provider-upjet-aws#1806); "
-            "stripping finalizer and triggering re-composition from XR",
+            "deleting the underlying AWS Route 53 record so Crossplane's next "
+            "Observe routes through the CREATE path",
+        )
+        delete_aws_record(mr)
+        # Reset our memory so we don't immediately retry if Crossplane has
+        # already created a fresh MR with the same UID (it won't, but defensive).
+        first_seen.pop(uid, None)
+        log.info(
+            f"{ns}/{name} AWS record deleted; Crossplane will recreate "
+            f"with the correct forProvider state"
         )
 
-        # Step 1: strip finalizers via merge-patch (safe even if already empty).
-        k8s("PATCH", path, headers=HEADERS_MERGE_PATCH,
-            body={"metadata": {"finalizers": None}})
-
-        # Step 2: delete the MR (no-op if it's already being garbage-collected).
-        try:
-            k8s("DELETE", path)
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                log.info(f"{ns}/{name} already gone")
-            else:
-                raise
-
-        log.info(f"{ns}/{name} recovered; Crossplane will re-compose from the XR")
 
     def main():
         log.info(
@@ -156,8 +253,7 @@ data:
             start = time.monotonic()
             try:
                 for mr in list_records():
-                    stuck, _msg = is_stuck(mr)
-                    if not stuck:
+                    if not is_stuck(mr):
                         continue
                     try:
                         recover(mr)
@@ -171,6 +267,7 @@ data:
                 log.error(f"loop error: {e}")
             elapsed = time.monotonic() - start
             time.sleep(max(0.0, POLL_INTERVAL - elapsed))
+
 
     if __name__ == "__main__":
         main()
