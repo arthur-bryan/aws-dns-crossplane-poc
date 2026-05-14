@@ -5,7 +5,8 @@ metadata:
   name: record-e2e-failover-type-swap-084333-rotate.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-failover-type-swap-084333","type":"A","routingPolicy":"failover","setIdentifier":"rotate","failoverType":"SECONDARY","ttl":300,"values":["10.0.32.10"]}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-failover-type-swap-084333","type":"A","routingPolicy":"failover","setIdentifier":"rotate","failoverType":"PRIMARY","ttl":300,"values":["10.0.32.10"]}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-e2e-failover-type-swap-084333-rotate.arthurbryan.com
   domain: cross
@@ -24,4 +25,4 @@ spec:
     - 10.0.32.10
   setIdentifier: rotate
   failoverRoutingPolicy:
-    type: SECONDARY
+    type: PRIMARY

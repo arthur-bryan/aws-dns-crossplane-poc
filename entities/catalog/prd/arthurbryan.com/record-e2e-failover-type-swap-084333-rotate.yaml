@@ -19,8 +19,8 @@ metadata:
     dock.tech/system: infrastructure
     dock.tech/environment: prd
     dock.tech/managed-by: scaffolder
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-failover-type-swap-084333","type":"A","routingPolicy":"failover","setIdentifier":"rotate","failoverType":"SECONDARY","ttl":300,"values":["10.0.32.10"]}'
-    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-failover-type-swap-084333%22%2C%22type%22%3A%22A%22%2C%22routingPolicy%22%3A%22failover%22%2C%22setIdentifier%22%3A%22rotate%22%2C%22failoverType%22%3A%22SECONDARY%22%2C%22ttl%22%3A300%2C%22values%22%3A%5B%2210.0.32.10%22%5D%7D
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-failover-type-swap-084333","type":"A","routingPolicy":"failover","setIdentifier":"rotate","failoverType":"PRIMARY","ttl":300,"values":["10.0.32.10"]}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-failover-type-swap-084333%22%2C%22type%22%3A%22A%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-failover-type-swap-084333-rotate.yaml"
   tags:
     - aws
