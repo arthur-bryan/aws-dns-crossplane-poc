@@ -1,0 +1,44 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-svc.e2e-multipriv-061445.arthurbryan.com
+  namespace: system-infrastructure-prd
+  title: svc.e2e-multipriv-061445.arthurbryan.com
+  description: "DNS A record svc.e2e-multipriv-061445.arthurbryan.com (prd)"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-svc.e2e-multipriv-061445.arthurbryan.com
+    dock.tech/zone-name: e2e-multipriv-061445.arthurbryan.com
+    dock.tech/zone-id: Z060732835YMHT7N398MM
+    dock.tech/record-name: "svc"
+    dock.tech/record-type: A
+    dock.tech/record-fqdn: svc.e2e-multipriv-061445.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: prd
+    dock.tech/managed-by: scaffolder
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-e2e-multipriv-061445.arthurbryan.com","recordName":"svc","type":"A","ttl":300,"values":["10.0.60.1"],"routingPolicy":"simple"}'
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-e2e-multipriv-061445.arthurbryan.com%22%2C%22recordName%22%3A%22svc%22%2C%22type%22%3A%22A%22%2C%22ttl%22%3A300%2C%22values%22%3A%5B%2210.0.60.1%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/e2e-multipriv-061445.arthurbryan.com/record-svc.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - a
+    - prd
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z060732835YMHT7N398MM
+      icon: cloud
+    - title: Delete record (opens GitHub delete UI)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/e2e-multipriv-061445.arthurbryan.com/record-svc.yaml
+      icon: delete
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-e2e-multipriv-061445.arthurbryan.com
