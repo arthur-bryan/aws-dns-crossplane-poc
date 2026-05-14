@@ -44,9 +44,43 @@ scaffolder_pr_url = _all.scaffolder_pr_url
 scaffolder_log_tail = _all.scaffolder_log_tail
 merge_pr = _all.merge_pr
 argo_wait_revision = _all.argo_wait_revision
-wait_xr_ready = _all.wait_xr_ready
-xr_status = _all.xr_status
+wait_xr_ready = _all.wait_xr_ready  # for Record XRs only
 git_pull = _all.git_pull
+
+
+# `_all.wait_xr_ready` / `_all.xr_status` are hard-coded for the Record XR
+# kind. Re-implement here for the Zone XR kind. (The original helpers query
+# `record.dock.tech/...` which obviously doesn't exist for zone tests, so
+# this whole suite was timing out on the wrong CRD until we noticed.)
+import subprocess
+import json as _json
+
+def zone_xr_status(xr_name: str, namespace: str) -> dict:
+    cmd = ["kubectl", "-n", namespace, "get",
+           f"zone.dock.tech/{xr_name}", "-o", "json"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        return {"absent": True}
+    obj = _json.loads(r.stdout)
+    conds = {c["type"]: c["status"]
+             for c in obj.get("status", {}).get("conditions") or []}
+    return {
+        "absent": False,
+        "synced": conds.get("Synced", ""),
+        "ready": conds.get("Ready", ""),
+    }
+
+def wait_zone_xr_ready(xr_name: str, namespace: str, deadline: int) -> bool:
+    elapsed = 0
+    while elapsed < deadline:
+        s = zone_xr_status(xr_name, namespace)
+        if (not s.get("absent")
+                and s.get("synced") == "True"
+                and s.get("ready") == "True"):
+            return True
+        time.sleep(5)
+        elapsed += 5
+    return False
 step = _all.step
 info = _all.info
 ok = _all.ok
@@ -148,12 +182,11 @@ def scenario_dev_public_zone(suffix: str) -> bool:
     if not argo_wait_revision("entities", head, 240):
         fail("argo did not sync zone PR")
         return False
-    # Lab caveat: zone creation timing in the kind-based PoC is highly
-    # variable (observed 15, 21, 25, 31+ min for the same shape of zone).
-    # The platform itself works -- the zones DO reach Ready -- but this
-    # test's deadline has to be generous. Override via E2E_ZONE_DEADLINE.
-    deadline = int(os.environ.get("E2E_ZONE_DEADLINE", "3600"))
-    if not wait_xr_ready(f"zone-{new_zone}", deadline):
+    # Lab caveat: zone creation timing in the kind-based PoC is variable
+    # (observed 14-31 min). Override via E2E_ZONE_DEADLINE.
+    deadline = int(os.environ.get("E2E_ZONE_DEADLINE", "1800"))
+    if not wait_zone_xr_ready(f"zone-{new_zone}", "system-infrastructure-dev",
+                              deadline):
         fail(f"zone-{new_zone} XR did not reach Ready in {deadline}s")
         return False
     ok(f"zone-{new_zone} XR Ready")
@@ -222,10 +255,9 @@ def scenario_prd_private_zone(suffix: str) -> bool:
     if not argo_wait_revision("entities", head, 240):
         fail("argo did not sync zone PR")
         return False
-    # Lab caveat (see scenario_dev_public_zone): zone creation is highly
-    # variable in this PoC. Use E2E_ZONE_DEADLINE to override.
-    deadline = int(os.environ.get("E2E_ZONE_DEADLINE", "3600"))
-    if not wait_xr_ready(f"zone-{new_zone}", deadline):
+    deadline = int(os.environ.get("E2E_ZONE_DEADLINE", "1800"))
+    if not wait_zone_xr_ready(f"zone-{new_zone}", "system-infrastructure-prd",
+                              deadline):
         fail(f"zone-{new_zone} XR did not reach Ready in {deadline}s")
         return False
     ok(f"zone-{new_zone} XR Ready")
