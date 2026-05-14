@@ -1,0 +1,44 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-neg-a-bad-octet.arthurbryan.com
+  namespace: system-infrastructure-prd
+  title: neg-a-bad-octet.arthurbryan.com
+  description: "DNS A record neg-a-bad-octet.arthurbryan.com (prd)"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-neg-a-bad-octet.arthurbryan.com
+    dock.tech/zone-name: arthurbryan.com
+    dock.tech/zone-id: Z03010981ALJFZB4QLU8W
+    dock.tech/record-name: "neg-a-bad-octet"
+    dock.tech/record-type: A
+    dock.tech/record-fqdn: neg-a-bad-octet.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: prd
+    dock.tech/managed-by: scaffolder
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"neg-a-bad-octet","type":"A","ttl":300,"values":["999.999.999.999"],"routingPolicy":"simple"}'
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22neg-a-bad-octet%22%2C%22type%22%3A%22A%22%2C%22ttl%22%3A300%2C%22values%22%3A%5B%22999.999.999.999%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-neg-a-bad-octet.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - a
+    - prd
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z03010981ALJFZB4QLU8W
+      icon: cloud
+    - title: Delete record (opens GitHub delete UI)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-neg-a-bad-octet.yaml
+      icon: delete
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-arthurbryan.com
