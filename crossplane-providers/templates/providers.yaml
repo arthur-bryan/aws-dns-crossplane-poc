@@ -35,10 +35,11 @@ spec:
             - name: package-runtime
               args:
                 # Tighten Crossplane's drift-detection cadence so out-of-band
-                # AWS changes are reverted within ~poll-interval rather than
-                # waiting for the upjet default (10m). sync-period bounds the
-                # worst case full-resync window.
-                - --poll-interval={{ .Values.providerRuntime.pollInterval | default "30s" }}
-                - --sync-period={{ .Values.providerRuntime.syncPeriod | default "5m" }}
+                # AWS changes are reverted within ~poll rather than waiting
+                # for the upjet default (10m). --sync bounds the worst case
+                # full-resync window. Upbound providers use --poll/--sync
+                # (not --poll-interval/--sync-period).
+                - --poll={{ .Values.providerRuntime.pollInterval | default "30s" }}
+                - --sync={{ .Values.providerRuntime.syncPeriod | default "5m" }}
                 - --max-reconcile-rate={{ .Values.providerRuntime.maxReconcileRate | default 10 }}
 {{- end }}
