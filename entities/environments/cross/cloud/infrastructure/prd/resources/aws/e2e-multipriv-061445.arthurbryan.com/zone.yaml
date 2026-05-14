@@ -1,0 +1,28 @@
+---
+apiVersion: dock.tech/v1
+kind: Zone
+metadata:
+  name: zone-e2e-multipriv-061445.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"delegatedZone":"resource:system-infrastructure-prd/zone-arthurbryan.com","prefix":"e2e-multipriv-061445","environment":"prd","private":true,"vpcs":["resource:default/vpc-0410f81cfe1bba322"]}'
+spec:
+  name: zone-e2e-multipriv-061445.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneName: e2e-multipriv-061445.arthurbryan.com
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd-account
+  visibility: private
+  vpcs:
+    - vpcId: vpc-0410f81cfe1bba322
+      vpcRegion: us-east-1
+      accountName: prd-account
+    - vpcId: vpc-0410f81cfe1bba322
+      vpcRegion: us-east-1
+      accountName: prd-account
