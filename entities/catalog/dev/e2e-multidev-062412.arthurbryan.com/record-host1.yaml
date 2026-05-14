@@ -1,0 +1,44 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-host1.e2e-multidev-062412.arthurbryan.com
+  namespace: system-infrastructure-dev
+  title: host1.e2e-multidev-062412.arthurbryan.com
+  description: "DNS A record host1.e2e-multidev-062412.arthurbryan.com (dev)"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-host1.e2e-multidev-062412.arthurbryan.com
+    dock.tech/zone-name: e2e-multidev-062412.arthurbryan.com
+    dock.tech/zone-id: Z05820913H4TVCOFMK8P2
+    dock.tech/record-name: "host1"
+    dock.tech/record-type: A
+    dock.tech/record-fqdn: host1.e2e-multidev-062412.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: dev
+    dock.tech/managed-by: scaffolder
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-dev/zone-e2e-multidev-062412.arthurbryan.com","recordName":"host1","type":"A","ttl":300,"values":["10.0.50.1"],"routingPolicy":"simple"}'
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-dev%2Fzone-e2e-multidev-062412.arthurbryan.com%22%2C%22recordName%22%3A%22host1%22%2C%22type%22%3A%22A%22%2C%22ttl%22%3A300%2C%22values%22%3A%5B%2210.0.50.1%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/e2e-multidev-062412.arthurbryan.com/record-host1.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - a
+    - dev
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z05820913H4TVCOFMK8P2
+      icon: cloud
+    - title: Delete record (opens GitHub delete UI)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/dev/resources/aws/e2e-multidev-062412.arthurbryan.com/record-host1.yaml
+      icon: delete
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-e2e-multidev-062412.arthurbryan.com
