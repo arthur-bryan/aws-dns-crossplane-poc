@@ -381,14 +381,24 @@ def post_merge_validate(scenario: Scenario, after_edit: bool = False) -> bool:
     ok(f"XR {xr_name} Synced+Ready")
 
     fqdn = f"{scenario.record_name}.{ZONE_NAME}" if scenario.record_name else ZONE_NAME
-    rows = aws_records_at(fqdn)
     expected = scenario.expected_aws_after_edit if after_edit else scenario.expected_aws
-    okp, msg = expected(rows)
-    if not okp:
-        fail(f"AWS check: {msg}")
-        return False
-    ok(f"AWS: {msg}")
-    return True
+    # Retry the AWS check: XR Ready can briefly be True between the edit
+    # landing and the controller picking up the new generation. Eventual
+    # consistency / stuck-mr-recoverer recovery can also lag a few minutes
+    # behind XR Ready. Keep polling up to AWS_RETRY_DEADLINE before giving up.
+    AWS_RETRY_DEADLINE = 240
+    elapsed = 0
+    okp, msg, rows = False, "no rows yet", []
+    while elapsed < AWS_RETRY_DEADLINE:
+        rows = aws_records_at(fqdn)
+        okp, msg = expected(rows)
+        if okp:
+            ok(f"AWS: {msg}")
+            return True
+        time.sleep(10)
+        elapsed += 10
+    fail(f"AWS check (timed out after {AWS_RETRY_DEADLINE}s): {msg}")
+    return False
 
 def cleanup_record(scenario: Scenario) -> bool:
     key = base_key(scenario.record_name, scenario.record_type, scenario.set_identifier)

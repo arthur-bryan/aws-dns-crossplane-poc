@@ -245,12 +245,17 @@ data:
             f"stuck-mr-recoverer started; recover_after={RECOVER_AFTER}s, "
             f"poll={POLL_INTERVAL}s"
         )
+        tick = 0
         while True:
+            tick += 1
             start = time.monotonic()
             try:
-                for mr in list_records():
+                mrs = list_records()
+                stuck_count = 0
+                for mr in mrs:
                     if not is_stuck(mr):
                         continue
+                    stuck_count += 1
                     try:
                         recover(mr)
                     except Exception as e:
@@ -259,8 +264,15 @@ data:
                             f"{mr['metadata']['namespace']}/"
                             f"{mr['metadata']['name']}: {e}"
                         )
+                # Heartbeat every 10 ticks (~5 min at default poll) so a hung
+                # process is observable in `kubectl logs`.
+                if tick % 10 == 0:
+                    log.info(
+                        f"tick={tick} mrs={len(mrs)} stuck_acted={stuck_count} "
+                        f"tracking={len(first_seen)}"
+                    )
             except Exception as e:
-                log.error(f"loop error: {e}")
+                log.error(f"loop error: {type(e).__name__}: {e}")
             elapsed = time.monotonic() - start
             time.sleep(max(0.0, POLL_INTERVAL - elapsed))
 
