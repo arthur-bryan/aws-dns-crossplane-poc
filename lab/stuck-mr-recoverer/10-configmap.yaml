@@ -148,74 +148,70 @@ data:
             log.warning(f"emit_event failed for {ns}/{name}: {e}")
 
 
-    def _aws_record_set(at_provider):
-        """Build a ResourceRecordSet payload that exactly matches the AWS record
-        currently observed in atProvider, so we can issue a DELETE."""
-        rrs = {"Name": at_provider["fqdn"], "Type": at_provider["type"]}
-        sid = at_provider.get("setIdentifier")
-        if sid:
-            rrs["SetIdentifier"] = sid
-
-        alias = at_provider.get("alias") or []
-        if alias:
-            a = alias[0] if isinstance(alias, list) else alias
-            rrs["AliasTarget"] = {
-                "DNSName": a["name"],
-                "HostedZoneId": a["zoneId"],
-                "EvaluateTargetHealth": a.get("evaluateTargetHealth", False),
-            }
-        else:
-            rrs["TTL"] = at_provider["ttl"]
-            rrs["ResourceRecords"] = [{"Value": v} for v in at_provider["records"]]
-
-        # Carry routing-policy-specific fields verbatim.
-        for k_at, k_aws in (
-            ("weight", "Weight"),
-            ("failover", "Failover"),
-            ("region", "Region"),
-            ("healthCheckId", "HealthCheckId"),
-            ("multivalueAnswerRoutingPolicy", "MultiValueAnswer"),
-        ):
-            if at_provider.get(k_at) not in (None, "", False):
-                rrs[k_aws] = at_provider[k_at]
-
-        geo = at_provider.get("geolocationRoutingPolicy") or []
-        if geo:
-            g = geo[0] if isinstance(geo, list) else geo
-            rrs["GeoLocation"] = {
-                k: g[v] for k, v in (
-                    ("ContinentCode", "continent"),
-                    ("CountryCode", "country"),
-                    ("SubdivisionCode", "subdivision"),
-                ) if g.get(v)
-            }
-        return rrs
-
-
     def delete_aws_record(mr):
-        at = mr.get("status", {}).get("atProvider") or {}
-        if not at.get("fqdn") or not at.get("type"):
-            raise RuntimeError("atProvider has no fqdn/type to delete")
-        zone_id = at.get("zoneId") or mr["spec"]["forProvider"]["zoneId"]
-        rrs = _aws_record_set(at)
-        change_batch = {
-            "Changes": [
-                {"Action": "DELETE", "ResourceRecordSet": rrs},
-            ]
-        }
+        """Look the record up live in Route 53 and issue a DELETE that mirrors
+        the existing ResourceRecordSet byte-for-byte. We can't trust
+        status.atProvider here: the previous recovery iteration may have
+        deleted+recomposed the MR before the provider had a chance to
+        re-observe AWS, so atProvider is often empty in the stuck-loop case.
+        spec.forProvider always has zoneId + name + type + (optional) setId,
+        which is enough to find the record."""
+        spec = mr["spec"]["forProvider"]
+        zone_id = spec["zoneId"]
+        name = spec["name"]
+        record_type = spec["type"]
+        set_id = (spec.get("setIdentifier") or "").strip() or None
+
+        # AWS returns names with a trailing dot; compare both forms.
+        name_with_dot = name if name.endswith(".") else name + "."
+
+        paginator = route53.get_paginator("list_resource_record_sets")
+        matching = []
+        for page in paginator.paginate(
+            HostedZoneId=zone_id,
+            StartRecordName=name,
+            StartRecordType=record_type,
+        ):
+            for rrs in page["ResourceRecordSets"]:
+                if rrs["Name"] != name_with_dot:
+                    continue
+                if rrs["Type"] != record_type:
+                    continue
+                if set_id and rrs.get("SetIdentifier") != set_id:
+                    continue
+                if not set_id and "SetIdentifier" in rrs:
+                    continue
+                matching.append(rrs)
+            # Stop early once paginator walks past the target name+type.
+            if (
+                page.get("IsTruncated")
+                and page.get("NextRecordName", "") > name_with_dot
+            ):
+                break
+
+        if not matching:
+            log.info(
+                f"AWS Route 53 record {name_with_dot} ({record_type}, "
+                f"setId={set_id!r}) already absent in zone {zone_id}; nothing "
+                f"to delete"
+            )
+            return
+
+        changes = [{"Action": "DELETE", "ResourceRecordSet": rrs} for rrs in matching]
         log.info(
-            f"AWS Route53 DELETE zone={zone_id} name={rrs['Name']} "
-            f"type={rrs['Type']} setId={rrs.get('SetIdentifier','')}"
+            f"AWS Route53 DELETE zone={zone_id} name={name_with_dot} "
+            f"type={record_type} setId={set_id!r} count={len(changes)}"
         )
         try:
             route53.change_resource_record_sets(
-                HostedZoneId=zone_id, ChangeBatch=change_batch
+                HostedZoneId=zone_id, ChangeBatch={"Changes": changes}
             )
         except ClientError as e:
-            # If AWS says the record doesn't exist, we're effectively done.
             err = e.response.get("Error", {})
-            if err.get("Code") == "InvalidChangeBatch" and "not found" in err.get("Message", "").lower():
-                log.info(f"AWS record already absent; nothing to delete")
+            msg = err.get("Message", "")
+            # Concurrent recovery may have raced us to the DELETE; treat as ok.
+            if err.get("Code") == "InvalidChangeBatch" and "not found" in msg.lower():
+                log.info("AWS reported record gone mid-flight; nothing to do")
                 return
             raise
 
