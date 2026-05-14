@@ -208,22 +208,35 @@ def scenario_same_record_rapid_edits(suffix: str) -> bool:
         return False
     ok(f"both edits opened PRs: {[p for _, p in prs]}")
 
-    # Merge sequentially; the later-merged one wins in git, which the platform
-    # observes as the latest desired state.
-    last_pr_tag, last_pr_url = prs[-1]
-    info(f"merging in order: {[t for t, _ in prs]}")
-    for tag, url in prs:
-        if not merge_pr(url):
-            fail(f"merge failed for edit {tag} ({url})")
-            return False
+    # Both PRs touch the same files (same record's XR + catalog entity), so
+    # GitHub will let the first one merge cleanly and report a merge conflict
+    # on the second. That is the *correct* platform behaviour: parallel
+    # editing isn't silently squashed; the second editor sees the conflict
+    # and rebases (or closes). We assert both outcomes explicitly.
+    first_tag, first_url = prs[0]
+    second_tag, second_url = prs[1]
+
+    info(f"merging first edit ({first_tag}) — must succeed cleanly")
+    if not merge_pr(first_url):
+        fail(f"first PR {first_url} failed to merge")
+        return False
     head = git_pull()
     if not argo_wait_revision("entities", head, 240):
-        fail("argo did not sync edits")
+        fail("argo did not sync first edit")
         return False
 
-    # Expected final state is whichever edit was last in the merge order.
-    final_values = {"A": ["10.0.40.20"], "B": ["10.0.40.30"]}[last_pr_tag]
-    info(f"last merged edit was '{last_pr_tag}', expected AWS values={final_values}")
+    info(f"attempting to merge second edit ({second_tag}) — must conflict")
+    if merge_pr(second_url):
+        fail(
+            f"second PR {second_url} merged cleanly even though both PRs "
+            f"edit the same files. Platform should let GitHub reject the "
+            f"second merge to surface the conflict to the operator."
+        )
+        return False
+    ok(f"second PR correctly rejected with merge conflict (expected)")
+
+    final_values = {"A": ["10.0.40.20"], "B": ["10.0.40.30"]}[first_tag]
+    info(f"first edit was '{first_tag}', expected AWS values={final_values}")
 
     def converged() -> bool:
         rows = aws_records_at(fqdn)
@@ -234,6 +247,12 @@ def scenario_same_record_rapid_edits(suffix: str) -> bool:
         fail(f"AWS did not converge to {final_values} within 5 min")
         return False
     ok(f"AWS converged to {final_values}")
+
+    # Tidy up: close the conflicting PR so it doesn't dangle.
+    try:
+        run(["gh", "pr", "close", second_url, "--delete-branch"], check=False)
+    except Exception:
+        pass
     return True
 
 
