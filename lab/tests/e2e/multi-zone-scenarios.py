@@ -55,6 +55,35 @@ git_pull = _all.git_pull
 import subprocess
 import json as _json
 
+def record_xr_status_ns(xr_name: str, namespace: str) -> dict:
+    cmd = ["kubectl", "-n", namespace, "get",
+           f"record.dock.tech/{xr_name}", "-o", "json"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        return {"absent": True}
+    obj = _json.loads(r.stdout)
+    conds = {c["type"]: c["status"]
+             for c in obj.get("status", {}).get("conditions") or []}
+    return {
+        "absent": False,
+        "synced": conds.get("Synced", ""),
+        "ready": conds.get("Ready", ""),
+    }
+
+
+def wait_record_xr_ready_ns(xr_name: str, namespace: str, deadline: int) -> bool:
+    elapsed = 0
+    while elapsed < deadline:
+        s = record_xr_status_ns(xr_name, namespace)
+        if (not s.get("absent")
+                and s.get("synced") == "True"
+                and s.get("ready") == "True"):
+            return True
+        time.sleep(5)
+        elapsed += 5
+    return False
+
+
 def zone_xr_status(xr_name: str, namespace: str) -> dict:
     cmd = ["kubectl", "-n", namespace, "get",
            f"zone.dock.tech/{xr_name}", "-o", "json"]
@@ -247,8 +276,9 @@ def scenario_dev_public_zone(suffix: str) -> bool:
     if not argo_wait_revision("entities", git_pull(), 240):
         fail("argo did not sync record PR")
         return False
-    if not wait_xr_ready(f"record-host1.{new_zone}", 240):
-        fail("record XR did not reach Ready")
+    if not wait_record_xr_ready_ns(f"record-host1.{new_zone}",
+                                    "system-infrastructure-dev", 360):
+        fail("record XR did not reach Ready in 6 min")
         return False
 
     zone_id = z["Id"].rsplit("/", 1)[-1]
