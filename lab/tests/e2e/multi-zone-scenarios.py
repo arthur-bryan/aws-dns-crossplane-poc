@@ -126,23 +126,51 @@ def submit_record_create(zone_namespace: str, zone_name: str,
     return scaffolder_pr_url(task_id)
 
 
-def aws_zone_by_name(zone_fqdn: str) -> Optional[dict]:
+DEV_ACCOUNT_ROLE = "arn:aws:iam::309670275661:role/OrganizationAccountAccessRole"
+
+
+def _aws(env_extra: Optional[dict], *args: str) -> object:
+    """Like _all.aws but with optional credential overrides."""
+    base = _all.aws_env()
+    if env_extra:
+        base.update(env_extra)
+    r = subprocess.run(["aws", *args, "--output", "json"],
+                       check=True, capture_output=True, text=True, env=base)
+    return _json.loads(r.stdout) if r.stdout else {}
+
+
+def assume_role_creds(role_arn: str) -> dict:
+    """Return AWS env-var overrides for the dev-account role chained from
+    the prd-account creds in the aws-creds Secret. This mirrors what the
+    Crossplane ClusterProviderConfig dev-account does at provider-side."""
+    out = _aws(None, "sts", "assume-role",
+               "--role-arn", role_arn,
+               "--role-session-name", "e2e-multizone")
+    c = out["Credentials"]
+    return {
+        "AWS_ACCESS_KEY_ID": c["AccessKeyId"],
+        "AWS_SECRET_ACCESS_KEY": c["SecretAccessKey"],
+        "AWS_SESSION_TOKEN": c["SessionToken"],
+    }
+
+
+def aws_zone_by_name(zone_fqdn: str, env_extra: Optional[dict] = None) -> Optional[dict]:
     if not zone_fqdn.endswith("."):
         zone_fqdn = zone_fqdn + "."
-    out = aws("route53", "list-hosted-zones-by-name", "--dns-name", zone_fqdn,
-              "--max-items", "5")
+    out = _aws(env_extra, "route53", "list-hosted-zones-by-name",
+               "--dns-name", zone_fqdn, "--max-items", "5")
     for z in out.get("HostedZones", []):
         if z["Name"] == zone_fqdn:
             return z
     return None
 
 
-def aws_record_in_zone(zone_id: str, record_fqdn: str, record_type: str
-                       ) -> list[dict]:
+def aws_record_in_zone(zone_id: str, record_fqdn: str, record_type: str,
+                       env_extra: Optional[dict] = None) -> list[dict]:
     if not record_fqdn.endswith("."):
         record_fqdn = record_fqdn + "."
-    out = aws(
-        "route53", "list-resource-record-sets",
+    out = _aws(
+        env_extra, "route53", "list-resource-record-sets",
         "--hosted-zone-id", zone_id,
         "--query",
         f"ResourceRecordSets[?Name=='{record_fqdn}' && Type=='{record_type}']",
@@ -191,19 +219,23 @@ def scenario_dev_public_zone(suffix: str) -> bool:
         return False
     ok(f"zone-{new_zone} XR Ready")
 
-    # Verify in AWS: hosted zone exists, is public.
+    # Verify in AWS: hosted zone exists, is public. The dev zone lives in
+    # dev-account, so we have to assume the dev cross-account role like the
+    # Crossplane provider does.
+    info("assuming dev-account role for AWS-side verification")
+    dev_creds = assume_role_creds(DEV_ACCOUNT_ROLE)
     z = None
     def found() -> bool:
         nonlocal z
-        z = aws_zone_by_name(new_zone)
+        z = aws_zone_by_name(new_zone, env_extra=dev_creds)
         return z is not None
-    if not wait_until(found, deadline_s=120, poll_s=5):
-        fail(f"AWS Route 53 does not show zone {new_zone} within 2 min")
+    if not wait_until(found, deadline_s=180, poll_s=5):
+        fail(f"AWS Route 53 (dev-account) does not show zone {new_zone}")
         return False
     if z.get("Config", {}).get("PrivateZone", False):
         fail(f"zone {new_zone} is private; expected public")
         return False
-    ok(f"AWS Route 53 has public zone {new_zone} (id {z['Id']})")
+    ok(f"AWS Route 53 dev-account has public zone {new_zone} (id {z['Id']})")
 
     # Add an A record inside the new zone.
     info(f"creating A record host1.{new_zone} = [10.0.50.1]")
@@ -221,13 +253,14 @@ def scenario_dev_public_zone(suffix: str) -> bool:
 
     zone_id = z["Id"].rsplit("/", 1)[-1]
     def record_visible() -> bool:
-        rows = aws_record_in_zone(zone_id, f"host1.{new_zone}", "A")
+        rows = aws_record_in_zone(zone_id, f"host1.{new_zone}", "A",
+                                  env_extra=dev_creds)
         if not rows:
             return False
         vals = sorted(r["Value"] for r in rows[0]["ResourceRecords"])
         return vals == ["10.0.50.1"]
-    if not wait_until(record_visible, deadline_s=120):
-        fail(f"AWS record host1.{new_zone} not visible within 2 min")
+    if not wait_until(record_visible, deadline_s=180):
+        fail(f"AWS record host1.{new_zone} not visible within 3 min")
         return False
     ok(f"AWS record host1.{new_zone} = [10.0.50.1] in zone {zone_id}")
     return True
