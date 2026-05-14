@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-alias-nlb-us-east-1-697842.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-alias-nlb-us-east-1-697842","type":"ALIAS","routingPolicy":"simple","serviceType":"NLB","dnsName":"nlb-create-1234567.elb.us-east-1.amazonaws.com","evaluateTargetHealth":true,"targetRegion":"us-east-1"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-alias-nlb-us-east-1-697842","type":"ALIAS","routingPolicy":"simple","serviceType":"NLB","dnsName":"nlb-edit-1234567.elb.us-east-1.amazonaws.com","evaluateTargetHealth":true,"targetRegion":"us-east-1"}'
 spec:
   name: record-e2e-alias-nlb-us-east-1-697842.arthurbryan.com
   domain: cross
@@ -21,6 +21,6 @@ spec:
   type: ALIAS
   aliasTarget:
     serviceType: NLB
-    dnsName: nlb-create-1234567.elb.us-east-1.amazonaws.com
+    dnsName: nlb-edit-1234567.elb.us-east-1.amazonaws.com
     evaluateTargetHealth: true
     region: us-east-1
