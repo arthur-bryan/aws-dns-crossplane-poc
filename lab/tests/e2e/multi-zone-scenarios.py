@@ -148,12 +148,12 @@ def scenario_dev_public_zone(suffix: str) -> bool:
     if not argo_wait_revision("entities", head, 240):
         fail("argo did not sync zone PR")
         return False
-    # Cross-account zone creation can be slow: the prd-account provider must
-    # assume the dev-account role, create the hosted zone, and the parent
-    # zone in prd-account must accept the NS delegation record. 15 min is
-    # generous but reflects real PoC timings (10-12 min observed).
-    if not wait_xr_ready(f"zone-{new_zone}", 900):
-        fail(f"zone-{new_zone} XR did not reach Ready in 15 min")
+    # Cross-account zone creation is consistently slow in this PoC: the
+    # provider has to assume the dev-account role, create the hosted zone,
+    # AND have the parent zone in prd-account accept the NS delegation
+    # record. Observed timings hover around 15-20 min. Cap at 25 min.
+    if not wait_xr_ready(f"zone-{new_zone}", 1500):
+        fail(f"zone-{new_zone} XR did not reach Ready in 25 min")
         return False
     ok(f"zone-{new_zone} XR Ready")
 
@@ -221,10 +221,10 @@ def scenario_prd_private_zone(suffix: str) -> bool:
     if not argo_wait_revision("entities", head, 240):
         fail("argo did not sync zone PR")
         return False
-    # Private + VPC association adds a second composed resource and bumps the
-    # critical path; allow 15 min as well.
-    if not wait_xr_ready(f"zone-{new_zone}", 900):
-        fail(f"zone-{new_zone} XR did not reach Ready in 15 min")
+    # Private + VPC association: hosted zone create + VPC associate +
+    # parent NS delegation. Allow 20 min (observed ~14 min upper bound).
+    if not wait_xr_ready(f"zone-{new_zone}", 1200):
+        fail(f"zone-{new_zone} XR did not reach Ready in 20 min")
         return False
     ok(f"zone-{new_zone} XR Ready")
 
