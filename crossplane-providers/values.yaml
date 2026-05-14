@@ -1,3 +1,11 @@
+# Runtime tuning for every upjet provider in this Helm release. Drift is
+# detected only when the provider re-Observes, so poll-interval bounds the
+# worst-case self-heal latency for out-of-band AWS changes.
+providerRuntime:
+  pollInterval: 30s
+  syncPeriod: 5m
+  maxReconcileRate: 10
+
 providers:
   - name: upbound-provider-aws-route53
     package: xpkg.upbound.io/upbound/provider-aws-route53:v2.5.3
