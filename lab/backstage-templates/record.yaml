@@ -514,12 +514,21 @@ spec:
             dependsOn:
               - resource:default/zone-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
+    - id: branchSuffix
+      name: Compute unique branch suffix
+      action: roadiehq:utils:jsonata
+      input:
+        data: {}
+        # JSONata $millis() returns epoch ms; cast to string. Without this,
+        # two parallel creates of the same record collide on the GitHub ref.
+        expression: '$string($millis())'
+
     - id: openPR
       name: Open PR with new record manifest
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
+        branchName: scaffolder/record-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}-${{ steps.branchSuffix.output.result }}
         targetBranchName: feature/ape-platform-alignment
         title: "feat(dns): create ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else ('at apex of ' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) }}"
         description: |

@@ -221,12 +221,19 @@ spec:
             dependsOn:
               - resource:default/zone-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}
 
+    - id: branchSuffix
+      name: Compute unique branch suffix
+      action: roadiehq:utils:jsonata
+      input:
+        data: {}
+        expression: '$string($millis())'
+
     - id: openPR
       name: Open PR
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/zone-${{ steps.computeZone.output.result }}-${{ parameters.environment }}
+        branchName: scaffolder/zone-${{ steps.computeZone.output.result }}-${{ parameters.environment }}-${{ steps.branchSuffix.output.result }}
         targetBranchName: feature/ape-platform-alignment
         title: "feat(dns): create zone ${{ steps.computeZone.output.result }} (${{ parameters.environment }})"
         description: |

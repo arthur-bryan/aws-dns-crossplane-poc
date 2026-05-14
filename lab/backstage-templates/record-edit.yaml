@@ -387,12 +387,22 @@ spec:
         files:
           - .e2e
 
+    - id: branchSuffix
+      name: Compute unique branch suffix
+      action: roadiehq:utils:jsonata
+      input:
+        data: {}
+        # JSONata $millis() returns epoch ms; cast to string for branch use.
+        # Without this, two parallel edits on the same record collide on the
+        # GitHub ref (`scaffolder/record-edit-<key>-<zone>-<env>`).
+        expression: '$string($millis())'
+
     - id: openPR
       name: Open PR with edited record
       action: publish:github:pull-request
       input:
         repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-edit-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
+        branchName: scaffolder/record-edit-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}-${{ steps.branchSuffix.output.result }}
         targetBranchName: feature/ape-platform-alignment
         title: "chore(dns): update ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else ('at apex of ' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) }}"
         description: |
