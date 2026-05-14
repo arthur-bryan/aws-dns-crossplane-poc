@@ -5,19 +5,25 @@ metadata:
   namespace: crossplane-system
 data:
   recoverer.py: |
-    # Watches route53.aws.m.upbound.io/records and recovers MRs stuck on the
-    # upjet+terraform-provider-aws records-only UPDATE bug
-    # (crossplane-contrib/provider-upjet-aws#1806). When only `records` change
-    # in an UPDATE, Upjet fails to populate RawPlan with companion fields and
-    # AWS rejects with "Expected exactly one of [AliasTarget, all of [TTL, and
-    # ResourceRecords], or TrafficPolicyInstanceId], but found none".
+    # Watches route53.aws.m.upbound.io MRs and recovers two distinct
+    # upjet+terraform-provider-aws bugs:
     #
-    # Recovery strategy: delete the wrong Route 53 record via the AWS API.
-    # Crossplane's next Observe will detect the resource missing and route
-    # through the CREATE path (upjet populates RawPlan fully on Create), which
-    # AWS accepts. Deleting the MR object alone does NOT work because the new
-    # MR re-imports via external-name and goes straight back into the broken
-    # Update path.
+    # (1) records-only UPDATE bug (crossplane-contrib/provider-upjet-aws#1806).
+    #     When only `records` change in an UPDATE, Upjet fails to populate
+    #     RawPlan with companion fields and AWS rejects with "Expected exactly
+    #     one of [AliasTarget, all of [TTL, and ResourceRecords], or
+    #     TrafficPolicyInstanceId], but found none". Recovery: delete the
+    #     wrong Route 53 record via the AWS API so Crossplane's next Observe
+    #     routes through the working CREATE path.
+    #
+    # (2) ZoneAssociation create-then-empty-read bug. When the composition
+    #     emits a route53_zone_association MR for a second (non-inline) VPC,
+    #     upjet's async-create fails with "reading Route 53 Zone Association
+    #     (<zoneId>:<vpcId>:<region>): empty result". The actual AWS
+    #     AssociateVPCWithHostedZone call is fine when issued directly --
+    #     upjet is dropping the association request silently. Recovery: call
+    #     the AWS API ourselves to make the association; upjet's next
+    #     Observe will pick it up and the MR will go Ready.
     import datetime, json, logging, os, ssl, time, urllib.error, urllib.request
 
     import boto3
@@ -46,6 +52,9 @@ data:
     )
     ERROR_SIGNATURE = (
         "Expected exactly one of [AliasTarget, all of [TTL, and ResourceRecords]"
+    )
+    ZONE_ASSOC_ERROR_SIGNATURE = (
+        "reading Route 53 Zone Association"
     )
 
     ctx = ssl.create_default_context(cafile=CA_PATH)
@@ -92,6 +101,10 @@ data:
 
     def list_records():
         return k8s("GET", "/apis/route53.aws.m.upbound.io/v1beta1/records").get("items", [])
+
+
+    def list_zone_associations():
+        return k8s("GET", "/apis/route53.aws.m.upbound.io/v1beta1/zoneassociations").get("items", [])
 
 
     # uid -> first time the recoverer observed this MR stuck on the signature.
@@ -240,6 +253,83 @@ data:
         )
 
 
+    # -----------------------------------------------------------------------
+    # ZoneAssociation handler: upjet "empty result" create bug
+    # -----------------------------------------------------------------------
+
+    def is_zone_assoc_stuck(mr):
+        uid = mr["metadata"]["uid"]
+        conditions = mr.get("status", {}).get("conditions", [])
+        # Two signals: Synced=False with the signature, or LastAsyncOperation
+        # AsyncCreateFailure with the signature (the more common state).
+        synced = next((c for c in conditions if c.get("type") == "Synced"), None)
+        last_op = next((c for c in conditions if c.get("type") == "LastAsyncOperation"), None)
+        ready = next((c for c in conditions if c.get("type") == "Ready"), None)
+
+        ready_status = ready.get("status") if ready else ""
+        last_op_msg = (last_op.get("message", "") or "") if last_op else ""
+        synced_msg = (synced.get("message", "") or "") if synced else ""
+
+        # If Ready=True, nothing to do.
+        if ready_status == "True":
+            first_seen.pop(uid, None)
+            return False
+
+        # Either the Synced or LastAsyncOperation message must show the bug
+        # signature; we tolerate either since upjet sometimes clears one while
+        # leaving the other.
+        signature_match = (
+            ZONE_ASSOC_ERROR_SIGNATURE in last_op_msg
+            or ZONE_ASSOC_ERROR_SIGNATURE in synced_msg
+        )
+        if not signature_match:
+            first_seen.pop(uid, None)
+            return False
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+        first = first_seen.setdefault(uid, now)
+        age = (now - first).total_seconds()
+        return age >= RECOVER_AFTER
+
+
+    def recover_zone_association(mr):
+        meta = mr["metadata"]
+        ns, name, uid = meta["namespace"], meta["name"], meta["uid"]
+        spec = mr["spec"]["forProvider"]
+        zone_id = spec["zoneId"]
+        vpc_id = spec["vpcId"]
+        vpc_region = spec.get("vpcRegion", "us-east-1")
+        log.info(
+            f"{ns}/{name} stuck on upjet ZoneAssociation create bug; "
+            f"associating vpc={vpc_id} region={vpc_region} to zone={zone_id} "
+            f"via AWS API directly"
+        )
+        emit_event(
+            ns, name, uid, "StuckMRRecovery",
+            "Detected upjet ZoneAssociation 'empty result' bug; "
+            "calling AssociateVPCWithHostedZone directly so Crossplane's "
+            "next Observe will see the association and mark Ready",
+        )
+        try:
+            route53.associate_vpc_with_hosted_zone(
+                HostedZoneId=zone_id,
+                VPC={"VPCRegion": vpc_region, "VPCId": vpc_id},
+            )
+        except ClientError as e:
+            err = e.response.get("Error", {})
+            # ConflictingDomainExists means the VPC is already associated;
+            # that's exactly the state we want, so treat as success.
+            if err.get("Code") in ("ConflictingDomainExists",
+                                   "VPCAlreadyAssociatedException"):
+                log.info(f"{ns}/{name} VPC already associated; nothing to do")
+            else:
+                raise
+        first_seen.pop(uid, None)
+        log.info(
+            f"{ns}/{name} VPC associated; upjet will observe and mark Ready"
+        )
+
+
     def main():
         log.info(
             f"stuck-mr-recoverer started; recover_after={RECOVER_AFTER}s, "
@@ -249,26 +339,38 @@ data:
         while True:
             tick += 1
             start = time.monotonic()
+            stuck_records = stuck_assocs = 0
             try:
                 mrs = list_records()
-                stuck_count = 0
                 for mr in mrs:
                     if not is_stuck(mr):
                         continue
-                    stuck_count += 1
+                    stuck_records += 1
                     try:
                         recover(mr)
                     except Exception as e:
                         log.error(
-                            f"recovery failed for "
+                            f"records recovery failed for "
                             f"{mr['metadata']['namespace']}/"
                             f"{mr['metadata']['name']}: {e}"
                         )
-                # Heartbeat every 10 ticks (~5 min at default poll) so a hung
-                # process is observable in `kubectl logs`.
+                assocs = list_zone_associations()
+                for mr in assocs:
+                    if not is_zone_assoc_stuck(mr):
+                        continue
+                    stuck_assocs += 1
+                    try:
+                        recover_zone_association(mr)
+                    except Exception as e:
+                        log.error(
+                            f"zone-assoc recovery failed for "
+                            f"{mr['metadata']['namespace']}/"
+                            f"{mr['metadata']['name']}: {e}"
+                        )
                 if tick % 10 == 0:
                     log.info(
-                        f"tick={tick} mrs={len(mrs)} stuck_acted={stuck_count} "
+                        f"tick={tick} records={len(mrs)} stuck_records={stuck_records} "
+                        f"assocs={len(assocs)} stuck_assocs={stuck_assocs} "
                         f"tracking={len(first_seen)}"
                     )
             except Exception as e:

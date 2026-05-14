@@ -10,7 +10,7 @@ metadata:
   name: stuck-mr-recoverer
 rules:
   - apiGroups: ["route53.aws.m.upbound.io"]
-    resources: ["records"]
+    resources: ["records", "zoneassociations"]
     verbs: ["get", "list", "watch", "patch", "delete"]
   - apiGroups: [""]
     resources: ["events"]
