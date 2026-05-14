@@ -5,7 +5,8 @@ metadata:
   name: record-e2e-conc-ttlrace-023923-secondary.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-conc-ttlrace-023923","type":"A","ttl":300,"values":["10.0.42.20"],"routingPolicy":"weighted","setIdentifier":"secondary","weight":50}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-conc-ttlrace-023923","type":"A","ttl":900,"values":["10.0.42.20"],"routingPolicy":"weighted","setIdentifier":"secondary","weight":50}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-e2e-conc-ttlrace-023923-secondary.arthurbryan.com
   domain: cross
@@ -19,7 +20,7 @@ spec:
   zoneName: arthurbryan.com
   recordName: "e2e-conc-ttlrace-023923"
   type: A
-  ttl: 300
+  ttl: 900
   values:
     - 10.0.42.20
   setIdentifier: secondary
