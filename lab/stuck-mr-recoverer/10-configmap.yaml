@@ -75,12 +75,76 @@ data:
 
 
     AWS_KEY, AWS_SECRET = _read_aws_creds(AWS_CREDS_PATH)
-    route53 = boto3.client(
-        "route53",
-        aws_access_key_id=AWS_KEY,
-        aws_secret_access_key=AWS_SECRET,
-        region_name="us-east-1",
-    )
+
+    # Role chains keyed by ClusterProviderConfig name. Mirrors the
+    # `assumeRoleChain` in lab/provider-config/<account>.yaml. The prd-account
+    # provider uses the base creds directly (no role assumption).
+    PROVIDER_ROLE_CHAIN = {
+        "dev-account": ["arn:aws:iam::309670275661:role/OrganizationAccountAccessRole"],
+        "prd-account": [],
+    }
+
+    _route53_clients: dict[str, object] = {}
+
+    def route53_for(provider_config: str = "prd-account"):
+        """Return a boto3 Route53 client whose credentials match the
+        ClusterProviderConfig in question (assuming the configured role
+        chain). Cached per-config; tokens last an hour so we let the cache
+        live and rebuild on AccessDenied."""
+        c = _route53_clients.get(provider_config)
+        if c is not None:
+            return c
+        chain = PROVIDER_ROLE_CHAIN.get(provider_config, [])
+        if not chain:
+            c = boto3.client(
+                "route53",
+                aws_access_key_id=AWS_KEY,
+                aws_secret_access_key=AWS_SECRET,
+                region_name="us-east-1",
+            )
+        else:
+            sts = boto3.client(
+                "sts",
+                aws_access_key_id=AWS_KEY,
+                aws_secret_access_key=AWS_SECRET,
+                region_name="us-east-1",
+            )
+            creds = {
+                "AccessKeyId": AWS_KEY,
+                "SecretAccessKey": AWS_SECRET,
+                "SessionToken": None,
+            }
+            for role_arn in chain:
+                sts_client = boto3.client(
+                    "sts",
+                    aws_access_key_id=creds["AccessKeyId"],
+                    aws_secret_access_key=creds["SecretAccessKey"],
+                    aws_session_token=creds["SessionToken"],
+                    region_name="us-east-1",
+                )
+                out = sts_client.assume_role(
+                    RoleArn=role_arn,
+                    RoleSessionName=f"stuck-mr-recoverer-{provider_config}",
+                )["Credentials"]
+                creds = {
+                    "AccessKeyId": out["AccessKeyId"],
+                    "SecretAccessKey": out["SecretAccessKey"],
+                    "SessionToken": out["SessionToken"],
+                }
+            c = boto3.client(
+                "route53",
+                aws_access_key_id=creds["AccessKeyId"],
+                aws_secret_access_key=creds["SecretAccessKey"],
+                aws_session_token=creds["SessionToken"],
+                region_name="us-east-1",
+            )
+        _route53_clients[provider_config] = c
+        return c
+
+    # Records-recovery code path uses the prd-account client (existing zone
+    # `arthurbryan.com` and all record MRs are in prd-account). Aliased for
+    # backwards compatibility with the rest of the script.
+    route53 = route53_for("prd-account")
 
 
     def k8s(method, path, headers=None, body=None):
@@ -299,10 +363,15 @@ data:
         zone_id = spec["zoneId"]
         vpc_id = spec["vpcId"]
         vpc_region = spec.get("vpcRegion", "us-east-1")
+        # The MR's providerConfigRef tells us which account to act in -- the
+        # composition routes the ZoneAssociation MR to the VPC's owning
+        # account so the AWS API call is authorized.
+        provider_cfg = (mr.get("spec", {}).get("providerConfigRef", {})
+                        .get("name", "prd-account"))
         log.info(
             f"{ns}/{name} stuck on upjet ZoneAssociation create bug; "
             f"associating vpc={vpc_id} region={vpc_region} to zone={zone_id} "
-            f"via AWS API directly"
+            f"via AWS API directly (using {provider_cfg} credentials)"
         )
         emit_event(
             ns, name, uid, "StuckMRRecovery",
@@ -310,8 +379,9 @@ data:
             "calling AssociateVPCWithHostedZone directly so Crossplane's "
             "next Observe will see the association and mark Ready",
         )
+        client = route53_for(provider_cfg)
         try:
-            route53.associate_vpc_with_hosted_zone(
+            client.associate_vpc_with_hosted_zone(
                 HostedZoneId=zone_id,
                 VPC={"VPCRegion": vpc_region, "VPCId": vpc_id},
             )

@@ -17,7 +17,7 @@ spec:
         app.kubernetes.io/name: stuck-mr-recoverer
       annotations:
         # Bump to force pod restart when the script ConfigMap changes.
-        kubectl.kubernetes.io/restartedAt: "2026-05-14T15:05:00Z"
+        kubectl.kubernetes.io/restartedAt: "2026-05-14T15:15:00Z"
     spec:
       serviceAccountName: stuck-mr-recoverer
       securityContext:
