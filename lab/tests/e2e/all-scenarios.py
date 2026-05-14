@@ -831,24 +831,24 @@ def make_a_ttl_only(suffix: str) -> Scenario:
     )
 
 def make_a_values_only(suffix: str) -> Scenario:
-    # upjet+terraform-provider-aws has a bug serializing route53_record UPDATE
-    # when only `records` change without TTL change: the resulting Route53
-    # ChangeResourceRecordSets call is missing TTL/ResourceRecords entirely and
-    # AWS rejects with "Expected exactly one of [AliasTarget, all of [TTL, and
-    # ResourceRecords], or TrafficPolicyInstanceId], but found none". Bumping
-    # TTL by 1 forces upjet to include a complete UPSERT body.
+    # Exercises the records-only UPDATE path: values change, TTL unchanged.
+    # The upjet+terraform-provider-aws stack has a known bug
+    # (crossplane-contrib/provider-upjet-aws#1806) where this case produces
+    # an empty AWS ChangeResourceRecordSets body. The platform-side
+    # stuck-mr-recoverer (lab/stuck-mr-recoverer/) detects the failure
+    # signature and recreates the MR so AWS eventually converges.
     name = f"a-values-only-{suffix}"
     record_name = f"e2e-{name}"
     create_v = ["192.0.2.90"]
-    edit_v = ["192.0.2.92"]
+    edit_v = ["192.0.2.91"]
     return Scenario(
         name=name,
         record_name=record_name,
         record_type="A",
         create_values={"ttl": 300, "values": create_v, "routingPolicy": "simple"},
-        edit_values={"ttl": 301, "values": edit_v},
+        edit_values={"ttl": 300, "values": edit_v},
         expected_aws=lambda rows: values_match(rows, "A", create_v, 300),
-        expected_aws_after_edit=lambda rows: values_match(rows, "A", edit_v, 301),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", edit_v, 300),
     )
 
 def make_weighted_weight_only(suffix: str) -> Scenario:

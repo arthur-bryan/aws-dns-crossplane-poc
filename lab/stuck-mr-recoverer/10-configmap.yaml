@@ -1,0 +1,176 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stuck-mr-recoverer-script
+  namespace: crossplane-system
+data:
+  recoverer.py: |
+    # Watches route53.aws.m.upbound.io/records and recovers MRs stuck on the
+    # upjet+terraform-provider-aws records-only UPDATE bug
+    # (crossplane-contrib/provider-upjet-aws#1806): when only `records` change,
+    # Upjet fails to populate RawPlan with companion fields, and AWS rejects
+    # the resulting empty UPSERT with "Expected exactly one of [AliasTarget,
+    # all of [TTL, and ResourceRecords], or TrafficPolicyInstanceId], but
+    # found none". Recovery strips the Crossplane finalizer and deletes the
+    # MR; Crossplane re-composes a fresh MR from the unchanged XR and the
+    # CREATE path uses a complete UPSERT body which AWS accepts.
+    import datetime, json, logging, os, ssl, time, urllib.error, urllib.request
+
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s %(levelname)s %(message)s")
+    log = logging.getLogger("stuck-mr-recoverer")
+
+    K8S_HOST = "https://kubernetes.default.svc"
+    TOKEN = open("/var/run/secrets/kubernetes.io/serviceaccount/token").read().strip()
+    CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    HEADERS_JSON = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Accept": "application/json",
+    }
+    HEADERS_MERGE_PATCH = {
+        **HEADERS_JSON,
+        "Content-Type": "application/merge-patch+json",
+    }
+    HEADERS_JSON_POST = {
+        **HEADERS_JSON,
+        "Content-Type": "application/json",
+    }
+
+    RECOVER_AFTER = int(os.environ.get("RECOVER_AFTER_SECONDS", "60"))
+    POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL_SECONDS", "30"))
+    ERROR_SIGNATURE = (
+        "Expected exactly one of [AliasTarget, all of [TTL, and ResourceRecords]"
+    )
+
+    ctx = ssl.create_default_context(cafile=CA_PATH)
+
+    def k8s(method, path, headers=None, body=None):
+        data = json.dumps(body).encode() if body is not None else None
+        req = urllib.request.Request(
+            f"{K8S_HOST}{path}", method=method,
+            headers=headers or HEADERS_JSON,
+            data=data,
+        )
+        try:
+            with urllib.request.urlopen(req, context=ctx, timeout=30) as r:
+                raw = r.read()
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as e:
+            log.error(f"{method} {path} -> {e.code} {e.reason}: {e.read().decode()[:300]}")
+            raise
+
+    def list_records():
+        return k8s("GET", "/apis/route53.aws.m.upbound.io/v1beta1/records").get("items", [])
+
+    def parse_ts(ts):
+        for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ"):
+            try:
+                return datetime.datetime.strptime(ts, fmt)
+            except ValueError:
+                continue
+        raise ValueError(f"unparseable timestamp: {ts}")
+
+    def is_stuck(mr):
+        conditions = mr.get("status", {}).get("conditions", [])
+        synced = next((c for c in conditions if c.get("type") == "Synced"), None)
+        if not synced or synced.get("status") != "False":
+            return False, None
+        msg = synced.get("message", "") or ""
+        if ERROR_SIGNATURE not in msg:
+            return False, msg
+        try:
+            age = (datetime.datetime.utcnow()
+                   - parse_ts(synced["lastTransitionTime"])).total_seconds()
+        except Exception:
+            age = RECOVER_AFTER  # err on the side of recovering
+        if age < RECOVER_AFTER:
+            return False, msg
+        return True, msg
+
+    def emit_event(ns, name, uid, reason, message):
+        now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        body = {
+            "apiVersion": "v1",
+            "kind": "Event",
+            "metadata": {
+                "generateName": f"stuck-mr-recoverer-{name[:40]}-",
+                "namespace": ns,
+            },
+            "involvedObject": {
+                "apiVersion": "route53.aws.m.upbound.io/v1beta1",
+                "kind": "Record",
+                "namespace": ns,
+                "name": name,
+                "uid": uid,
+            },
+            "reason": reason,
+            "message": message,
+            "type": "Warning",
+            "firstTimestamp": now,
+            "lastTimestamp": now,
+            "source": {"component": "stuck-mr-recoverer"},
+        }
+        try:
+            k8s("POST", f"/api/v1/namespaces/{ns}/events",
+                headers=HEADERS_JSON_POST, body=body)
+        except Exception as e:
+            log.warning(f"emit_event failed for {ns}/{name}: {e}")
+
+    def recover(mr):
+        meta = mr["metadata"]
+        ns, name, uid = meta["namespace"], meta["name"], meta["uid"]
+        path = f"/apis/route53.aws.m.upbound.io/v1beta1/namespaces/{ns}/records/{name}"
+
+        if meta.get("deletionTimestamp"):
+            log.info(f"{ns}/{name} already terminating; stripping finalizer only")
+        else:
+            log.info(f"{ns}/{name} stuck on upjet records-only UPDATE bug; recovering")
+
+        emit_event(
+            ns, name, uid, "StuckMRRecovery",
+            "Detected records-only UPDATE bug (provider-upjet-aws#1806); "
+            "stripping finalizer and triggering re-composition from XR",
+        )
+
+        # Step 1: strip finalizers via merge-patch (safe even if already empty).
+        k8s("PATCH", path, headers=HEADERS_MERGE_PATCH,
+            body={"metadata": {"finalizers": None}})
+
+        # Step 2: delete the MR (no-op if it's already being garbage-collected).
+        try:
+            k8s("DELETE", path)
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                log.info(f"{ns}/{name} already gone")
+            else:
+                raise
+
+        log.info(f"{ns}/{name} recovered; Crossplane will re-compose from the XR")
+
+    def main():
+        log.info(
+            f"stuck-mr-recoverer started; recover_after={RECOVER_AFTER}s, "
+            f"poll={POLL_INTERVAL}s"
+        )
+        while True:
+            start = time.monotonic()
+            try:
+                for mr in list_records():
+                    stuck, _msg = is_stuck(mr)
+                    if not stuck:
+                        continue
+                    try:
+                        recover(mr)
+                    except Exception as e:
+                        log.error(
+                            f"recovery failed for "
+                            f"{mr['metadata']['namespace']}/"
+                            f"{mr['metadata']['name']}: {e}"
+                        )
+            except Exception as e:
+                log.error(f"loop error: {e}")
+            elapsed = time.monotonic() - start
+            time.sleep(max(0.0, POLL_INTERVAL - elapsed))
+
+    if __name__ == "__main__":
+        main()
