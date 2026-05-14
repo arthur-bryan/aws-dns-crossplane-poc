@@ -908,6 +908,154 @@ def make_a_apex(suffix: str) -> Scenario:
     )
 
 # ---------------------------------------------------------------------------
+# Edit-dimension coverage: routing-policy field changes that are *not* a
+# values/ttl rotation. Some are in-place updates in Route 53 (geo continent,
+# latency region, failover role); others (record type, routing-policy itself)
+# legitimately require a destroy+recreate at AWS, which we expect the
+# platform to handle autonomously.
+# ---------------------------------------------------------------------------
+
+def make_geo_continent_change(suffix: str) -> Scenario:
+    """Geolocation record whose `continent` flips on edit; values stay put."""
+    name = f"geo-continent-change-{suffix}"
+    record_name = f"e2e-{name}"
+    set_id = "rotate"
+    vals = ["10.0.30.10"]
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="A",
+        set_identifier=set_id,
+        create_values={
+            "routingPolicy": "geolocation",
+            "setIdentifier": set_id,
+            "geoContinent": "EU",
+            "ttl": 300,
+            "values": vals,
+        },
+        edit_values={
+            "routingPolicy": "geolocation",
+            "setIdentifier": set_id,
+            "geoContinent": "NA",
+            "ttl": 300,
+            "values": vals,
+        },
+        expected_aws=lambda rows: values_match(rows, "A", vals, 300, set_identifier=set_id),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", vals, 300, set_identifier=set_id),
+    )
+
+
+def make_latency_region_change(suffix: str) -> Scenario:
+    """Latency record whose `latencyRegion` flips on edit."""
+    name = f"latency-region-change-{suffix}"
+    record_name = f"e2e-{name}"
+    set_id = "rotate"
+    vals = ["10.0.31.10"]
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="A",
+        set_identifier=set_id,
+        create_values={
+            "routingPolicy": "latency",
+            "setIdentifier": set_id,
+            "latencyRegion": "us-east-1",
+            "ttl": 300,
+            "values": vals,
+        },
+        edit_values={
+            "routingPolicy": "latency",
+            "setIdentifier": set_id,
+            "latencyRegion": "us-west-2",
+            "ttl": 300,
+            "values": vals,
+        },
+        expected_aws=lambda rows: values_match(rows, "A", vals, 300, set_identifier=set_id),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", vals, 300, set_identifier=set_id),
+    )
+
+
+def make_failover_type_swap(suffix: str) -> Scenario:
+    """Failover PRIMARY → SECONDARY swap. AWS requires PRIMARY non-alias
+    records to carry a health check, so the create side reuses
+    ensure_health_check (the same pattern as make_failover). The edit
+    demotes to SECONDARY (health check still attached — harmless on
+    SECONDARY)."""
+    name = f"failover-type-swap-{suffix}"
+    record_name = f"e2e-{name}"
+    set_id = "rotate"
+    vals = ["10.0.32.10"]
+    hc = ensure_health_check(f"failover-type-swap-{suffix}")
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="A",
+        set_identifier=set_id,
+        create_values={
+            "routingPolicy": "failover",
+            "setIdentifier": set_id,
+            "failoverType": "PRIMARY",
+            "healthCheckId": hc,
+            "ttl": 300,
+            "values": vals,
+        },
+        edit_values={
+            "routingPolicy": "failover",
+            "setIdentifier": set_id,
+            "failoverType": "SECONDARY",
+            "healthCheckId": hc,
+            "ttl": 300,
+            "values": vals,
+        },
+        expected_aws=lambda rows: values_match(rows, "A", vals, 300, set_identifier=set_id),
+        expected_aws_after_edit=lambda rows: values_match(rows, "A", vals, 300, set_identifier=set_id),
+    )
+
+
+def make_type_change_a_to_aaaa(suffix: str) -> Scenario:
+    """A record whose `type` flips to AAAA. Route 53 cannot edit a record's
+    type in place, so the platform must destroy-and-create autonomously.
+    We assert: (1) AWS has the original A record with the original value
+    before edit; (2) AWS has the new AAAA record with the new value after
+    edit; (3) AWS no longer has the original A record (no orphan)."""
+    name = f"type-change-a-to-aaaa-{suffix}"
+    record_name = f"e2e-{name}"
+
+    def expected_pre(rows: list[dict]) -> tuple[bool, str]:
+        a_rows = [r for r in rows if r.get("Type") == "A"]
+        ok_a, msg = values_match(a_rows, "A", ["10.0.33.10"], 300)
+        return ok_a, msg
+
+    def expected_post(rows: list[dict]) -> tuple[bool, str]:
+        a_rows = [r for r in rows if r.get("Type") == "A"]
+        aaaa_rows = [r for r in rows if r.get("Type") == "AAAA"]
+        if a_rows:
+            return False, f"old A record still present (orphaned): {a_rows!r}"
+        if not aaaa_rows:
+            return False, "AAAA record not present"
+        return values_match(aaaa_rows, "AAAA", ["2001:db8::1"], 300)
+
+    return Scenario(
+        name=name,
+        record_name=record_name,
+        record_type="A",
+        create_values={"ttl": 300, "values": ["10.0.33.10"], "routingPolicy": "simple"},
+        edit_values={"type": "AAAA", "ttl": 300, "values": ["2001:db8::1"],
+                     "routingPolicy": "simple"},
+        expected_aws=expected_pre,
+        expected_aws_after_edit=expected_post,
+    )
+
+
+# NOTE: scaffolder's record-edit template derives the catalog entity key as
+# `<recordName>[-<setIdentifier>]`, so promoting simple → weighted (which
+# *adds* a setIdentifier) would change the lookup key and the edit template
+# can't find the existing entity. Routing-policy promotion is therefore a
+# delete+create workflow at the *user* level rather than an edit-template
+# capability; it's tracked as a separate platform redesign, not in this
+# scenario suite.
+
+# ---------------------------------------------------------------------------
 # Native alias serviceTypes — exercise the composition's region-keyed zone-id
 # mapping table (record.yaml lines 73-160). Custom is already covered.
 # ---------------------------------------------------------------------------
@@ -1018,6 +1166,11 @@ SCENARIO_BUILDERS: dict[str, Callable[[str], Scenario]] = {
     "weighted-weight-only":  lambda s: make_weighted_weight_only(s),
     # apex variant
     "a-apex":                lambda s: make_a_apex(s),
+    # edit-dimension coverage: changing fields other than values/ttl
+    "geo-continent-change":  lambda s: make_geo_continent_change(s),
+    "latency-region-change": lambda s: make_latency_region_change(s),
+    "failover-type-swap":    lambda s: make_failover_type_swap(s),
+    "type-change-a-to-aaaa": lambda s: make_type_change_a_to_aaaa(s),
     # native alias serviceTypes — exercise the composition's hosted-zone-id
     # lookup tables for managed AWS endpoints
     "alias-cloudfront":      lambda s: make_alias_cloudfront(s),
