@@ -5,7 +5,8 @@ metadata:
   name: record-e2e-conc-siblings-024742-primary.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-conc-siblings-024742","type":"A","ttl":300,"values":["10.0.41.10"],"routingPolicy":"weighted","setIdentifier":"primary","weight":70}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-conc-siblings-024742","type":"A","ttl":600,"values":["10.0.41.11"],"routingPolicy":"weighted","setIdentifier":"primary","weight":70}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-e2e-conc-siblings-024742-primary.arthurbryan.com
   domain: cross
@@ -19,8 +20,8 @@ spec:
   zoneName: arthurbryan.com
   recordName: "e2e-conc-siblings-024742"
   type: A
-  ttl: 300
+  ttl: 600
   values:
-    - 10.0.41.10
+    - 10.0.41.11
   setIdentifier: primary
   weight: 70
