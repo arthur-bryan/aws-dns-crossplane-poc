@@ -1,0 +1,28 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-e2e-failover-type-swap-085707-rotate.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-failover-type-swap-085707","type":"A","routingPolicy":"failover","setIdentifier":"rotate","failoverType":"PRIMARY","healthCheckId":"fd13e0d2-2f29-40a1-a40d-59e0b54fac48","ttl":300,"values":["10.0.32.10"]}'
+spec:
+  name: record-e2e-failover-type-swap-085707-rotate.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: "e2e-failover-type-swap-085707"
+  type: A
+  ttl: 300
+  values:
+    - 10.0.32.10
+  setIdentifier: rotate
+  failoverRoutingPolicy:
+    type: PRIMARY
+  healthCheckId: fd13e0d2-2f29-40a1-a40d-59e0b54fac48
