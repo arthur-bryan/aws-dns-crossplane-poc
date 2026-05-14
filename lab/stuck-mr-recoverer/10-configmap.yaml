@@ -402,10 +402,14 @@ data:
         # The AWS state is now correct, but upjet is still stuck in
         # "Creating" because the original async-create returned an error and
         # its retry path keeps hitting VPCAlreadyAssociatedException without
-        # transitioning the MR to Ready. Stamping
-        # crossplane.io/external-create-succeeded tells the Crossplane
-        # runtime "Create finished, switch to Observe", which makes the next
-        # reconcile mark the MR Ready=True from the (now-truthful) atProvider.
+        # transitioning the MR to Ready. We need to tell the Crossplane
+        # runtime three things at once:
+        #   1) Create has succeeded -> set external-create-succeeded
+        #   2) There is no pending Create -> clear external-create-pending
+        #   3) There is no past failure to retry -> clear external-create-failed
+        # Without (2) and (3), upjet's reconciler will kick off another
+        # Create attempt on the next sync-period and we flip back to
+        # Ready=False reason=Creating.
         now_iso = datetime.datetime.now(datetime.timezone.utc).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
@@ -415,15 +419,18 @@ data:
             k8s("PATCH", path, headers=HEADERS_MERGE_PATCH, body={
                 "metadata": {"annotations": {
                     "crossplane.io/external-create-succeeded": now_iso,
+                    # Setting to null deletes the annotation via merge-patch.
+                    "crossplane.io/external-create-pending": None,
+                    "crossplane.io/external-create-failed": None,
                 }},
             })
         except Exception as e:
-            log.warning(f"{ns}/{name} stamping external-create-succeeded failed: {e}")
+            log.warning(f"{ns}/{name} annotation patch failed: {e}")
 
         first_seen.pop(uid, None)
         log.info(
-            f"{ns}/{name} VPC associated and external-create-succeeded "
-            f"stamped; upjet will mark Ready"
+            f"{ns}/{name} VPC associated and create-state annotations "
+            f"reset; upjet will mark Ready"
         )
 
 
