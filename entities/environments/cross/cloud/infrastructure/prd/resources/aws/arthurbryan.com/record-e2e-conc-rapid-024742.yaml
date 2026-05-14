@@ -5,7 +5,7 @@ metadata:
   name: record-e2e-conc-rapid-024742.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-conc-rapid-024742","type":"A","ttl":300,"values":["10.0.40.10"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-conc-rapid-024742","type":"A","ttl":300,"values":["10.0.40.30"],"routingPolicy":"simple"}'
 spec:
   name: record-e2e-conc-rapid-024742.arthurbryan.com
   domain: cross
@@ -21,4 +21,4 @@ spec:
   type: A
   ttl: 300
   values:
-    - 10.0.40.10
+    - 10.0.40.30
