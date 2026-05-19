@@ -1,0 +1,27 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: vpc-067a880ce560341f8
+  title: vpc-067a880ce560341f8 (us-east-1, hml-account)
+  description: "VPC vpc-067a880ce560341f8 in us-east-1 (hml-account), CIDR 172.31.0.0/16, default"
+  annotations:
+    dock.tech/vpc-id: vpc-067a880ce560341f8
+    dock.tech/vpc-region: us-east-1
+    dock.tech/vpc-cidr: 172.31.0.0/16
+    dock.tech/vpc-is-default: "true"
+    dock.tech/aws-account-id: "382598791794"
+    dock.tech/aws-account-name: hml-account
+  tags:
+    - aws
+    - vpc
+    - us-east-1
+    - hml-account
+    - default
+  links:
+    - title: View in AWS Console
+      url: https://console.aws.amazon.com/vpc/home?region=us-east-1#VpcDetails:VpcId=vpc-067a880ce560341f8
+      icon: cloud
+spec:
+  type: aws-vpc-default
+  owner: group:default/infrastructure

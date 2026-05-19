@@ -85,6 +85,7 @@ data:
     # provider uses the base creds directly (no role assumption).
     PROVIDER_ROLE_CHAIN = {
         "dev-account": ["arn:aws:iam::309670275661:role/OrganizationAccountAccessRole"],
+        "hml-account": ["arn:aws:iam::382598791794:role/OrganizationAccountAccessRole"],
         "prd-account": [],
     }
 

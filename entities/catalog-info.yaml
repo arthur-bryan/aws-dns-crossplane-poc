@@ -66,6 +66,40 @@ spec:
   owner: group:default/infrastructure
   system: infrastructure
 ---
+# Environment entity for hml. Sandbox AWS account 382598791794.
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: infrastructure-hml
+  namespace: system-infrastructure-hml
+  description: HML (homologation) environment for the infrastructure system
+  annotations:
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: hml
+spec:
+  type: environment
+  owner: group:default/infrastructure
+  system: infrastructure
+---
+# Environment entity for prd. AWS account 597230762851 (base creds).
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: infrastructure-prd
+  namespace: system-infrastructure-prd
+  description: Production environment for the infrastructure system
+  annotations:
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: prd
+spec:
+  type: environment
+  owner: group:default/infrastructure
+  system: infrastructure
+---
 apiVersion: backstage.io/v1alpha1
 kind: Group
 metadata:

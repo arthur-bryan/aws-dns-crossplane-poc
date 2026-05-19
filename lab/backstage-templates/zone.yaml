@@ -40,7 +40,7 @@ spec:
         environment:
           title: Environment
           type: string
-          enum: [dev, prd]
+          enum: [dev, hml, prd]
           default: prd
         fqdnPreview:
           title: ''
@@ -115,6 +115,7 @@ spec:
           env: ${{ parameters.environment }}
         expression: >-
           env = "dev" ? {"accountId": "309670275661", "accountName": "dev-account", "defaultVpcId": "vpc-0dd3eaef2e5c11f69", "defaultVpcRegion": "us-east-1"}
+          : env = "hml" ? {"accountId": "382598791794", "accountName": "hml-account", "defaultVpcId": "vpc-067a880ce560341f8", "defaultVpcRegion": "us-east-1"}
           : env = "prd" ? {"accountId": "597230762851", "accountName": "prd-account", "defaultVpcId": "vpc-0410f81cfe1bba322", "defaultVpcRegion": "us-east-1"}
           : {"accountId": "", "accountName": ""}
 
