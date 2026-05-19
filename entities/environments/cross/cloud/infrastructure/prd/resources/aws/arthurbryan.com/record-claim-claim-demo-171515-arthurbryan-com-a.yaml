@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: claim-claim-demo-171515-arthurbryan-com-a
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"environment":"prd","zoneId":"Z03010981ALJFZB4QLU8W","existingRecord":{"name":"claim-demo-171515.arthurbryan.com","type":"A","ttl":600,"values":["10.20.30.40"]}}'
+    dock.tech/import-existing: "true"
+spec:
+  name: claim-claim-demo-171515-arthurbryan-com-a
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: "claim-demo-171515"
+  type: A
+  ttl: 600
+  values:
+    - 10.20.30.40
+  import:
+    existing: true
