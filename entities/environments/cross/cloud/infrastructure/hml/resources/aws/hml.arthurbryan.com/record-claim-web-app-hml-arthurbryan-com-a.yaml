@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: claim-web-app-hml-arthurbryan-com-a
+  namespace: system-infrastructure-hml
+  annotations:
+    dock.tech/scaffolder-parameters: '{"environment":"hml","existingRecord":{"name":"web-app.hml.arthurbryan.com","type":"A","ttl":600,"values":["10.50.60.70"]},"zoneId":"Z02234832G6QGRGKEEUMU"}'
+    dock.tech/import-existing: "true"
+spec:
+  name: claim-web-app-hml-arthurbryan-com-a
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: hml
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  zoneId: Z02234832G6QGRGKEEUMU
+  zoneName: hml.arthurbryan.com
+  recordName: "web-app"
+  type: A
+  ttl: 600
+  values:
+    - 10.50.60.70
+  import:
+    existing: true
