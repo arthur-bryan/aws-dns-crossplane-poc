@@ -72,6 +72,30 @@ if [ -z "${GITHUB_TOKEN:-}" ]; then
 fi
 export GITHUB_TOKEN
 
+# ---- AWS credentials for /api/dns/* backend -------------------------------
+# The dns-routes backend (lab/.../backend/src/modules/dns-routes) uses
+# AssumeRole to reach the per-environment AWS accounts (dev, hml). It needs
+# a *source* credential -- the dns-poc IAM user that already lives in the
+# Crossplane aws-creds Secret. Mirror it into the backend's env so AssumeRole
+# has something to start from. If the secret isn't present we just warn and
+# let the user fall back to ~/.aws/credentials.
+if [ -z "${AWS_ACCESS_KEY_ID:-}" ] && command -v kubectl >/dev/null 2>&1; then
+  if kubectl -n crossplane-system get secret aws-creds >/dev/null 2>&1; then
+    creds="$(kubectl -n crossplane-system get secret aws-creds \
+              -o jsonpath='{.data.credentials}' | base64 -d 2>/dev/null || true)"
+    if [ -n "$creds" ]; then
+      AWS_ACCESS_KEY_ID="$(echo "$creds" | awk -F= '/aws_access_key_id/{gsub(/[ \t]/,"",$2);print $2}')"
+      AWS_SECRET_ACCESS_KEY="$(echo "$creds" | awk -F= '/aws_secret_access_key/{gsub(/[ \t]/,"",$2);print $2}')"
+      export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+      export AWS_REGION="${AWS_REGION:-us-east-1}"
+      echo ">>> AWS credentials sourced from crossplane-system/aws-creds"
+    fi
+  fi
+fi
+if [ -z "${AWS_ACCESS_KEY_ID:-}" ]; then
+  echo "WARN: no AWS credentials in env or aws-creds Secret. /api/dns/* will fail until you set AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY or ~/.aws/credentials."
+fi
+
 # ---- app-config.local.yaml ------------------------------------------------
 if [ ! -f "$APP_DIR/app-config.local.yaml" ]; then
   echo ">>> app-config.local.yaml missing — copying from template"

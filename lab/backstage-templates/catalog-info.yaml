@@ -9,3 +9,4 @@ spec:
     - ./zone.yaml
     - ./record.yaml
     - ./record-edit.yaml
+    - ./record-claim.yaml

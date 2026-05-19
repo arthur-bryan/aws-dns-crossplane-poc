@@ -1,0 +1,165 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aws-dns-record-claim
+  title: Claim Existing AWS Route53 DNS Record
+  description: >
+    Adopt an existing Route53 record into platform management. The platform
+    will observe-and-update the record (managementPolicies=[Observe,Update])
+    without recreating it. Deleting the XR leaves the AWS record intact.
+  labels:
+    category: resources
+  tags:
+    - resource
+    - aws
+    - dns
+    - claim
+spec:
+  type: resource
+
+  parameters:
+    - title: DNS Record to Claim
+      required:
+        - environment
+        - zoneId
+        - existingRecord
+      properties:
+        environment:
+          title: Environment
+          type: string
+          enum: [dev, hml, prd]
+          default: prd
+        zoneId:
+          title: DNS Zone
+          type: string
+          description: Live Route53 hosted zones in the selected environment.
+          ui:field: AwsDnsZonePicker
+          ui:options:
+            environmentFieldName: environment
+        existingRecord:
+          title: Existing Record
+          type: object
+          description: Pick the record. Type / TTL / values auto-populate from Route53.
+          ui:field: AwsDnsRecordPicker
+          ui:options:
+            environmentFieldName: environment
+            zoneFieldName: zoneId
+          properties:
+            name:    { type: string }
+            type:    { type: string }
+            ttl:     { type: integer }
+            values:  { type: array, items: { type: string } }
+            aliasTarget:
+              type: object
+              properties:
+                dnsName:              { type: string }
+                hostedZoneId:         { type: string }
+                evaluateTargetHealth: { type: boolean }
+
+  steps:
+    - id: deriveAccount
+      name: Derive account from environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          env: ${{ parameters.environment }}
+        expression: >-
+          env = "dev" ? {"accountId": "309670275661", "accountName": "dev-account"}
+          : env = "hml" ? {"accountId": "382598791794", "accountName": "hml-account"}
+          : env = "prd" ? {"accountId": "597230762851", "accountName": "prd-account"}
+          : {"accountId": "", "accountName": ""}
+
+    - id: deriveZoneName
+      name: Derive zone name from the picked record's FQDN
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          recordName: ${{ parameters.existingRecord.name }}
+        # Trim the trailing dot Route53 returns and drop the record-name
+        # prefix to leave the zone name (e.g. "host1.foo.example.com." -> "foo.example.com").
+        # The record's FQDN is the picker output; the zone's FQDN is the
+        # everything-after-the-first-label suffix. For apex records (where
+        # recordName == zoneName) this is a no-op.
+        expression: >-
+          (
+            $name := $replace(recordName, /\.$/, "");
+            $contains($name, ".") and ($count($split($name, ".")) > 2)
+              ? $join($filter($split($name, "."), function($v, $i) { $i > 0 }), ".")
+              : $name
+          )
+
+    - id: branchSuffix
+      name: Compute unique branch suffix
+      action: roadiehq:utils:jsonata
+      input:
+        data: {}
+        expression: '$string($millis())'
+
+    - id: writeXR
+      name: Write Record XR manifest with import.existing=true
+      action: roadiehq:utils:fs:write
+      input:
+        path: >-
+          entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml
+        content: |
+          ---
+          apiVersion: dock.tech/v1
+          kind: Record
+          metadata:
+            name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+            namespace: system-infrastructure-${{ parameters.environment }}
+            annotations:
+              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              dock.tech/import-existing: "true"
+          spec:
+            name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+            domain: cross
+            subdomain: cloud
+            system: infrastructure
+            environment: ${{ parameters.environment }}
+            aws:
+              account: ${{ steps.deriveAccount.output.result.accountId | int }}
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            zoneId: ${{ parameters.zoneId }}
+            zoneName: ${{ steps.deriveZoneName.output.result }}
+            recordName: "${{ parameters.existingRecord.name | replace('.' + steps.deriveZoneName.output.result + '.', '') | replace('.' + steps.deriveZoneName.output.result, '') }}"
+            type: ${{ parameters.existingRecord.type }}
+            {%- if parameters.existingRecord.aliasTarget %}
+            aliasTarget:
+              serviceType: Custom
+              dnsName: ${{ parameters.existingRecord.aliasTarget.dnsName }}
+              hostedZoneId: ${{ parameters.existingRecord.aliasTarget.hostedZoneId }}
+              evaluateTargetHealth: ${{ parameters.existingRecord.aliasTarget.evaluateTargetHealth }}
+            {%- else %}
+            ttl: ${{ parameters.existingRecord.ttl }}
+            values:
+            {%- for v in parameters.existingRecord.values %}
+              - ${{ v }}
+            {%- endfor %}
+            {%- endif %}
+            import:
+              existing: true
+
+    - id: openPR
+      name: Open PR
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
+        branchName: scaffolder/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}-${{ parameters.environment }}-${{ steps.branchSuffix.output.result }}
+        targetBranchName: feature/ape-platform-alignment
+        title: "chore(dns): claim existing ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
+        description: |
+          Claim PR — adopts an existing AWS Route53 record into platform
+          management with `spec.import.existing: true`. The platform will
+          observe-and-update it; no Create or Delete is issued against
+          AWS unless the user explicitly removes the XR file later.
+
+          Record: ${{ parameters.existingRecord.name }}
+          Type: ${{ parameters.existingRecord.type }}
+          Zone: ${{ steps.deriveZoneName.output.result }} (${{ parameters.zoneId }})
+          Account: ${{ steps.deriveAccount.output.result.accountName }} (${{ steps.deriveAccount.output.result.accountId }})
+
+  output:
+    links:
+      - title: Pull Request
+        url: ${{ steps.openPR.output.remoteUrl }}
