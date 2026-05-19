@@ -140,6 +140,61 @@ spec:
             import:
               existing: true
 
+    - id: writeCatalogEntity
+      name: Write Backstage Resource entity for the claimed record
+      action: roadiehq:utils:fs:write
+      input:
+        path: >-
+          entities/catalog/${{ parameters.environment }}/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml
+        content: |
+          ---
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
+          metadata:
+            name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+            namespace: system-infrastructure-${{ parameters.environment }}
+            title: ${{ parameters.existingRecord.name }}
+            description: "Claimed ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
+            annotations:
+              dock.tech/xr-kind: Record
+              dock.tech/xr-name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+              dock.tech/zone-name: ${{ steps.deriveZoneName.output.result }}
+              dock.tech/zone-id: ${{ parameters.zoneId }}
+              dock.tech/record-name: "${{ parameters.existingRecord.name | replace('.' + steps.deriveZoneName.output.result + '.', '') | replace('.' + steps.deriveZoneName.output.result, '') }}"
+              dock.tech/record-type: ${{ parameters.existingRecord.type }}
+              dock.tech/record-fqdn: ${{ parameters.existingRecord.name }}
+              dock.tech/domain: cross
+              dock.tech/subdomain: cloud
+              dock.tech/system: infrastructure
+              dock.tech/environment: ${{ parameters.environment }}
+              dock.tech/aws-account-id: "${{ steps.deriveAccount.output.result.accountId }}"
+              dock.tech/aws-account-name: ${{ steps.deriveAccount.output.result.accountName }}
+              dock.tech/managed-by: scaffolder
+              dock.tech/import-existing: "true"
+              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml"
+            tags:
+              - aws
+              - dns
+              - route53
+              - record
+              - claimed
+              - ${{ parameters.existingRecord.type | lower }}
+              - ${{ parameters.environment }}
+            links:
+              - title: View in AWS Console
+                url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ parameters.zoneId }}
+                icon: cloud
+              - title: Remove platform claim (opens GitHub delete UI; AWS record is preserved)
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml
+                icon: delete
+          spec:
+            type: aws-dns-record
+            owner: group:default/infrastructure
+            system: infrastructure
+            dependsOn:
+              - resource:default/zone-${{ steps.deriveZoneName.output.result }}
+
     - id: openPR
       name: Open PR
       action: publish:github:pull-request
