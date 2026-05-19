@@ -32,9 +32,6 @@ metadata:
     - a
     - hml
   links:
-    - title: View in AWS Console
-      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z02234832G6QGRGKEEUMU
-      icon: cloud
     - title: Remove platform claim (opens GitHub delete UI; AWS record is preserved)
       url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/record-claim-web-app-hml-arthurbryan-com-a.yaml
       icon: delete

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Chip,
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -139,23 +138,9 @@ export const RecordInfoCard = () => {
     ],
     [
       'Zone',
-      zoneName ? (
-        <span>
-          {zoneName}
-          {zoneId && (
-            <Link
-              href={`https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${zoneId}`}
-              target="_blank"
-              rel="noreferrer"
-              style={{ marginLeft: 8 }}
-            >
-              ({zoneId})
-            </Link>
-          )}
-        </span>
-      ) : (
-        '—'
-      ),
+      zoneName
+        ? `${zoneName}${zoneId ? ` (${zoneId})` : ''}`
+        : '—',
     ],
     ['Environment', env ? <Chip size="small" label={env} /> : '—'],
   ];

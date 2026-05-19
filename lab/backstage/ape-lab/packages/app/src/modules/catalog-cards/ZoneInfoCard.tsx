@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Chip,
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -58,17 +57,7 @@ export const ZoneInfoCard = () => {
     ['Zone name', zoneName ?? <span className={classes.empty}>—</span>],
     [
       'Zone ID',
-      zoneId ? (
-        <Link
-          href={`https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${zoneId}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {zoneId}
-        </Link>
-      ) : (
-        <span className={classes.empty}>provisioning…</span>
-      ),
+      zoneId ?? <span className={classes.empty}>provisioning…</span>,
     ],
     [
       'Status',

@@ -30,9 +30,6 @@ metadata:
     - hml
     - public
   links:
-    - title: View in AWS Console
-      url: https://console.aws.amazon.com/route53/v2/hostedzones
-      icon: cloud
     - title: Delete zone (opens GitHub delete UI)
       url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/zone.yaml
       icon: delete

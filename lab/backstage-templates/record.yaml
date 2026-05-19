@@ -501,9 +501,6 @@ spec:
               - ${{ parameters.type | lower }}
               - ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
             links:
-              - title: View in AWS Console
-                url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
-                icon: cloud
               - title: Delete record (opens GitHub delete UI)
                 url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
                 icon: delete

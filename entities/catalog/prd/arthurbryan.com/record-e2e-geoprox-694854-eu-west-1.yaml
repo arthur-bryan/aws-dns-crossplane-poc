@@ -30,9 +30,6 @@ metadata:
     - a
     - prd
   links:
-    - title: View in AWS Console
-      url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/Z03010981ALJFZB4QLU8W
-      icon: cloud
     - title: Delete record (opens GitHub delete UI)
       url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-geoprox-694854-eu-west-1.yaml
       icon: delete

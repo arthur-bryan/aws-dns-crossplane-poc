@@ -182,9 +182,6 @@ spec:
               - ${{ parameters.existingRecord.type | lower }}
               - ${{ parameters.environment }}
             links:
-              - title: View in AWS Console
-                url: https://console.aws.amazon.com/route53/v2/hostedzones#ListRecordSets/${{ parameters.zoneId }}
-                icon: cloud
               - title: Remove platform claim (opens GitHub delete UI; AWS record is preserved)
                 url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml
                 icon: delete

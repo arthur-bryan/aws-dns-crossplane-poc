@@ -209,9 +209,6 @@ spec:
               - ${{ parameters.environment }}
               - ${{ 'private' if parameters.private else 'public' }}
             links:
-              - title: View in AWS Console
-                url: https://console.aws.amazon.com/route53/v2/hostedzones
-                icon: cloud
               - title: Delete zone (opens GitHub delete UI)
                 url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml
                 icon: delete

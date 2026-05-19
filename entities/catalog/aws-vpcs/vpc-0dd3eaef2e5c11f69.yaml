@@ -18,10 +18,6 @@ metadata:
     - us-east-1
     - dev-account
     - default
-  links:
-    - title: View in AWS Console
-      url: https://console.aws.amazon.com/vpc/home?region=us-east-1#VpcDetails:VpcId=vpc-0dd3eaef2e5c11f69
-      icon: cloud
 spec:
   type: aws-vpc-default
   owner: group:default/infrastructure
