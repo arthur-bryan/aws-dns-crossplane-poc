@@ -34,6 +34,7 @@ help:
 	@echo "  phase5-apps       — apply App-of-Apps"
 	@echo ""
 	@echo "  aws-creds         — create aws-creds secret (reads ~/.aws/credentials)"
+	@echo "  dns-env           — print required DNS env vars for Backstage zone/record pickers"
 	@echo "  argo-password     — print argocd admin initial password"
 	@echo "  argo-port         — port-forward argocd server to :8081"
 
@@ -175,6 +176,25 @@ aws-creds:
 	  --from-file=credentials=$$HOME/.aws/credentials \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "aws-creds secret applied in crossplane-system"
+
+.PHONY: dns-env
+dns-env:
+	@echo "Set these env vars before running 'make backstage-up' to enable the zone/record pickers:"
+	@echo ""
+	@echo "  export DNS_ACCOUNT_ID_DEV=<dev-dns-account-id>"
+	@echo "  export DNS_ROLE_ARN_DEV=arn:aws:iam::<dev-dns-account-id>:role/backstage-role"
+	@echo "  export DNS_ACCOUNT_ID_HML=<hml-dns-account-id>"
+	@echo "  export DNS_ROLE_ARN_HML=arn:aws:iam::<hml-dns-account-id>:role/backstage-role"
+	@echo "  export DNS_ACCOUNT_ID_PRD=<prd-dns-account-id>"
+	@echo "  export DNS_ROLE_ARN_PRD=arn:aws:iam::<prd-dns-account-id>:role/backstage-role"
+	@echo ""
+	@echo "Current values:"
+	@echo "  DNS_ACCOUNT_ID_DEV=$${DNS_ACCOUNT_ID_DEV:-<not set>}"
+	@echo "  DNS_ROLE_ARN_DEV=$${DNS_ROLE_ARN_DEV:-<not set>}"
+	@echo "  DNS_ACCOUNT_ID_HML=$${DNS_ACCOUNT_ID_HML:-<not set>}"
+	@echo "  DNS_ROLE_ARN_HML=$${DNS_ROLE_ARN_HML:-<not set>}"
+	@echo "  DNS_ACCOUNT_ID_PRD=$${DNS_ACCOUNT_ID_PRD:-<not set>}"
+	@echo "  DNS_ROLE_ARN_PRD=$${DNS_ROLE_ARN_PRD:-<not set>}"
 
 .PHONY: argo-password
 argo-password:

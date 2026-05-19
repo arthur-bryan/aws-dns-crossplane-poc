@@ -44,6 +44,10 @@ metadata:
 spec:
   owner: group:default/infrastructure
   domain: cloud
+  environments:
+    - name: dev
+    - name: hml
+    - name: prd
 ---
 # Environment entity for dev. One per env the system runs in.
 apiVersion: backstage.io/v1alpha1

@@ -46,6 +46,18 @@ scaffolder:
     email: scaffolder@ape.local
   defaultCommitMessage: "chore(dns): scaffolder-generated change"
 
+dns:
+  accounts:
+    dev:
+      accountId: ${DNS_ACCOUNT_ID_DEV}
+      roleArn: ${DNS_ROLE_ARN_DEV}
+    hml:
+      accountId: ${DNS_ACCOUNT_ID_HML}
+      roleArn: ${DNS_ROLE_ARN_HML}
+    prd:
+      accountId: ${DNS_ACCOUNT_ID_PRD}
+      roleArn: ${DNS_ROLE_ARN_PRD}
+
 auth:
   providers:
     guest: {}

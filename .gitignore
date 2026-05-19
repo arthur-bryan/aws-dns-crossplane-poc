@@ -51,6 +51,8 @@ summary/
 *.md
 !README.md
 !docs/ARCHITECTURE.md
+!PENDING_TASKS.md
+!lab/README.local.md
 
 # Local lab — Backstage scaffolded app artifacts.
 # The scaffolded app at lab/backstage/ape-lab/ has its own .gitignore that

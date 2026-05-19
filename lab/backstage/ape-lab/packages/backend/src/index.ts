@@ -27,6 +27,7 @@ backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
 backend.add(import('./modules/zone-enrichment'));
 backend.add(import('./modules/catalog-file-watcher'));
+backend.add(import('./modules/dns-routes'));
 
 backend.add(import('@backstage/plugin-permission-backend'));
 backend.add(
