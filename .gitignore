@@ -76,3 +76,7 @@ lab/backstage/backstage.log
 # AWS credentials (never commit)
 route53-credentials
 aws-credentials
+
+# draw.io autosave/backup
+*.drawio.bkp
+.$*.drawio.bkp
