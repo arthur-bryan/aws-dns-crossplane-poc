@@ -19,9 +19,9 @@ spec:
       required:
         - name
         - system
-        - zone
-        - recordName
-        - type
+        - environment
+        - zoneId
+        - existingRecord
         - owner
       properties:
         name:
@@ -45,39 +45,41 @@ spec:
             catalogFilter:
               - kind: System
 
-        zone:
+        environment:
+          title: Environment
+          type: string
+          description: Pick the environment whose AWS account owns the zone
+          ui:field: EnvironmentPicker
+          ui:options:
+            systemFieldName: system
+
+        zoneId:
           title: DNS Zone
           type: string
-          description: Select the DNS zone where the record lives
-          ui:field: EntityPicker
+          description: Live list of Route53 hosted zones in the selected environment
+          ui:field: AwsDnsZonePicker
           ui:options:
-            catalogFilter:
-              - kind: Resource
-                spec.type: Zone
+            environmentFieldName: environment
 
-        recordName:
-          title: Record Name
-          type: string
-          description: Exact record name as it exists in Route53
-          pattern: '^[a-z0-9@]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*$'
-          ui:help: "Use @ for apex records. Examples: www, api, cdn"
-
-        type:
-          title: Record Type
-          type: string
-          description: DNS record type
-          default: A
-          enum:
-            - A
-            - AAAA
-            - CNAME
-            - TXT
-            - ALIAS
-            - MX
-            - SRV
-            - NS
-            - CAA
-            - PTR
+        existingRecord:
+          title: Existing Record
+          type: object
+          description: Pick the record you want to claim. Details auto-populate.
+          ui:field: AwsDnsRecordPicker
+          ui:options:
+            environmentFieldName: environment
+            zoneFieldName: zoneId
+          properties:
+            name:    { type: string }
+            type:    { type: string }
+            ttl:     { type: integer }
+            values:  { type: array, items: { type: string } }
+            aliasTarget:
+              type: object
+              properties:
+                dnsName:              { type: string }
+                hostedZoneId:         { type: string }
+                evaluateTargetHealth: { type: boolean }
 
         owner:
           title: Claiming Team
@@ -85,267 +87,15 @@ spec:
           description: Your team will become the owner of this record
           ui:field: MyGroupsPicker
 
-      dependencies:
-        type:
-          oneOf:
-            - properties:
-                type:
-                  const: A
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: IPv4 Addresses
-                  type: array
-                  items:
-                    type: string
-                    pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}$'
-                  minItems: 1
-                  ui:help: "Example: 10.0.1.100"
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: AAAA
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: IPv6 Addresses
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-                  ui:help: "Example: 2001:0db8:85a3::8a2e:0370:7334"
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: CNAME
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: Target Hostname
-                  type: array
-                  items:
-                    type: string
-                  maxItems: 1
-                  minItems: 1
-                  ui:help: "Example: api.example.com"
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: TXT
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: Text Values
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-                  ui:help: "Example: v=spf1 include:_spf.google.com ~all"
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: MX
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: MX Records
-                  type: array
-                  description: 'Mail exchange records (format: "priority hostname")'
-                  items:
-                    type: string
-                    pattern: '^\s*[0-9]+\s+\S+\s*$'
-                  minItems: 1
-                  ui:help: 'Example: "10 mail.example.com"'
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: SRV
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: SRV Records
-                  type: array
-                  description: 'Service records (format: "priority weight port target")'
-                  items:
-                    type: string
-                    pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$'
-                  minItems: 1
-                  ui:help: 'Example: "10 60 5060 sipserver.example.com"'
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: NS
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 172800
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: Nameservers
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-                  ui:help: "Example: ns1.example.com"
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: CAA
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: CAA Records
-                  type: array
-                  description: 'Certificate authority authorization (format: "flags tag value")'
-                  items:
-                    type: string
-                    pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$'
-                  minItems: 1
-                  ui:help: '0 issue "letsencrypt.org"'
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: PTR
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
-                values:
-                  title: Target Hostname
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-                  maxItems: 1
-                  ui:help: "Example: server.example.com"
-              required:
-                - values
-
-            - properties:
-                type:
-                  const: ALIAS
-                serviceType:
-                  title: AWS Service Type
-                  type: string
-                  default: CloudFront
-                  enum:
-                    - CloudFront
-                    - ALB
-                    - NLB
-                    - S3Website
-                    - APIGateway
-                    - GlobalAccelerator
-                    - Custom
-                  enumNames:
-                    - "CloudFront Distribution"
-                    - "Application Load Balancer (ALB)"
-                    - "Network Load Balancer (NLB)"
-                    - "S3 Website Endpoint"
-                    - "API Gateway"
-                    - "Global Accelerator"
-                    - "Custom (provide zone ID manually)"
-                dnsName:
-                  title: Target DNS Name
-                  type: string
-                  description: DNS name of the AWS resource
-                  ui:help: "Example: d111111abcdef8.cloudfront.net"
-                evaluateTargetHealth:
-                  title: Evaluate Target Health
-                  type: boolean
-                  default: false
-              required:
-                - serviceType
-                - dnsName
-              dependencies:
-                serviceType:
-                  oneOf:
-                    - properties:
-                        serviceType:
-                          enum:
-                            - CloudFront
-                            - GlobalAccelerator
-                            - S3Website
-                            - APIGateway
-                    - properties:
-                        serviceType:
-                          const: Custom
-                        customZoneId:
-                          title: Custom Hosted Zone ID
-                          type: string
-                          description: Hosted zone ID for custom alias target
-                          pattern: "^Z[A-Z0-9]+$"
-                          ui:help: "Example: Z2FDTNDATAQYW2"
-                      required:
-                        - customZoneId
-                    - properties:
-                        serviceType:
-                          enum:
-                            - ALB
-                            - NLB
-
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
     - $yaml: ../../../shared/entities/fetch-system.yaml
-
-    - id: fetchZone
-      name: Fetch Zone Entity
-      action: catalog:fetch
-      input:
-        entityRef: ${{ parameters.zone }}
-        defaultKind: Resource
 
     - id: writeFile
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/dev/record-${{ parameters.name }}-dev.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ parameters.name }}-${{ parameters.environment }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
@@ -362,23 +112,21 @@ spec:
             cloud: aws
             owner: ${{ parameters.owner }}
             system: ${{ parameters.system }}
-            zone: ${{ parameters.zone }}
-            recordName: ${{ parameters.recordName }}
-            recordType: ${{ parameters.type }}
-            {%- if parameters.type != 'ALIAS' %}
-            ttl: ${{ parameters.ttl }}
+            environment: ${{ parameters.environment }}
+            zoneId: ${{ parameters.zoneId }}
+            recordName: ${{ parameters.existingRecord.name }}
+            recordType: ${{ parameters.existingRecord.type }}
+            {%- if parameters.existingRecord.aliasTarget %}
+            aliasTarget:
+              dnsName: ${{ parameters.existingRecord.aliasTarget.dnsName }}
+              hostedZoneId: ${{ parameters.existingRecord.aliasTarget.hostedZoneId }}
+              evaluateTargetHealth: ${{ parameters.existingRecord.aliasTarget.evaluateTargetHealth }}
+            {%- else %}
+            ttl: ${{ parameters.existingRecord.ttl }}
             values:
-            {%- for value in parameters.values %}
+            {%- for value in parameters.existingRecord.values %}
               - ${{ value }}
             {%- endfor %}
-            {%- else %}
-            aliasTarget:
-              serviceType: ${{ parameters.serviceType }}
-              dnsName: ${{ parameters.dnsName }}
-              {%- if parameters.serviceType == 'Custom' %}
-              hostedZoneId: ${{ parameters.customZoneId }}
-              {%- endif %}
-              evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
             {%- endif %}
 
     - $yaml: ../../../shared/entities/commit.yaml

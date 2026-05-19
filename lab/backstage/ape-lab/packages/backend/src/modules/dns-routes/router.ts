@@ -21,18 +21,24 @@ function getAccountConfig(
   const accountId = config.getString(
     `dns.accounts.${environment}.accountId`,
   );
-  const roleArn = config.getString(
-    `dns.accounts.${environment}.roleArn`,
-  );
+  // roleArn is optional: when empty, the backend uses its default credential
+  // chain (useful for the env whose account IS the backend's own account, so
+  // no cross-account AssumeRole is needed).
+  const roleArn =
+    config.getOptionalString(`dns.accounts.${environment}.roleArn`) ?? '';
   return { accountId, roleArn };
 }
 
 function makeRoute53Client(roleArn: string): Route53Client {
   return new Route53Client({
     region: 'us-east-1',
-    credentials: fromTemporaryCredentials({
-      params: { RoleArn: roleArn },
-    }),
+    ...(roleArn
+      ? {
+          credentials: fromTemporaryCredentials({
+            params: { RoleArn: roleArn },
+          }),
+        }
+      : {}),
   });
 }
 
@@ -42,7 +48,7 @@ async function listAllZones(client: Route53Client): Promise<HostedZone[]> {
 
   do {
     const resp = await client.send(
-      new ListHostedZonesCommand({ Marker: marker, MaxItems: '100' }),
+      new ListHostedZonesCommand({ Marker: marker, MaxItems: 100 }),
     );
     zones.push(...(resp.HostedZones ?? []));
     marker = resp.IsTruncated ? resp.NextMarker : undefined;
@@ -63,7 +69,7 @@ async function listAllRecords(
     const resp = await client.send(
       new ListResourceRecordSetsCommand({
         HostedZoneId: zoneId,
-        MaxItems: '300',
+        MaxItems: 300,
         StartRecordName: nextName,
         StartRecordType: nextType as any,
       }),
