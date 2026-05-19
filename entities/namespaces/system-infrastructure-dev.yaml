@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: system-infrastructure-dev
+  labels:
+    dock.tech/system: infrastructure
+    dock.tech/environment: dev
