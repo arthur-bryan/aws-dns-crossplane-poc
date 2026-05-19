@@ -1,0 +1,33 @@
+name: Scaffolder auto-merge
+
+# Every PR opened by the Backstage scaffolder has a branch name that starts
+# with `scaffolder/`. We enable GitHub's native auto-merge on those PRs
+# immediately, so they merge themselves the moment their required status
+# checks turn green. No human in the loop, no e2e harness wrapper, no
+# `autoMerge: true` per-template (the upstream publish:github:pull-request
+# action does not support that input).
+#
+# Required repo setting: `allow_auto_merge=true` (enabled via gh api PATCH).
+# If a PR has no required checks configured, auto-merge merges immediately.
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    if: startsWith(github.event.pull_request.head.ref, 'scaffolder/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge on this PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+          echo "Enabling auto-merge for $PR_URL"
+          gh pr merge "$PR_URL" --auto --merge --delete-branch
