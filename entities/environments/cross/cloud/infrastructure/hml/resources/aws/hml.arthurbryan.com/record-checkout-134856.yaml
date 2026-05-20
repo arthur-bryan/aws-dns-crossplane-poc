@@ -5,8 +5,7 @@ metadata:
   name: record-checkout-134856.hml.arthurbryan.com
   namespace: system-infrastructure-hml
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"A","ttl":300,"values":["10.7.8.9"],"routingPolicy":"simple","import":{"existing":true}}'
-    dock.tech/import-existing: "true"
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"A","ttl":3600,"values":["10.0.0.10"],"routingPolicy":"simple","import":{"existing":true}}'
 spec:
   name: record-checkout-134856.hml.arthurbryan.com
   domain: cross
@@ -20,8 +19,6 @@ spec:
   zoneName: hml.arthurbryan.com
   recordName: "checkout-134856"
   type: A
-  ttl: 300
+  ttl: 3600
   values:
-    - 10.7.8.9
-  import:
-    existing: true
+    - 10.0.0.10
