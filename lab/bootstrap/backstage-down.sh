@@ -10,6 +10,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LAB_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PIDFILE="$LAB_DIR/backstage/backstage.pid"
+GP_PIDFILE="$LAB_DIR/backstage/git-pull.pid"
 
 stopped_any=0
 
@@ -28,6 +29,13 @@ if [ -f "$PIDFILE" ]; then
   PID="$(cat "$PIDFILE" 2>/dev/null || true)"
   kill_tree "$PID"
   rm -f "$PIDFILE"
+fi
+
+# 1b. git-pull poller PID file
+if [ -f "$GP_PIDFILE" ]; then
+  GPPID="$(cat "$GP_PIDFILE" 2>/dev/null || true)"
+  kill_tree "$GPPID"
+  rm -f "$GP_PIDFILE"
 fi
 
 # 2. Port-based sweep (covers orphans + children). Needs lsof (always installed

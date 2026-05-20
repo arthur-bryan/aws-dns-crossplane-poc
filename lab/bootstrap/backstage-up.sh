@@ -113,3 +113,35 @@ echo "$BSPID" > "$PIDFILE"
 echo ">>> backstage started (pid $BSPID)"
 echo ">>> log: tail -f $LOGFILE"
 echo ">>> http://localhost:3000 ready in ~60-90s (cold start, Rspack bundle)"
+
+# ---- git-pull poller ------------------------------------------------------
+# Backstage's catalog file-watcher only sees the local filesystem. To keep
+# the catalog in sync with PRs that GitHub merges (via the scaffolder
+# auto-merge workflow), poll the remote and fast-forward the local clone.
+# No user/admin action needed when scaffolder PRs land.
+REPO_ROOT="$(cd "$LAB_DIR/.." && pwd)"
+GP_PIDFILE="$LAB_DIR/backstage/git-pull.pid"
+GP_LOGFILE="$LAB_DIR/backstage/git-pull.log"
+GP_INTERVAL="${GIT_PULL_INTERVAL:-30}"
+
+if [ -f "$GP_PIDFILE" ] && kill -0 "$(cat "$GP_PIDFILE")" 2>/dev/null; then
+  echo ">>> git-pull poller already running (pid $(cat "$GP_PIDFILE"))"
+else
+  : > "$GP_LOGFILE"
+  # Quiet, fast-forward-only. If the user has uncommitted work this will
+  # fail per cycle without disrupting anything else. Author identity is set
+  # so any internal merge bookkeeping doesn't trip on an empty global config.
+  nohup bash -c "
+    while true; do
+      ts=\$(date -u +%FT%TZ)
+      out=\$(git -c user.name='Arthur Bryan' -c user.email='arthurbryan2030@gmail.com' \
+              -C '$REPO_ROOT' pull --ff-only --quiet 2>&1)
+      [ -n \"\$out\" ] && echo \"\$ts \$out\"
+      sleep $GP_INTERVAL
+    done
+  " </dev/null >>"$GP_LOGFILE" 2>&1 &
+  GPPID=$!
+  disown "$GPPID" 2>/dev/null || true
+  echo "$GPPID" > "$GP_PIDFILE"
+  echo ">>> git-pull poller started (pid $GPPID, every ${GP_INTERVAL}s) — log: $GP_LOGFILE"
+fi
