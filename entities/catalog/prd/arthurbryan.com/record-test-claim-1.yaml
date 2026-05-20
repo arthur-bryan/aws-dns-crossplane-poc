@@ -1,0 +1,39 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-test-claim-1.arthurbryan.com
+  namespace: system-infrastructure-prd
+  title: test-claim-1.arthurbryan.com
+  description: "Claimed A record test-claim-1.arthurbryan.com (prd)"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-test-claim-1.arthurbryan.com
+    dock.tech/zone-name: arthurbryan.com
+    dock.tech/zone-id: Z03010981ALJFZB4QLU8W
+    dock.tech/record-name: "test-claim-1"
+    dock.tech/record-type: A
+    dock.tech/record-fqdn: test-claim-1.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: prd
+    dock.tech/aws-account-id: "597230762851"
+    dock.tech/aws-account-name: prd-account
+    dock.tech/managed-by: scaffolder
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"test-claim-1","type":"A","ttl":300,"values":["192.0.2.11"],"routingPolicy":"simple"}'
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22test-claim-1%22%2C%22type%22%3A%22A%22%2C%22ttl%22%3A300%2C%22values%22%3A%5B%22192.0.2.11%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-test-claim-1.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - a
+    - prd
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-arthurbryan.com
