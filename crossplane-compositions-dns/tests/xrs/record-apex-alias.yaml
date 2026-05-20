@@ -1,6 +1,6 @@
 ---
 # Apex ALIAS (zone-root A record pointing at a CloudFront distribution).
-# AWS Console equivalent: "Create record" with the Name field blank.
+# Use empty recordName to address the zone apex.
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
