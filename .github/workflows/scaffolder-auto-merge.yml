@@ -20,7 +20,17 @@ permissions:
 
 jobs:
   enable-auto-merge:
-    if: startsWith(github.event.pull_request.head.ref, 'scaffolder/')
+    # Auto-merge every scaffolder PR EXCEPT claims. A claim is a transfer
+    # of ownership of an existing AWS record into platform management --
+    # we want a human to review the proposed owner group before merging.
+    # Branch shapes:
+    #   create:  scaffolder/record-<name>-<env>-<millis>
+    #   edit:    scaffolder/record-edit-<name>-<env>-<millis>
+    #   zone:    scaffolder/zone-<name>-<env>-<millis>
+    #   claim:   scaffolder/record-claim-<name>-<env>-<millis>  <-- excluded
+    if: >
+      startsWith(github.event.pull_request.head.ref, 'scaffolder/') &&
+      !startsWith(github.event.pull_request.head.ref, 'scaffolder/record-claim-')
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge on this PR

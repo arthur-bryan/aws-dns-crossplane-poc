@@ -23,6 +23,7 @@ spec:
         - environment
         - zoneId
         - existingRecord
+        - owner
       properties:
         environment:
           title: Environment
@@ -55,6 +56,11 @@ spec:
                 dnsName:              { type: string }
                 hostedZoneId:         { type: string }
                 evaluateTargetHealth: { type: boolean }
+        owner:
+          title: Owner
+          type: string
+          description: One of your groups will own this record (controls who can view/edit). Claims require manual approval before merge.
+          ui:field: MyGroupsPicker
 
   steps:
     - id: deriveAccount
@@ -88,6 +94,47 @@ spec:
               : $name
           )
 
+    - id: computeRecordName
+      name: Compute zone-relative record name
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          fqdn: ${{ parameters.existingRecord.name }}
+          zoneName: ${{ steps.deriveZoneName.output.result }}
+        # Strip trailing dot and the ".<zoneName>" suffix to leave just the
+        # record name (e.g. "checkout-1.hml.arthurbryan.com." -> "checkout-1").
+        # Apex records (where the FQDN equals the zone name) return "".
+        expression: >-
+          (
+            $f := $replace(fqdn, /\.$/, "");
+            $f = zoneName ? "" : $replace($f, "." & zoneName, "")
+          )
+
+    - id: editFormData
+      name: Build edit form data for the catalog Resource entity
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          env: ${{ parameters.environment }}
+          zoneName: ${{ steps.deriveZoneName.output.result }}
+          recordName: ${{ steps.computeRecordName.output.result }}
+          recordType: ${{ parameters.existingRecord.type }}
+          ttl: ${{ parameters.existingRecord.ttl }}
+          values: ${{ parameters.existingRecord.values }}
+        # Shape the JSON the way aws-dns-record-edit expects, so clicking
+        # the pencil in the catalog opens that template's form pre-filled
+        # with the record's current state.
+        expression: >-
+          {
+            "zone": "resource:system-infrastructure-" & env & "/zone-" & zoneName,
+            "recordName": recordName,
+            "type": recordType,
+            "ttl": ttl,
+            "values": values,
+            "routingPolicy": "simple",
+            "import": { "existing": true }
+          }
+
     - id: branchSuffix
       name: Compute unique branch suffix
       action: roadiehq:utils:jsonata
@@ -99,20 +146,24 @@ spec:
       name: Write Record XR manifest with import.existing=true
       action: roadiehq:utils:fs:write
       input:
+        # Same path convention as the create template so the pencil-edit
+        # flow finds and overwrites this file in place.
         path: >-
-          entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml
+          entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
         content: |
           ---
           apiVersion: dock.tech/v1
           kind: Record
           metadata:
-            name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+            name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
             namespace: system-infrastructure-${{ parameters.environment }}
             annotations:
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              # Stored in the record-edit-shape so the edit template can read
+              # it back via dock.tech/scaffolder-parameters and pre-fill.
+              dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
               dock.tech/import-existing: "true"
           spec:
-            name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+            name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
             domain: cross
             subdomain: cloud
             system: infrastructure
@@ -122,7 +173,7 @@ spec:
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
             zoneId: ${{ parameters.zoneId }}
             zoneName: ${{ steps.deriveZoneName.output.result }}
-            recordName: "${{ parameters.existingRecord.name | replace('.' + steps.deriveZoneName.output.result + '.', '') | replace('.' + steps.deriveZoneName.output.result, '') }}"
+            recordName: "${{ steps.computeRecordName.output.result }}"
             type: ${{ parameters.existingRecord.type }}
             {%- if parameters.existingRecord.aliasTarget %}
             aliasTarget:
@@ -144,23 +195,25 @@ spec:
       name: Write Backstage Resource entity for the claimed record
       action: roadiehq:utils:fs:write
       input:
+        # Same path + naming as the create template so the pencil-edit
+        # action and the rest of the catalog tooling work uniformly.
         path: >-
-          entities/catalog/${{ parameters.environment }}/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml
+          entities/catalog/${{ parameters.environment }}/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
         content: |
           ---
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+            name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
             namespace: system-infrastructure-${{ parameters.environment }}
             title: ${{ parameters.existingRecord.name }}
             description: "Claimed ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
             annotations:
               dock.tech/xr-kind: Record
-              dock.tech/xr-name: claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}
+              dock.tech/xr-name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
               dock.tech/zone-name: ${{ steps.deriveZoneName.output.result }}
               dock.tech/zone-id: ${{ parameters.zoneId }}
-              dock.tech/record-name: "${{ parameters.existingRecord.name | replace('.' + steps.deriveZoneName.output.result + '.', '') | replace('.' + steps.deriveZoneName.output.result, '') }}"
+              dock.tech/record-name: "${{ steps.computeRecordName.output.result }}"
               dock.tech/record-type: ${{ parameters.existingRecord.type }}
               dock.tech/record-fqdn: ${{ parameters.existingRecord.name }}
               dock.tech/domain: cross
@@ -171,8 +224,10 @@ spec:
               dock.tech/aws-account-name: ${{ steps.deriveAccount.output.result.accountName }}
               dock.tech/managed-by: scaffolder
               dock.tech/import-existing: "true"
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
-              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml"
+              # Stored in record-edit-shape so the edit template can hydrate.
+              dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
+              backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=${{ steps.editFormData.output.result | dump | urlencode }}
+              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml"
             tags:
               - aws
               - dns
@@ -183,11 +238,11 @@ spec:
               - ${{ parameters.environment }}
             links:
               - title: Remove platform claim (opens GitHub delete UI; AWS record is preserved)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}.yaml
+                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
                 icon: delete
           spec:
             type: aws-dns-record
-            owner: group:default/infrastructure
+            owner: ${{ parameters.owner }}
             system: infrastructure
             dependsOn:
               - resource:default/zone-${{ steps.deriveZoneName.output.result }}
@@ -201,15 +256,26 @@ spec:
         targetBranchName: feature/ape-platform-alignment
         title: "chore(dns): claim existing ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
         description: |
-          Claim PR — adopts an existing AWS Route53 record into platform
-          management with `spec.import.existing: true`. The platform will
-          observe-and-update it; no Create or Delete is issued against
-          AWS unless the user explicitly removes the XR file later.
+          ⚠️  This is a **claim** PR — it transfers ownership of an existing
+          AWS record into platform management. Unlike create / edit PRs,
+          claims are NOT auto-merged. A human must review and merge.
+
+          What to check before merging:
+            - the requester (PR author) is in the proposed owner group
+            - the record really belongs to that team
+            - the record is not already claimed (no duplicate XR for the
+              same name + type in the cluster)
+
+          After merge: the platform adopts the record with
+          `managementPolicies=[Observe, Update]`. AWS state is preserved
+          byte-for-byte; the platform will only push changes from
+          subsequent edits.
 
           Record: ${{ parameters.existingRecord.name }}
           Type: ${{ parameters.existingRecord.type }}
           Zone: ${{ steps.deriveZoneName.output.result }} (${{ parameters.zoneId }})
           Account: ${{ steps.deriveAccount.output.result.accountName }} (${{ steps.deriveAccount.output.result.accountId }})
+          Owner: ${{ parameters.owner }}
 
   output:
     links:
