@@ -5,7 +5,7 @@ metadata:
   name: record-checkout-134856.hml.arthurbryan.com
   namespace: system-infrastructure-hml
   title: checkout-134856.hml.arthurbryan.com
-  description: "Claimed A record checkout-134856.hml.arthurbryan.com (hml)"
+  description: "DNS A record checkout-134856.hml.arthurbryan.com (hml)"
   annotations:
     dock.tech/xr-kind: Record
     dock.tech/xr-name: record-checkout-134856.hml.arthurbryan.com
@@ -18,23 +18,19 @@ metadata:
     dock.tech/subdomain: cloud
     dock.tech/system: infrastructure
     dock.tech/environment: hml
-    dock.tech/aws-account-id: "382598791794"
-    dock.tech/aws-account-name: hml-account
     dock.tech/managed-by: scaffolder
-    dock.tech/import-existing: "true"
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"A","ttl":300,"values":["10.7.8.9"],"routingPolicy":"simple","import":{"existing":true}}'
-    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-hml%2Fzone-hml.arthurbryan.com%22%2C%22recordName%22%3A%22checkout-134856%22%2C%22type%22%3A%22A%22%2C%22ttl%22%3A300%2C%22values%22%3A%5B%2210.7.8.9%22%5D%2C%22routingPolicy%22%3A%22simple%22%2C%22import%22%3A%7B%22existing%22%3Atrue%7D%7D
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"A","ttl":3600,"values":["10.0.0.10"],"routingPolicy":"simple","import":{"existing":true}}'
+    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-hml%2Fzone-hml.arthurbryan.com%22%2C%22recordName%22%3A%22checkout-134856%22%2C%22type%22%3A%22A%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/record-checkout-134856.yaml"
   tags:
     - aws
     - dns
     - route53
     - record
-    - claimed
     - a
     - hml
   links:
-    - title: Remove platform claim (opens GitHub delete UI; AWS record is preserved)
+    - title: Delete record (opens GitHub delete UI)
       url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/record-checkout-134856.yaml
       icon: delete
 spec:
