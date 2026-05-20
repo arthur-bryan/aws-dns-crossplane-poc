@@ -20,7 +20,6 @@ spec:
         - environment
         - zoneId
         - existingRecord
-        - owner
       properties:
         environment:
           title: Environment
@@ -51,12 +50,21 @@ spec:
                 dnsName:              { type: string }
                 hostedZoneId:         { type: string }
                 evaluateTargetHealth: { type: boolean }
-        owner:
-          title: Owner
-          type: string
-          ui:field: MyGroupsPicker
 
   steps:
+    - id: deriveOwner
+      name: Derive owner from requester's group membership
+      action: roadiehq:utils:jsonata
+      input:
+        data: ${{ user.entity }}
+        expression: >-
+          (
+            $g := spec.memberOf[0];
+            $g
+              ? ($contains($g, "/") ? $g : "group:default/" & $g)
+              : "group:default/infrastructure"
+          )
+
     - id: deriveAccount
       name: Derive account from environment
       action: roadiehq:utils:jsonata
@@ -208,7 +216,7 @@ spec:
               - ${{ parameters.environment }}
           spec:
             type: aws-dns-record
-            owner: ${{ parameters.owner }}
+            owner: ${{ steps.deriveOwner.output.result }}
             system: infrastructure
             dependsOn:
               - resource:default/zone-${{ steps.deriveZoneName.output.result }}
@@ -226,7 +234,7 @@ spec:
 
           Record: ${{ parameters.existingRecord.name }} (${{ parameters.existingRecord.type }})
           Environment: ${{ parameters.environment }}
-          Owner: ${{ parameters.owner }}
+          Owner: ${{ steps.deriveOwner.output.result }}
 
   output:
     links:
