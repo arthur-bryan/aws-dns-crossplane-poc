@@ -25,7 +25,7 @@ apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: infrastructure
-  description: Platform infrastructure — owns shared DNS, networking, and related resources
+  description: Infrastructure Services — DNS, SFTP, email, Active Directory, and other shared platforms
   annotations:
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
@@ -90,7 +90,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Group
 metadata:
   name: infrastructure
-  description: Infrastructure team — owns platform DNS, networking, and shared AWS resources
+  description: Infrastructure Services team — owns the shared services the organization runs on (DNS, SFTP, email, Active Directory, and related platforms)
 spec:
   type: team
   children: []
