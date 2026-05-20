@@ -1,0 +1,45 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: record-api-frontend-200554.hml.arthurbryan.com
+  namespace: system-infrastructure-hml
+  title: api-frontend-200554.hml.arthurbryan.com
+  description: "Claimed A record api-frontend-200554.hml.arthurbryan.com (hml)"
+  annotations:
+    dock.tech/xr-kind: Record
+    dock.tech/xr-name: record-api-frontend-200554.hml.arthurbryan.com
+    dock.tech/zone-name: hml.arthurbryan.com
+    dock.tech/zone-id: Z02234832G6QGRGKEEUMU
+    dock.tech/record-name: "api-frontend-200554"
+    dock.tech/record-type: A
+    dock.tech/record-fqdn: api-frontend-200554.hml.arthurbryan.com
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: infrastructure
+    dock.tech/environment: hml
+    dock.tech/aws-account-id: "382598791794"
+    dock.tech/aws-account-name: hml-account
+    dock.tech/managed-by: scaffolder
+    dock.tech/import-existing: "true"
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"api-frontend-200554","type":"A","ttl":900,"values":["10.99.88.77"],"routingPolicy":"simple","import":{"existing":true}}'
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-hml%2Fzone-hml.arthurbryan.com%22%2C%22recordName%22%3A%22api-frontend-200554%22%2C%22type%22%3A%22A%22%2C%22ttl%22%3A900%2C%22values%22%3A%5B%2210.99.88.77%22%5D%2C%22routingPolicy%22%3A%22simple%22%2C%22import%22%3A%7B%22existing%22%3Atrue%7D%7D
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/record-api-frontend-200554.yaml"
+  tags:
+    - aws
+    - dns
+    - route53
+    - record
+    - claimed
+    - a
+    - hml
+  links:
+    - title: Remove platform claim (opens GitHub delete UI; AWS record is preserved)
+      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/record-api-frontend-200554.yaml
+      icon: delete
+spec:
+  type: aws-dns-record
+  owner: group:default/infrastructure
+  system: infrastructure
+  dependsOn:
+    - resource:default/zone-hml.arthurbryan.com
