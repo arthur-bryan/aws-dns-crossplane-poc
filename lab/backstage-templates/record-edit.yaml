@@ -226,6 +226,19 @@ spec:
         expression: '$'
         as: object
 
+    - id: cleanParams
+      name: Drop legacy import.existing flag from merged params
+      action: roadiehq:utils:jsonata
+      input:
+        data: ${{ steps.mergeParams.output.result }}
+        # The 'import.existing' flag was the old way of declaring an
+        # adopted record. We no longer model claims that way (the
+        # composition gets its external-name from zoneId+fqdn+type and
+        # the MR always runs with full management policies), so strip it
+        # before persisting back into the catalog so future edits don't
+        # round-trip it.
+        expression: '$sift($, function($v, $k) { $k != "import" })'
+
     - id: writeXR
       name: Write Record XR manifest
       action: roadiehq:utils:fs:write
@@ -246,7 +259,7 @@ spec:
             name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
             namespace: system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
             annotations:
-              dock.tech/scaffolder-parameters: '${{ steps.mergeParams.output.result | dump }}'
+              dock.tech/scaffolder-parameters: '${{ steps.cleanParams.output.result | dump }}'
               {%- if steps.snapshotOriginal.output.result.type != parameters.type or steps.snapshotOriginal.output.result.routingPolicy != 'simple' %}
               argocd.argoproj.io/sync-options: Force=true,Replace=true
               {%- endif %}
@@ -355,9 +368,16 @@ spec:
               dock.tech/subdomain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}
               dock.tech/system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
               dock.tech/environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
+              dock.tech/aws-account-id: "${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-id'] }}"
+              dock.tech/aws-account-name: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
               dock.tech/managed-by: scaffolder
-              dock.tech/scaffolder-parameters: '${{ steps.mergeParams.output.result | dump }}'
-              backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=${{ {"zone": parameters.zone, "recordName": parameters.recordName, "type": parameters.type} | dump | urlencode }}
+              dock.tech/scaffolder-parameters: '${{ steps.cleanParams.output.result | dump }}'
+              # Encode the full merged params (TTL, values, routing policy,
+              # set identifier, etc.) so the pencil-edit button opens the
+              # form pre-filled with the record's current state. Encoding
+              # only {zone, recordName, type} would force the user to
+              # re-enter every other field on every edit.
+              backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=${{ steps.cleanParams.output.result | dump | urlencode }}
               backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml"
             tags:
               - aws
@@ -366,10 +386,6 @@ spec:
               - record
               - ${{ parameters.type | lower }}
               - ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
-            links:
-              - title: Delete record (opens GitHub delete UI)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
-                icon: delete
           spec:
             type: aws-dns-record
             owner: ${{ steps.fetchZone.output.entity.spec.owner }}

@@ -208,10 +208,6 @@ spec:
               - zone
               - ${{ parameters.environment }}
               - ${{ 'private' if parameters.private else 'public' }}
-            links:
-              - title: Delete zone (opens GitHub delete UI)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml
-                icon: delete
           spec:
             type: aws-dns-zone
             owner: ${{ steps.fetchParent.output.entity.spec.owner }}

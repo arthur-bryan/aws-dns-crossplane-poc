@@ -5,8 +5,10 @@ metadata:
   title: Claim Existing AWS Route53 DNS Record
   description: >
     Adopt an existing Route53 record into platform management. The platform
-    will observe-and-update the record (managementPolicies=[Observe,Update])
-    without recreating it. Deleting the XR leaves the AWS record intact.
+    finds the record by its zone + name + type, takes over its lifecycle,
+    and from then on treats it like any other platform-managed record
+    (no UI delete button; removing the XR is an admin-level operation
+    that DOES propagate the deletion to Route53).
   labels:
     category: resources
   tags:
@@ -123,7 +125,10 @@ spec:
           values: ${{ parameters.existingRecord.values }}
         # Shape the JSON the way aws-dns-record-edit expects, so clicking
         # the pencil in the catalog opens that template's form pre-filled
-        # with the record's current state.
+        # with the record's current state. No 'import' flag: the
+        # composition adopts the existing AWS record via its external-name
+        # (zoneId + fqdn + type) regardless, and we want kubectl-delete
+        # of the XR to cascade to Route53.
         expression: >-
           {
             "zone": "resource:system-infrastructure-" & env & "/zone-" & zoneName,
@@ -131,8 +136,7 @@ spec:
             "type": recordType,
             "ttl": ttl,
             "values": values,
-            "routingPolicy": "simple",
-            "import": { "existing": true }
+            "routingPolicy": "simple"
           }
 
     - id: branchSuffix
@@ -143,7 +147,7 @@ spec:
         expression: '$string($millis())'
 
     - id: writeXR
-      name: Write Record XR manifest with import.existing=true
+      name: Write Record XR manifest
       action: roadiehq:utils:fs:write
       input:
         # Same path convention as the create template so the pencil-edit
@@ -161,7 +165,6 @@ spec:
               # Stored in the record-edit-shape so the edit template can read
               # it back via dock.tech/scaffolder-parameters and pre-fill.
               dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
-              dock.tech/import-existing: "true"
           spec:
             name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
             domain: cross
@@ -188,8 +191,6 @@ spec:
               - ${{ v }}
             {%- endfor %}
             {%- endif %}
-            import:
-              existing: true
 
     - id: writeCatalogEntity
       name: Write Backstage Resource entity for the claimed record
@@ -223,7 +224,6 @@ spec:
               dock.tech/aws-account-id: "${{ steps.deriveAccount.output.result.accountId }}"
               dock.tech/aws-account-name: ${{ steps.deriveAccount.output.result.accountName }}
               dock.tech/managed-by: scaffolder
-              dock.tech/import-existing: "true"
               # Stored in record-edit-shape so the edit template can hydrate.
               dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
               backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=${{ steps.editFormData.output.result | dump | urlencode }}
@@ -233,13 +233,8 @@ spec:
               - dns
               - route53
               - record
-              - claimed
               - ${{ parameters.existingRecord.type | lower }}
               - ${{ parameters.environment }}
-            links:
-              - title: Remove platform claim (opens GitHub delete UI; AWS record is preserved)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
-                icon: delete
           spec:
             type: aws-dns-record
             owner: ${{ parameters.owner }}
@@ -256,9 +251,9 @@ spec:
         targetBranchName: feature/ape-platform-alignment
         title: "chore(dns): claim existing ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
         description: |
-          ⚠️  This is a **claim** PR — it transfers ownership of an existing
-          AWS record into platform management. Unlike create / edit PRs,
-          claims are NOT auto-merged. A human must review and merge.
+          This is a **claim** PR — it brings an existing AWS Route53 record
+          under platform management. Unlike create / edit PRs, claims are
+          NOT auto-merged. A human must review and merge.
 
           What to check before merging:
             - the requester (PR author) is in the proposed owner group
@@ -266,10 +261,12 @@ spec:
             - the record is not already claimed (no duplicate XR for the
               same name + type in the cluster)
 
-          After merge: the platform adopts the record with
-          `managementPolicies=[Observe, Update]`. AWS state is preserved
-          byte-for-byte; the platform will only push changes from
-          subsequent edits.
+          After merge: the platform adopts the record via its external-name
+          (`<zoneId>_<fqdn>_<type>`) and from then on runs it with full
+          management policies. The current AWS state (TTL, values, routing
+          policy) is preserved on adoption; subsequent edits propagate
+          through the platform; and removing the XR with kubectl WILL
+          delete the Route53 record (admin-level action, no UI button).
 
           Record: ${{ parameters.existingRecord.name }}
           Type: ${{ parameters.existingRecord.type }}

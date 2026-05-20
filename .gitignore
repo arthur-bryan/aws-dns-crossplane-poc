@@ -80,3 +80,5 @@ aws-credentials
 # draw.io autosave/backup
 *.drawio.bkp
 .$*.drawio.bkp
+lab/backstage/git-pull.pid
+lab/backstage/git-pull.log

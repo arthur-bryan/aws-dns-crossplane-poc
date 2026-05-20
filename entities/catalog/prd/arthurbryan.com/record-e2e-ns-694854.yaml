@@ -20,7 +20,7 @@ metadata:
     dock.tech/environment: prd
     dock.tech/managed-by: scaffolder
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-ns-694854","type":"NS","ttl":86400,"values":["ns1.example.com","ns2.example.com","ns3.example.com"],"routingPolicy":"simple"}'
-    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-ns-694854%22%2C%22type%22%3A%22NS%22%7D
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-ns-694854%22%2C%22type%22%3A%22NS%22%2C%22ttl%22%3A86400%2C%22values%22%3A%5B%22ns1.example.com%22%2C%22ns2.example.com%22%2C%22ns3.example.com%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-ns-694854.yaml"
   tags:
     - aws
@@ -29,10 +29,6 @@ metadata:
     - record
     - ns
     - prd
-  links:
-    - title: Delete record (opens GitHub delete UI)
-      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-ns-694854.yaml
-      icon: delete
 spec:
   type: aws-dns-record
   owner: group:default/infrastructure

@@ -29,10 +29,6 @@ metadata:
     - zone
     - hml
     - public
-  links:
-    - title: Delete zone (opens GitHub delete UI)
-      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/zone.yaml
-      icon: delete
 spec:
   type: aws-dns-zone
   owner: group:default/infrastructure

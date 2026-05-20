@@ -5,8 +5,7 @@ metadata:
   name: record-web-app.hml.arthurbryan.com
   namespace: system-infrastructure-hml
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"web-app","type":"A","ttl":600,"values":["10.50.60.70"],"routingPolicy":"simple","import":{"existing":true}}'
-    dock.tech/import-existing: "true"
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"web-app","type":"A","ttl":600,"values":["10.50.60.70"],"routingPolicy":"simple"}'
 spec:
   name: record-web-app.hml.arthurbryan.com
   domain: cross
@@ -23,5 +22,3 @@ spec:
   ttl: 600
   values:
     - 10.50.60.70
-  import:
-    existing: true

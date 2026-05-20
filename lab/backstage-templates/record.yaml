@@ -500,10 +500,6 @@ spec:
               - record
               - ${{ parameters.type | lower }}
               - ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
-            links:
-              - title: Delete record (opens GitHub delete UI)
-                url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
-                icon: delete
           spec:
             type: aws-dns-record
             owner: ${{ steps.fetchZone.output.entity.spec.owner }}

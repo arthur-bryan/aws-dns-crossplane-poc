@@ -20,7 +20,7 @@ metadata:
     dock.tech/environment: prd
     dock.tech/managed-by: scaffolder
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-alias-custom-694854","type":"ALIAS","routingPolicy":"simple","serviceType":"Custom","dnsName":"d222-edit.cloudfront.net","evaluateTargetHealth":false,"customZoneId":"Z2FDTNDATAQYW2"}'
-    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-alias-custom-694854%22%2C%22type%22%3A%22ALIAS%22%7D
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-alias-custom-694854%22%2C%22type%22%3A%22ALIAS%22%2C%22routingPolicy%22%3A%22simple%22%2C%22serviceType%22%3A%22Custom%22%2C%22dnsName%22%3A%22d222-edit.cloudfront.net%22%2C%22evaluateTargetHealth%22%3Afalse%2C%22customZoneId%22%3A%22Z2FDTNDATAQYW2%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-alias-custom-694854.yaml"
   tags:
     - aws
@@ -29,10 +29,6 @@ metadata:
     - record
     - alias
     - prd
-  links:
-    - title: Delete record (opens GitHub delete UI)
-      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-alias-custom-694854.yaml
-      icon: delete
 spec:
   type: aws-dns-record
   owner: group:default/infrastructure

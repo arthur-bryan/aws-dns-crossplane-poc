@@ -5,8 +5,7 @@ metadata:
   name: record-api-frontend-200554.hml.arthurbryan.com
   namespace: system-infrastructure-hml
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"api-frontend-200554","type":"A","ttl":900,"values":["10.99.88.77"],"routingPolicy":"simple","import":{"existing":true}}'
-    dock.tech/import-existing: "true"
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"api-frontend-200554","type":"A","ttl":900,"values":["10.99.88.77"],"routingPolicy":"simple"}'
 spec:
   name: record-api-frontend-200554.hml.arthurbryan.com
   domain: cross
@@ -23,5 +22,3 @@ spec:
   ttl: 900
   values:
     - 10.99.88.77
-  import:
-    existing: true
