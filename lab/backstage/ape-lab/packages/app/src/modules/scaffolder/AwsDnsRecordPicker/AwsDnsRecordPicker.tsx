@@ -6,9 +6,10 @@ import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { useEffect } from 'react';
 import useAsync from 'react-use/esm/useAsync';
-import type { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
 
-export type DnsRecord = {
+import { AwsDnsRecordPickerProps } from './schema';
+
+type DnsRecord = {
   name: string;
   type: string;
   ttl?: number;
@@ -22,21 +23,21 @@ export type DnsRecord = {
   weight?: number;
 };
 
-export const AwsDnsRecordPicker = (
-  props: FieldExtensionComponentProps<DnsRecord | undefined>,
-) => {
+export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   const { onChange, formData, formContext, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } = props;
 
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
 
-  const uiOptions = (uiSchema as any)['ui:options'] ?? {};
+  const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
   const zoneFieldName = uiOptions.zoneFieldName ?? 'zoneId';
   const environmentFromForm = formContext?.formData?.[environmentFieldName];
   const zoneFromForm = formContext?.formData?.[zoneFieldName];
-  const environment = typeof environmentFromForm === 'string' ? environmentFromForm : undefined;
-  const zoneId = typeof zoneFromForm === 'string' ? zoneFromForm : undefined;
+  const rawEnvironment = uiOptions.environment ?? environmentFromForm;
+  const rawZoneId = uiOptions.zoneId ?? zoneFromForm;
+  const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
+  const zoneId = typeof rawZoneId === 'string' ? rawZoneId : undefined;
 
   const {
     value: records = [],
@@ -48,9 +49,7 @@ export const AwsDnsRecordPicker = (
     }
 
     const baseUrl = await discoveryApi.getBaseUrl('dns');
-    const response = await fetchApi.fetch(
-      `${baseUrl}/records?environment=${encodeURIComponent(environment)}&zoneId=${encodeURIComponent(zoneId)}`,
-    );
+    const response = await fetchApi.fetch(`${baseUrl}/records?environment=${encodeURIComponent(environment)}&zoneId=${encodeURIComponent(zoneId)}`);
 
     if (!response.ok) {
       throw new Error(`Failed to load DNS records (${response.status})`);
@@ -61,31 +60,25 @@ export const AwsDnsRecordPicker = (
   }, [discoveryApi, fetchApi, environment, zoneId]);
 
   useEffect(() => {
-    if (
-      formData &&
-      records.length > 0 &&
-      !records.some(r => r.name === formData.name && r.type === formData.type)
-    ) {
+    if (formData && records.length > 0 && !records.some((r) => r.name === formData.name && r.type === formData.type)) {
       onChange(undefined);
     }
   }, [records, formData, onChange]);
 
   let helperText = 'Select a zone first to load DNS records.';
+
   if (loading) {
     helperText = 'Loading DNS records...';
   } else if (error) {
     helperText = 'Could not load DNS records.';
   } else if (environment && zoneId) {
-    helperText =
-      records.length > 0
-        ? `${records.length} record(s) available. Type to filter.`
-        : 'No records found in this zone.';
+    helperText = records.length > 0 ? `${records.length} record(s) available. Type to filter.` : 'No records found in this zone.';
   }
 
   return (
     <ScaffolderField
       rawErrors={rawErrors}
-      rawDescription={(uiSchema as any)['ui:description'] ?? schema.description}
+      rawDescription={uiSchema['ui:description'] ?? schema.description}
       required={required}
       disabled={disabled}
       errors={errors}
@@ -96,34 +89,21 @@ export const AwsDnsRecordPicker = (
           disabled={disabled || loading || !environment || !zoneId}
           loading={loading}
           options={records}
-          getOptionLabel={r => `${r.name} (${r.type})`}
+          getOptionLabel={(r) => `${r.name} (${r.type})`}
           getOptionSelected={(a, b) => a.name === b.name && a.type === b.type}
-          value={
-            records.find(r => r.name === formData?.name && r.type === formData?.type) ?? null
-          }
+          value={records.find((r) => r.name === formData?.name && r.type === formData?.type) ?? null}
           onChange={(_, selected) => onChange(selected ?? undefined)}
           filterOptions={(options, state) => {
             const input = state.inputValue.toLowerCase();
-            return options.filter(
-              r =>
-                r.name.toLowerCase().includes(input) ||
-                r.type.toLowerCase().includes(input),
-            );
+            return options.filter((r) => r.name.toLowerCase().includes(input) || r.type.toLowerCase().includes(input));
           }}
-          renderOption={r => (
+          renderOption={(r) => (
             <MenuItem key={`${r.name}-${r.type}`}>
               {r.name} ({r.type})
             </MenuItem>
           )}
-          renderInput={params => (
-            <TextField
-              {...params}
-              label={schema.title ?? 'DNS Record'}
-              margin="dense"
-              variant="outlined"
-              required={required}
-              fullWidth
-            />
+          renderInput={(params) => (
+            <TextField {...params} label={schema.title ?? 'DNS Record'} margin="dense" variant="outlined" required={required} fullWidth />
           )}
         />
         <FormHelperText>{helperText}</FormHelperText>

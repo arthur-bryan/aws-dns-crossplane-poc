@@ -5,7 +5,8 @@ import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { useEffect } from 'react';
 import useAsync from 'react-use/esm/useAsync';
-import type { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
+
+import { AwsDnsZonePickerProps } from './schema';
 
 type Zone = {
   id: string;
@@ -14,15 +15,17 @@ type Zone = {
   recordCount?: number;
 };
 
-export const AwsDnsZonePicker = (
-  props: FieldExtensionComponentProps<string>,
-) => {
+function isEnvironment(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
   const { onChange, formData, formContext, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } = props;
 
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
 
-  const uiOptions = (uiSchema as any)['ui:options'] ?? {};
+  const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
   const environmentFromForm = formContext?.formData?.[environmentFieldName];
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
@@ -34,14 +37,12 @@ export const AwsDnsZonePicker = (
     loading,
     error,
   } = useAsync(async () => {
-    if (!environment || environment.trim().length === 0) {
+    if (!environment || typeof environment !== 'string' || environment.trim().length === 0) {
       return [] as Zone[];
     }
 
     const baseUrl = await discoveryApi.getBaseUrl('dns');
-    const response = await fetchApi.fetch(
-      `${baseUrl}/zones?environment=${encodeURIComponent(environment)}`,
-    );
+    const response = await fetchApi.fetch(`${baseUrl}/zones?environment=${encodeURIComponent(environment)}`);
 
     if (!response.ok) {
       throw new Error(`Failed to load DNS zones (${response.status})`);
@@ -52,27 +53,25 @@ export const AwsDnsZonePicker = (
   }, [discoveryApi, fetchApi, environment]);
 
   useEffect(() => {
-    if (zoneValue && zones.length > 0 && !zones.some(z => z.id === zoneValue)) {
+    if (zoneValue && zones.length > 0 && !zones.some((zone) => zone.id === zoneValue)) {
       onChange(undefined);
     }
   }, [zones, zoneValue, onChange]);
 
   let helperText = 'Select an environment first to load DNS zones.';
+
   if (loading) {
     helperText = 'Loading DNS zones...';
   } else if (error) {
     helperText = 'Could not load DNS zones.';
-  } else if (environment) {
-    helperText =
-      zones.length > 0
-        ? `${zones.length} zone(s) available for ${environment}.`
-        : `No DNS zones found for ${environment}.`;
+  } else if (isEnvironment(environment)) {
+    helperText = zones.length > 0 ? `${zones.length} zone(s) available for ${environment}.` : `No DNS zones found for ${environment}.`;
   }
 
   return (
     <ScaffolderField
       rawErrors={rawErrors}
-      rawDescription={(uiSchema as any)['ui:description'] ?? schema.description}
+      rawDescription={uiSchema['ui:description'] ?? schema.description}
       required={required}
       disabled={disabled}
       errors={errors}
@@ -80,22 +79,16 @@ export const AwsDnsZonePicker = (
       <>
         <Autocomplete
           id={idSchema?.$id}
-          disabled={disabled || loading || !environment}
+          disabled={disabled || loading || !isEnvironment(environment)}
           loading={loading}
           options={zones}
-          getOptionLabel={zone => zone.name}
+          getOptionLabel={(zone) => zone.name}
           getOptionSelected={(option, val) => option.id === val.id}
-          value={zones.find(z => z.id === zoneValue) ?? null}
+          value={zones.find((zone) => zone.id === zoneValue) ?? null}
           onChange={(_, selected) => onChange(selected ? selected.id : undefined)}
-          renderInput={params => (
-            <TextField
-              {...params}
-              label={schema.title ?? 'DNS Zone'}
-              margin="dense"
-              variant="outlined"
-              required={required}
-              fullWidth
-            />
+          renderOption={(zone) => zone.name}
+          renderInput={(params) => (
+            <TextField {...params} label={schema.title ?? 'DNS Zone'} margin="dense" variant="outlined" required={required} fullWidth />
           )}
         />
         <FormHelperText>{helperText}</FormHelperText>
