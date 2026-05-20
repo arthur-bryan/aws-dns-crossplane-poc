@@ -2,13 +2,13 @@
 apiVersion: dock.tech/v1
 kind: Record
 metadata:
-  name: claim-api-frontend-200554-hml-arthurbryan-com-a
+  name: record-api-frontend-200554.hml.arthurbryan.com
   namespace: system-infrastructure-hml
   annotations:
-    dock.tech/scaffolder-parameters: '{"environment":"hml","zoneId":"Z02234832G6QGRGKEEUMU","existingRecord":{"name":"api-frontend-200554.hml.arthurbryan.com","type":"A","ttl":900,"values":["10.99.88.77"]}}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"api-frontend-200554","type":"A","ttl":900,"values":["10.99.88.77"],"routingPolicy":"simple","import":{"existing":true}}'
     dock.tech/import-existing: "true"
 spec:
-  name: claim-api-frontend-200554-hml-arthurbryan-com-a
+  name: record-api-frontend-200554.hml.arthurbryan.com
   domain: cross
   subdomain: cloud
   system: infrastructure
