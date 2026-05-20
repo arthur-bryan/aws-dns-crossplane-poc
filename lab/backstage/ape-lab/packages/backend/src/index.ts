@@ -26,6 +26,18 @@ backend.add(
 backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
 backend.add(import('./modules/zone-enrichment'));
+// Hybrid catalog sourcing:
+//   - Static seed (Domain/System/Group/environments + Templates) comes from
+//     remote URLs in catalog.locations, so it tracks GitHub without any
+//     local-clone dependency.
+//   - Dynamic per-zone / per-record YAMLs under entities/catalog/**/*.yaml
+//     are picked up by this chokidar watcher against the local clone. We
+//     tried the official GitHub catalog provider, but Backstage's branch
+//     parser rejects '/' in filters.branch and the URL reader mishandles
+//     blob<->tree path translation for branches with slashes. Until the
+//     branch is renamed or Backstage fixes those, the file watcher + the
+//     30s git-pull poller (backstage-up.sh) provide the same behaviour
+//     end-to-end: new catalog files appear ~30-60s after a PR is merged.
 backend.add(import('./modules/catalog-file-watcher'));
 backend.add(import('./modules/dns-routes'));
 

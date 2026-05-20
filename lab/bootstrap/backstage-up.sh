@@ -115,10 +115,13 @@ echo ">>> log: tail -f $LOGFILE"
 echo ">>> http://localhost:3000 ready in ~60-90s (cold start, Rspack bundle)"
 
 # ---- git-pull poller ------------------------------------------------------
-# Backstage's catalog file-watcher only sees the local filesystem. To keep
-# the catalog in sync with PRs that GitHub merges (via the scaffolder
-# auto-merge workflow), poll the remote and fast-forward the local clone.
-# No user/admin action needed when scaffolder PRs land.
+# Backstage's catalog file-watcher (lab/.../modules/catalog-file-watcher)
+# globs the local clone for entities/catalog/**/*.yaml. Without a periodic
+# git pull the local clone diverges from origin and PRs merged by the
+# scaffolder-auto-merge workflow stay invisible in the UI until a human
+# pulls. This loop keeps the clone in sync. The fully-remote GitHub
+# catalog provider would be cleaner but doesn't accept our slash-named
+# branch (see app-config.local.yaml for the trade-off).
 REPO_ROOT="$(cd "$LAB_DIR/.." && pwd)"
 GP_PIDFILE="$LAB_DIR/backstage/git-pull.pid"
 GP_LOGFILE="$LAB_DIR/backstage/git-pull.log"
@@ -128,9 +131,6 @@ if [ -f "$GP_PIDFILE" ] && kill -0 "$(cat "$GP_PIDFILE")" 2>/dev/null; then
   echo ">>> git-pull poller already running (pid $(cat "$GP_PIDFILE"))"
 else
   : > "$GP_LOGFILE"
-  # Quiet, fast-forward-only. If the user has uncommitted work this will
-  # fail per cycle without disrupting anything else. Author identity is set
-  # so any internal merge bookkeeping doesn't trip on an empty global config.
   nohup bash -c "
     while true; do
       ts=\$(date -u +%FT%TZ)
