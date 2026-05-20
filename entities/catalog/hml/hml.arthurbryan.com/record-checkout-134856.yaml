@@ -5,14 +5,14 @@ metadata:
   name: record-checkout-134856.hml.arthurbryan.com
   namespace: system-infrastructure-hml
   title: checkout-134856.hml.arthurbryan.com
-  description: "DNS A record checkout-134856.hml.arthurbryan.com (hml)"
+  description: "DNS CNAME record checkout-134856.hml.arthurbryan.com (hml)"
   annotations:
     dock.tech/xr-kind: Record
     dock.tech/xr-name: record-checkout-134856.hml.arthurbryan.com
     dock.tech/zone-name: hml.arthurbryan.com
     dock.tech/zone-id: Z02234832G6QGRGKEEUMU
     dock.tech/record-name: "checkout-134856"
-    dock.tech/record-type: A
+    dock.tech/record-type: CNAME
     dock.tech/record-fqdn: checkout-134856.hml.arthurbryan.com
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
@@ -21,20 +21,20 @@ metadata:
     dock.tech/aws-account-id: "382598791794"
     dock.tech/aws-account-name: hml-account
     dock.tech/managed-by: scaffolder
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"A","ttl":3600,"values":["10.0.0.20"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"CNAME","ttl":7198,"values":["arthurbryan.com"],"routingPolicy":"simple"}'
     # Encode the full merged params (TTL, values, routing policy,
     # set identifier, etc.) so the pencil-edit button opens the
     # form pre-filled with the record's current state. Encoding
     # only {zone, recordName, type} would force the user to
     # re-enter every other field on every edit.
-    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-hml%2Fzone-hml.arthurbryan.com%22%2C%22recordName%22%3A%22checkout-134856%22%2C%22type%22%3A%22A%22%2C%22ttl%22%3A3600%2C%22values%22%3A%5B%2210.0.0.20%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-hml%2Fzone-hml.arthurbryan.com%22%2C%22recordName%22%3A%22checkout-134856%22%2C%22type%22%3A%22CNAME%22%2C%22ttl%22%3A7198%2C%22values%22%3A%5B%22arthurbryan.com%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/record-checkout-134856.yaml"
   tags:
     - aws
     - dns
     - route53
     - record
-    - a
+    - cname
     - hml
 spec:
   type: aws-dns-record

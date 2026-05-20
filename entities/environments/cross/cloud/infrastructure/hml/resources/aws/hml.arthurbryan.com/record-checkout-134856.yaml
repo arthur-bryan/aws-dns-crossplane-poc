@@ -5,7 +5,8 @@ metadata:
   name: record-checkout-134856.hml.arthurbryan.com
   namespace: system-infrastructure-hml
   annotations:
-    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"A","ttl":3600,"values":["10.0.0.20"],"routingPolicy":"simple"}'
+    dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"CNAME","ttl":7198,"values":["arthurbryan.com"],"routingPolicy":"simple"}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-checkout-134856.hml.arthurbryan.com
   domain: cross
@@ -18,7 +19,7 @@ spec:
   zoneId: Z02234832G6QGRGKEEUMU
   zoneName: hml.arthurbryan.com
   recordName: "checkout-134856"
-  type: A
-  ttl: 3600
+  type: CNAME
+  ttl: 7198
   values:
-    - 10.0.0.20
+    - arthurbryan.com
