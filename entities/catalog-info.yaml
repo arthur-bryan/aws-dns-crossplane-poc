@@ -1,14 +1,3 @@
-# Backstage catalog seed.
-# Hierarchy (APE pattern): Domain → SubDomain → System → Environment.
-#
-# DNS resources created through the scaffolder land under:
-#   entities/environments/{domain}/{subdomain}/{system}/{environment}/resources/aws/
-#
-# Current hierarchy used for DNS ownership:
-#   Domain        cross
-#   SubDomain     cloud
-#   System        infrastructure
-#   Environments  dev, hml, prd (dev seeded here)
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Domain
@@ -49,7 +38,6 @@ spec:
     - name: hml
     - name: prd
 ---
-# Environment entity for dev. One per env the system runs in.
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
@@ -66,7 +54,6 @@ spec:
   owner: group:default/infrastructure
   system: infrastructure
 ---
-# Environment entity for hml. Sandbox AWS account 382598791794.
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
@@ -83,7 +70,6 @@ spec:
   owner: group:default/infrastructure
   system: infrastructure
 ---
-# Environment entity for prd. AWS account 597230762851 (base creds).
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:

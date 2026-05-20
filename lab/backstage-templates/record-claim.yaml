@@ -3,12 +3,7 @@ kind: Template
 metadata:
   name: aws-dns-record-claim
   title: Claim Existing AWS Route53 DNS Record
-  description: >
-    Adopt an existing Route53 record into platform management. The platform
-    finds the record by its zone + name + type, takes over its lifecycle,
-    and from then on treats it like any other platform-managed record
-    (no UI delete button; removing the XR is an admin-level operation
-    that DOES propagate the deletion to Route53).
+  description: Bring an existing Route53 record under platform management
   labels:
     category: resources
   tags:
@@ -35,14 +30,12 @@ spec:
         zoneId:
           title: DNS Zone
           type: string
-          description: Live Route53 hosted zones in the selected environment.
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
         existingRecord:
           title: Existing Record
           type: object
-          description: Pick the record. Type / TTL / values auto-populate from Route53.
           ui:field: AwsDnsRecordPicker
           ui:options:
             environmentFieldName: environment
@@ -61,7 +54,6 @@ spec:
         owner:
           title: Owner
           type: string
-          description: One of your groups will own this record (controls who can view/edit). Claims require manual approval before merge.
           ui:field: MyGroupsPicker
 
   steps:
@@ -83,11 +75,6 @@ spec:
       input:
         data:
           recordName: ${{ parameters.existingRecord.name }}
-        # Trim the trailing dot Route53 returns and drop the record-name
-        # prefix to leave the zone name (e.g. "host1.foo.example.com." -> "foo.example.com").
-        # The record's FQDN is the picker output; the zone's FQDN is the
-        # everything-after-the-first-label suffix. For apex records (where
-        # recordName == zoneName) this is a no-op.
         expression: >-
           (
             $name := $replace(recordName, /\.$/, "");
@@ -103,9 +90,6 @@ spec:
         data:
           fqdn: ${{ parameters.existingRecord.name }}
           zoneName: ${{ steps.deriveZoneName.output.result }}
-        # Strip trailing dot and the ".<zoneName>" suffix to leave just the
-        # record name (e.g. "checkout-1.hml.arthurbryan.com." -> "checkout-1").
-        # Apex records (where the FQDN equals the zone name) return "".
         expression: >-
           (
             $f := $replace(fqdn, /\.$/, "");
@@ -123,12 +107,6 @@ spec:
           recordType: ${{ parameters.existingRecord.type }}
           ttl: ${{ parameters.existingRecord.ttl }}
           values: ${{ parameters.existingRecord.values }}
-        # Shape the JSON the way aws-dns-record-edit expects, so clicking
-        # the pencil in the catalog opens that template's form pre-filled
-        # with the record's current state. No 'import' flag: the
-        # composition adopts the existing AWS record via its external-name
-        # (zoneId + fqdn + type) regardless, and we want kubectl-delete
-        # of the XR to cascade to Route53.
         expression: >-
           {
             "zone": "resource:system-infrastructure-" & env & "/zone-" & zoneName,
@@ -150,8 +128,6 @@ spec:
       name: Write Record XR manifest
       action: roadiehq:utils:fs:write
       input:
-        # Same path convention as the create template so the pencil-edit
-        # flow finds and overwrites this file in place.
         path: >-
           entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
         content: |
@@ -162,8 +138,6 @@ spec:
             name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
             namespace: system-infrastructure-${{ parameters.environment }}
             annotations:
-              # Stored in the record-edit-shape so the edit template can read
-              # it back via dock.tech/scaffolder-parameters and pre-fill.
               dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
           spec:
             name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
@@ -196,8 +170,6 @@ spec:
       name: Write Backstage Resource entity for the claimed record
       action: roadiehq:utils:fs:write
       input:
-        # Same path + naming as the create template so the pencil-edit
-        # action and the rest of the catalog tooling work uniformly.
         path: >-
           entities/catalog/${{ parameters.environment }}/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
         content: |
@@ -224,7 +196,6 @@ spec:
               dock.tech/aws-account-id: "${{ steps.deriveAccount.output.result.accountId }}"
               dock.tech/aws-account-name: ${{ steps.deriveAccount.output.result.accountName }}
               dock.tech/managed-by: scaffolder
-              # Stored in record-edit-shape so the edit template can hydrate.
               dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
               backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=${{ steps.editFormData.output.result | dump | urlencode }}
               backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml"
@@ -251,27 +222,10 @@ spec:
         targetBranchName: feature/ape-platform-alignment
         title: "chore(dns): claim existing ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
         description: |
-          This is a **claim** PR — it brings an existing AWS Route53 record
-          under platform management. Unlike create / edit PRs, claims are
-          NOT auto-merged. A human must review and merge.
+          Claim request — requires manual review and merge.
 
-          What to check before merging:
-            - the requester (PR author) is in the proposed owner group
-            - the record really belongs to that team
-            - the record is not already claimed (no duplicate XR for the
-              same name + type in the cluster)
-
-          After merge: the platform adopts the record via its external-name
-          (`<zoneId>_<fqdn>_<type>`) and from then on runs it with full
-          management policies. The current AWS state (TTL, values, routing
-          policy) is preserved on adoption; subsequent edits propagate
-          through the platform; and removing the XR with kubectl WILL
-          delete the Route53 record (admin-level action, no UI button).
-
-          Record: ${{ parameters.existingRecord.name }}
-          Type: ${{ parameters.existingRecord.type }}
-          Zone: ${{ steps.deriveZoneName.output.result }} (${{ parameters.zoneId }})
-          Account: ${{ steps.deriveAccount.output.result.accountName }} (${{ steps.deriveAccount.output.result.accountId }})
+          Record: ${{ parameters.existingRecord.name }} (${{ parameters.existingRecord.type }})
+          Environment: ${{ parameters.environment }}
           Owner: ${{ parameters.owner }}
 
   output:

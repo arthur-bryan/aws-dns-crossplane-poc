@@ -1,7 +1,4 @@
 ---
-# Managed by batch import.
-# Removing this file unadopts the record from the platform; the Route53
-# record itself is NOT deleted (managementPolicies: [Observe, Update]).
 apiVersion: dock.tech/v1
 kind: Record
 metadata:

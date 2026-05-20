@@ -22,11 +22,6 @@ metadata:
     dock.tech/aws-account-name: hml-account
     dock.tech/managed-by: scaffolder
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-hml/zone-hml.arthurbryan.com","recordName":"checkout-134856","type":"CNAME","ttl":7198,"values":["arthurbryan.com"],"routingPolicy":"simple"}'
-    # Encode the full merged params (TTL, values, routing policy,
-    # set identifier, etc.) so the pencil-edit button opens the
-    # form pre-filled with the record's current state. Encoding
-    # only {zone, recordName, type} would force the user to
-    # re-enter every other field on every edit.
     backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-hml%2Fzone-hml.arthurbryan.com%22%2C%22recordName%22%3A%22checkout-134856%22%2C%22type%22%3A%22CNAME%22%2C%22ttl%22%3A7198%2C%22values%22%3A%5B%22arthurbryan.com%22%5D%2C%22routingPolicy%22%3A%22simple%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/hml/resources/aws/hml.arthurbryan.com/record-checkout-134856.yaml"
   tags:

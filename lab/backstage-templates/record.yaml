@@ -512,8 +512,6 @@ spec:
       action: roadiehq:utils:jsonata
       input:
         data: {}
-        # JSONata $millis() returns epoch ms; cast to string. Without this,
-        # two parallel creates of the same record collide on the GitHub ref.
         expression: '$string($millis())'
 
     - id: openPR
