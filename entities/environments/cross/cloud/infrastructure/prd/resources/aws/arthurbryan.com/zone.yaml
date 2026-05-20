@@ -16,4 +16,6 @@ spec:
     account: 597230762851
     accountName: prd-account
   zoneName: arthurbryan.com
-  zoneId: Z03010981ALJFZB4QLU8W
+  import:
+    existing: true
+    zoneId: Z03010981ALJFZB4QLU8W
