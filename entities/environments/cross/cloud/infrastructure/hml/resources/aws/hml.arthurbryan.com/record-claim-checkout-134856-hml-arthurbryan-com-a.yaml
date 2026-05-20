@@ -1,0 +1,27 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: claim-checkout-134856-hml-arthurbryan-com-a
+  namespace: system-infrastructure-hml
+  annotations:
+    dock.tech/scaffolder-parameters: '{"environment":"hml","existingRecord":{"name":"checkout-134856.hml.arthurbryan.com","type":"A","ttl":300,"values":["10.7.8.9"]},"zoneId":"Z02234832G6QGRGKEEUMU"}'
+    dock.tech/import-existing: "true"
+spec:
+  name: claim-checkout-134856-hml-arthurbryan-com-a
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: hml
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  zoneId: Z02234832G6QGRGKEEUMU
+  zoneName: hml.arthurbryan.com
+  recordName: "checkout-134856"
+  type: A
+  ttl: 300
+  values:
+    - 10.7.8.9
+  import:
+    existing: true
