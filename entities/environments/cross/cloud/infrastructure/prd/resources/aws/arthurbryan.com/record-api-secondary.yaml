@@ -28,5 +28,3 @@ spec:
     - "10.0.1.21"
   setIdentifier: "api-secondary"
   weight: 30
-  import:
-    existing: true

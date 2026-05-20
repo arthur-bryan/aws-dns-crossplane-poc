@@ -20,7 +20,7 @@ metadata:
     dock.tech/environment: prd
     dock.tech/managed-by: scaffolder
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"e2e-alias-nlb-us-east-1-697842","type":"ALIAS","routingPolicy":"simple","serviceType":"NLB","dnsName":"nlb-edit-1234567.elb.us-east-1.amazonaws.com","evaluateTargetHealth":true,"targetRegion":"us-east-1"}'
-    backstage.io/edit-url: http://localhost:3000/create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-alias-nlb-us-east-1-697842%22%2C%22type%22%3A%22ALIAS%22%7D
+    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22e2e-alias-nlb-us-east-1-697842%22%2C%22type%22%3A%22ALIAS%22%2C%22routingPolicy%22%3A%22simple%22%2C%22serviceType%22%3A%22NLB%22%2C%22dnsName%22%3A%22nlb-edit-1234567.elb.us-east-1.amazonaws.com%22%2C%22evaluateTargetHealth%22%3Atrue%2C%22targetRegion%22%3A%22us-east-1%22%7D
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-alias-nlb-us-east-1-697842.yaml"
   tags:
     - aws
@@ -29,10 +29,6 @@ metadata:
     - record
     - alias
     - prd
-  links:
-    - title: Delete record (opens GitHub delete UI)
-      url: https://github.com/arthur-bryan/aws-dns-crossplane-poc/delete/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-e2e-alias-nlb-us-east-1-697842.yaml
-      icon: delete
 spec:
   type: aws-dns-record
   owner: group:default/infrastructure
