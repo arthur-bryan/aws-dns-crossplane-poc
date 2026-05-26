@@ -2,242 +2,149 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-zone
-  title: AWS Route53 DNS Zone
-  description: Create a Route53 hosted zone delegated from an existing platform zone
+  title: AWS Route53 DNS Zone Template
+  description: A template for creating an AWS Route53 hosted zone
   labels:
     category: resources
   tags:
     - resource
     - aws
-    - dns
-    - zone
+    - public
+    - cloud-infrastructure
 spec:
+  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
-    - title: Zone
+    - title: DNS Zone Information
       required:
-        - delegatedZone
-        - prefix
         - environment
+        - zoneName
       properties:
-        delegatedZone:
-          title: Delegated From
-          type: string
-          ui:field: EntityPicker
-          ui:autofocus: true
-          ui:options:
-            catalogFilter:
-              - kind: Resource
-                spec.type: aws-dns-zone
-            defaultKind: Resource
-        prefix:
-          title: Zone Name
-          type: string
-          minLength: 1
-          maxLength: 63
-          pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'
         environment:
           title: Environment
           type: string
-          enum: [dev, hml, prd]
-          default: prd
-        fqdnPreview:
-          title: ''
+          description: Environment where the DNS zone will be created
+          ui:field: AwsEnvironmentPicker
+        kind:
+          title: Kind
           type: string
-          ui:field: ZoneFqdnPreview
-        private:
-          title: Private Zone
-          type: boolean
-          default: false
-      dependencies:
-        private:
-          oneOf:
-            - properties:
-                private: { const: false }
-            - properties:
-                private: { const: true }
-                vpcs:
-                  title: Associated VPCs
-                  type: array
-                  default: []
-                  ui:field: MultiEntityPicker
-                  ui:options:
-                    catalogFilter:
-                      - kind: Resource
-                        spec.type: aws-vpc
+          default: Zone
+          ui:widget: hidden
 
-    - title: Tags
+        zoneName:
+          title: Zone Name
+          type: string
+          description: DNS zone name (FQDN without trailing dot, e.g., test.dev.dock.tech)
+          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
+          ui:help: "Example: test.dev.dock.tech (no trailing dot)"
+
+        comment:
+          title: Comment
+          type: string
+          description: Optional comment for the zone (max 256 characters)
+          maxLength: 256
+
+    - title: Additional Tags (Optional)
       properties:
         tags:
           title: Tags
           type: object
-          additionalProperties:
-            type: string
+          description: Additional AWS tags (hierarchy tags are added automatically)
+          ui:field: KeyValuePairInput
+          ui:help: "Add custom tags for cost tracking or organization"
 
   steps:
-    - id: validateVpcs
-      name: Validate VPC selection
-      if: ${{ parameters.private }}
+    - $yaml: ../../../shared/entities/clone.yaml
+
+    - id: composeName
+      name: Compose resource name from zone and environment
       action: roadiehq:utils:jsonata
       input:
         data:
-          count: ${{ parameters.vpcs | length }}
-        expression: '$assert(count >= 1, "Private zones require at least one VPC. Pick one in the Associated VPCs picker.")'
-
-    - id: fetchParent
-      name: Fetch parent zone
-      action: catalog:fetch
-      input:
-        entityRef: ${{ parameters.delegatedZone }}
-
-    - id: fetchVpcs
-      name: Fetch VPCs
-      if: ${{ parameters.private }}
-      action: catalog:fetch
-      input:
-        entityRefs: ${{ parameters.vpcs }}
-
-    - id: computeZone
-      name: Compute zone name
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          prefix: ${{ parameters.prefix }}
-          parentZoneName: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-        expression: '$lowercase(prefix & "." & parentZoneName)'
+          zoneName: ${{ parameters.zoneName }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          $join($split($replace(zoneName, /\.$/, ""), "."), "-") & "-" & environment
 
     - id: deriveAccount
-      name: Derive account from environment
+      name: Derive DNS account from environment
       action: roadiehq:utils:jsonata
       input:
         data:
-          env: ${{ parameters.environment }}
+          environment: ${{ parameters.environment }}
         expression: >-
-          env = "dev" ? {"accountId": "309670275661", "accountName": "dev-account", "defaultVpcId": "vpc-0dd3eaef2e5c11f69", "defaultVpcRegion": "us-east-1"}
-          : env = "hml" ? {"accountId": "382598791794", "accountName": "hml-account", "defaultVpcId": "vpc-067a880ce560341f8", "defaultVpcRegion": "us-east-1"}
-          : env = "prd" ? {"accountId": "597230762851", "accountName": "prd-account", "defaultVpcId": "vpc-0410f81cfe1bba322", "defaultVpcRegion": "us-east-1"}
-          : {"accountId": "", "accountName": ""}
+          (
+            $accounts := {
+              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
+              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
+              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
+            };
+            $accounts[environment]
+          )
 
-    - id: writeXR
-      name: Write Zone XR
+    - id: checkIffileAlreadyExists
+      name: Check If File Already Exists
+      action: fs:file:exists
+      input:
+        filepath: ./entities/dock-tech/resources/aws/${{ parameters.environment }}/zone-${{ steps.composeName.output.result }}.yaml
+
+    - id: launchErrorIfFileExists
+      name: Launch Error If File Exists
+      if: ${{ steps.checkIffileAlreadyExists.output.exists }}
+      action: error:launch
+      input:
+        message: A resource file for this DNS zone already exists.
+
+    - id: writeFile
+      name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: >-
-          entities/environments/${{
-            steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain']
-          }}/${{
-            steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain']
-          }}/${{
-            steps.fetchParent.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ parameters.environment }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml
+        path: ./entities/dock-tech/resources/aws/${{ parameters.environment }}/zone-${{ steps.composeName.output.result }}.yaml
         content: |
-          ---
-          apiVersion: dock.tech/v1
-          kind: Zone
-          metadata:
-            name: zone-${{ steps.computeZone.output.result }}
-            namespace: system-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
-            annotations:
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
-          spec:
-            name: zone-${{ steps.computeZone.output.result }}
-            domain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}
-            subdomain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}
-            system: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}
-            environment: ${{ parameters.environment }}
-            aws:
-              account: ${{ steps.deriveAccount.output.result.accountId | int }}
-              accountName: ${{ steps.deriveAccount.output.result.accountName }}
-            zoneName: ${{ steps.computeZone.output.result }}
-            delegatedFromZoneId: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }}
-            delegatedFromAccountName: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
-            visibility: ${{ 'private' if parameters.private else 'public' }}
-            {%- if parameters.private %}
-            vpcs:
-              - vpcId: ${{ steps.deriveAccount.output.result.defaultVpcId }}
-                vpcRegion: ${{ steps.deriveAccount.output.result.defaultVpcRegion }}
-                accountName: ${{ steps.deriveAccount.output.result.accountName }}
-            {%- for vpc in steps.fetchVpcs.output.entities %}
-              - vpcId: ${{ vpc.metadata.annotations['dock.tech/vpc-id'] }}
-                vpcRegion: ${{ vpc.metadata.annotations['dock.tech/vpc-region'] }}
-                accountName: ${{ vpc.metadata.annotations['dock.tech/aws-account-name'] }}
-            {%- endfor %}
-            {%- endif %}
-            {%- if parameters.tags and (parameters.tags | length) %}
-            tags:
-              {%- for key, value in parameters.tags %}
-              ${{ key }}: ${{ value }}
-              {%- endfor %}
-            {%- endif %}
-
-    - id: writeCatalogEntity
-      name: Write catalog entity
-      action: roadiehq:utils:fs:write
-      input:
-        path: entities/catalog/${{ parameters.environment }}/${{ steps.computeZone.output.result }}/zone.yaml
-        content: |
-          ---
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: zone-${{ steps.computeZone.output.result }}
-            namespace: system-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}-${{ parameters.environment }}
-            title: "${{ steps.computeZone.output.result }} · ${{ parameters.environment }}"
-            description: "Route53 Hosted Zone ${{ steps.computeZone.output.result }} (${{ parameters.environment }}) — delegated from ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}"
+            name: ${{ steps.composeName.output.result }}
+            namespace: default
+            description: AWS Route53 DNS Zone created by template
             annotations:
-              dock.tech/xr-kind: Zone
-              dock.tech/xr-name: zone-${{ steps.computeZone.output.result }}
-              dock.tech/zone-name: ${{ steps.computeZone.output.result }}
-              dock.tech/parent-zone-id: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }}
-              dock.tech/parent-zone-name: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-              dock.tech/parent-aws-account-name: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
-              dock.tech/domain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}
-              dock.tech/subdomain: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}
-              dock.tech/system: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}
-              dock.tech/environment: ${{ parameters.environment }}
-              dock.tech/aws-account-id: "${{ steps.deriveAccount.output.result.accountId }}"
-              dock.tech/aws-account-name: ${{ steps.deriveAccount.output.result.accountName }}
-              dock.tech/visibility: ${{ 'private' if parameters.private else 'public' }}
-              dock.tech/managed-by: scaffolder
-              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}/${{ parameters.environment }}/resources/aws/${{ steps.computeZone.output.result }}/zone.yaml"
-            tags:
-              - aws
-              - dns
-              - route53
-              - zone
-              - ${{ parameters.environment }}
-              - ${{ 'private' if parameters.private else 'public' }}
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
+              dock.tech/scaffolder-editable-template: dns-zone-edit
+              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+            labels:
+              environment: ${{ parameters.environment }}
+              cloud: aws
           spec:
-            type: aws-dns-zone
-            owner: ${{ steps.fetchParent.output.entity.spec.owner }}
-            system: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/system'] }}
-            dependsOn:
-              - resource:default/zone-${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+            type: Zone
+            cloud: aws
+            owner: group:dock-tech/cloud-infrastructure
+            environment: ${{ parameters.environment }}
+            zoneName: ${{ parameters.zoneName }}
+            aws:
+              account: ${{ steps.deriveAccount.output.result.accountId }}
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            {%- if parameters.comment %}
+            comment: ${{ parameters.comment }}
+            {%- endif %}
+            {%- if parameters.tags %}
+            tags:
+            {%- for key, value in parameters.tags %}
+              {{ key }}: {{ value }}
+            {%- endfor %}
+            {%- endif %}
 
-    - id: branchSuffix
-      name: Compute unique branch suffix
-      action: roadiehq:utils:jsonata
+    - $yaml: ../../../shared/entities/commit.yaml
+    - $yaml: ../../../shared/entities/push.yaml
+
+    - id: publish-activity-log
+      action: activity-log:publish
       input:
-        data: {}
-        expression: '$string($millis())'
+        action: created
+        entityRef: resource:default/${{ steps.composeName.output.result }}
+        payload: ${{ parameters }}
 
-    - id: openPR
-      name: Open PR
-      action: publish:github:pull-request
-      input:
-        repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/zone-${{ steps.computeZone.output.result }}-${{ parameters.environment }}-${{ steps.branchSuffix.output.result }}
-        targetBranchName: feature/ape-platform-alignment
-        title: "feat(dns): create zone ${{ steps.computeZone.output.result }} (${{ parameters.environment }})"
-        description: |
-          Parent zone: ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-name'] }} (${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/zone-id'] }}, ${{ steps.fetchParent.output.entity.metadata.annotations['dock.tech/aws-account-name'] }})
-          New zone: ${{ steps.computeZone.output.result }}
-          Environment: ${{ parameters.environment }}
-          Account: ${{ steps.deriveAccount.output.result.accountName }} (${{ steps.deriveAccount.output.result.accountId }})
-          Visibility: ${{ 'private' if parameters.private else 'public' }}
+    - $yaml: ../../../shared/entities/refresh-entities.yaml
+    - $yaml: ../../../shared/notify.yaml
 
-  output:
-    links:
-      - title: Pull Request
-        url: ${{ steps.openPR.output.remoteUrl }}
+  output: {}

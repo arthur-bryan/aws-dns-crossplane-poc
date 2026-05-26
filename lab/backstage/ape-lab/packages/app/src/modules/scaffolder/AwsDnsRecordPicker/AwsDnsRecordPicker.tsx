@@ -35,7 +35,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   const environmentFromForm = formContext?.formData?.[environmentFieldName];
   const zoneFromForm = formContext?.formData?.[zoneFieldName];
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
-  const rawZoneId = uiOptions.zoneId ?? zoneFromForm;
+  const rawZoneId = uiOptions.zoneId ?? (zoneFromForm && typeof zoneFromForm === 'object' ? (zoneFromForm as { id: string }).id : zoneFromForm);
   const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
   const zoneId = typeof rawZoneId === 'string' ? rawZoneId : undefined;
 
@@ -48,8 +48,10 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
       return [] as DnsRecord[];
     }
 
-    const baseUrl = await discoveryApi.getBaseUrl('dns');
-    const response = await fetchApi.fetch(`${baseUrl}/records?environment=${encodeURIComponent(environment)}&zoneId=${encodeURIComponent(zoneId)}`);
+    const baseUrl = await discoveryApi.getBaseUrl('aws');
+    const response = await fetchApi.fetch(
+      `${baseUrl}/dns-records?environment=${encodeURIComponent(environment)}&zoneId=${encodeURIComponent(zoneId)}`,
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to load DNS records (${response.status})`);

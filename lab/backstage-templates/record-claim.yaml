@@ -9,86 +9,71 @@ metadata:
   tags:
     - resource
     - aws
-    - dns
-    - claim
+    - public
+    - hidden
+    - cloud-infrastructure
 spec:
+  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
     - title: DNS Record to Claim
       required:
+        - system
         - environment
-        - zoneId
+        - zone
         - existingRecord
       properties:
+        system:
+          title: System
+          type: string
+          description: System that will own this record
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: System
+                metadata.labels.aws: "true"
+
         environment:
           title: Environment
           type: string
-          enum: [dev, hml, prd]
-          default: prd
-        zoneId:
+          description: Environment where the record exists
+          ui:field: EnvironmentPicker
+
+        zone:
           title: DNS Zone
-          type: string
+          type: object
+          description: The Route53 hosted zone containing this record
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
+
         existingRecord:
           title: Existing Record
           type: object
+          description: Select the existing Route53 record to bring under management
           ui:field: AwsDnsRecordPicker
           ui:options:
             environmentFieldName: environment
-            zoneFieldName: zoneId
-          properties:
-            name:    { type: string }
-            type:    { type: string }
-            ttl:     { type: integer }
-            values:  { type: array, items: { type: string } }
-            aliasTarget:
-              type: object
-              properties:
-                dnsName:              { type: string }
-                hostedZoneId:         { type: string }
-                evaluateTargetHealth: { type: boolean }
+            zoneFieldName: zone
 
   steps:
-    - id: deriveOwner
-      name: Derive owner from requester's group membership
-      action: roadiehq:utils:jsonata
-      input:
-        data: ${{ user.entity }}
-        expression: >-
-          (
-            $g := spec.memberOf[0];
-            $g
-              ? ($contains($g, "/") ? $g : "group:default/" & $g)
-              : "group:default/infrastructure"
-          )
+    - $yaml: ../../../shared/entities/clone.yaml
+    - $yaml: ../../../shared/entities/fetch-system.yaml
+    - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
     - id: deriveAccount
-      name: Derive account from environment
+      name: Derive DNS account from environment
       action: roadiehq:utils:jsonata
       input:
         data:
           env: ${{ parameters.environment }}
-        expression: >-
-          env = "dev" ? {"accountId": "309670275661", "accountName": "dev-account"}
-          : env = "hml" ? {"accountId": "382598791794", "accountName": "hml-account"}
-          : env = "prd" ? {"accountId": "597230762851", "accountName": "prd-account"}
-          : {"accountId": "", "accountName": ""}
-
-    - id: deriveZoneName
-      name: Derive zone name from the picked record's FQDN
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          recordName: ${{ parameters.existingRecord.name }}
+          systemEnvironments: ${{ steps.fetchSystem.output.entity.spec.environments }}
         expression: >-
           (
-            $name := $replace(recordName, /\.$/, "");
-            $contains($name, ".") and ($count($split($name, ".")) > 2)
-              ? $join($filter($split($name, "."), function($v, $i) { $i > 0 }), ".")
-              : $name
+            $env := $filter(systemEnvironments, function($e) { $e.name = env })[0];
+            $env ? { "accountId": $string($env.aws.account), "accountName": $env.aws.accountName }
+                 : { "accountId": "", "accountName": "" }
           )
 
     - id: computeRecordName
@@ -97,69 +82,71 @@ spec:
       input:
         data:
           fqdn: ${{ parameters.existingRecord.name }}
-          zoneName: ${{ steps.deriveZoneName.output.result }}
+          zoneName: ${{ parameters.zone.name }}
         expression: >-
           (
             $f := $replace(fqdn, /\.$/, "");
-            $f = zoneName ? "" : $replace($f, "." & zoneName, "")
+            $z := $replace(zoneName, /\.$/, "");
+            $f = $z ? "" : $replace($f, "." & $z, "")
           )
 
-    - id: editFormData
-      name: Build edit form data for the catalog Resource entity
+    - id: composeName
+      name: Compose resource name from record fields
       action: roadiehq:utils:jsonata
       input:
         data:
-          env: ${{ parameters.environment }}
-          zoneName: ${{ steps.deriveZoneName.output.result }}
           recordName: ${{ steps.computeRecordName.output.result }}
-          recordType: ${{ parameters.existingRecord.type }}
-          ttl: ${{ parameters.existingRecord.ttl }}
-          values: ${{ parameters.existingRecord.values }}
+          type: ${{ parameters.existingRecord.type }}
+          zoneName: ${{ parameters.zone.name }}
+          environment: ${{ parameters.environment }}
         expression: >-
-          {
-            "zone": "resource:system-infrastructure-" & env & "/zone-" & zoneName,
-            "recordName": recordName,
-            "type": recordType,
-            "ttl": ttl,
-            "values": values,
-            "routingPolicy": "simple"
-          }
+          $join($split($replace(recordName, /\.$/, ""), "."), "-") & "-" & $lowercase(type) & "-" & $join($split($replace(zoneName, /\.$/, ""), "."), "-") & "-" & environment
 
-    - id: branchSuffix
-      name: Compute unique branch suffix
-      action: roadiehq:utils:jsonata
+    - id: checkIfFileAlreadyExists
+      name: Check If File Already Exists
+      action: fs:file:exists
       input:
-        data: {}
-        expression: '$string($millis())'
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ steps.composeName.output.result }}.yaml
 
-    - id: writeXR
-      name: Write Record XR manifest
+    - id: launchErrorIfFileExists
+      name: Launch Error If File Exists
+      if: ${{ steps.checkIfFileAlreadyExists.output.exists }}
+      action: error:launch
+      input:
+        message: A resource file for this DNS record already exists.
+
+    - id: writeFile
+      name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: >-
-          entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ steps.composeName.output.result }}.yaml
         content: |
-          ---
-          apiVersion: dock.tech/v1
-          kind: Record
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
           metadata:
-            name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
-            namespace: system-infrastructure-${{ parameters.environment }}
+            name: ${{ steps.composeName.output.result }}
+            namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
+            description: AWS Route53 DNS Record claimed by template
             annotations:
-              dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
+              dock.tech/scaffolder-editable-template: dns-record-edit
+              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+            labels:
+              environment: ${{ parameters.environment }}
+              cloud: aws
           spec:
-            name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
-            domain: cross
-            subdomain: cloud
-            system: infrastructure
+            type: Record
+            cloud: aws
+            owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            system: ${{ parameters.system }}
             environment: ${{ parameters.environment }}
-            aws:
-              account: ${{ steps.deriveAccount.output.result.accountId | int }}
-              accountName: ${{ steps.deriveAccount.output.result.accountName }}
-            zoneId: ${{ parameters.zoneId }}
-            zoneName: ${{ steps.deriveZoneName.output.result }}
+            zoneId: ${{ parameters.zone.id }}
+            zoneName: ${{ parameters.zone.name }}
             recordName: "${{ steps.computeRecordName.output.result }}"
-            type: ${{ parameters.existingRecord.type }}
+            recordType: ${{ parameters.existingRecord.type }}
+            aws:
+              account: ${{ steps.deriveAccount.output.result.accountId }}
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.existingRecord.aliasTarget %}
             aliasTarget:
               serviceType: Custom
@@ -174,69 +161,17 @@ spec:
             {%- endfor %}
             {%- endif %}
 
-    - id: writeCatalogEntity
-      name: Write Backstage Resource entity for the claimed record
-      action: roadiehq:utils:fs:write
+    - $yaml: ../../../shared/entities/commit.yaml
+    - $yaml: ../../../shared/entities/push.yaml
+
+    - id: publish-activity-log
+      action: activity-log:publish
       input:
-        path: >-
-          entities/catalog/${{ parameters.environment }}/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml
-        content: |
-          ---
-          apiVersion: backstage.io/v1alpha1
-          kind: Resource
-          metadata:
-            name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
-            namespace: system-infrastructure-${{ parameters.environment }}
-            title: ${{ parameters.existingRecord.name }}
-            description: "Claimed ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
-            annotations:
-              dock.tech/xr-kind: Record
-              dock.tech/xr-name: record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.${{ steps.deriveZoneName.output.result }}
-              dock.tech/zone-name: ${{ steps.deriveZoneName.output.result }}
-              dock.tech/zone-id: ${{ parameters.zoneId }}
-              dock.tech/record-name: "${{ steps.computeRecordName.output.result }}"
-              dock.tech/record-type: ${{ parameters.existingRecord.type }}
-              dock.tech/record-fqdn: ${{ parameters.existingRecord.name }}
-              dock.tech/domain: cross
-              dock.tech/subdomain: cloud
-              dock.tech/system: infrastructure
-              dock.tech/environment: ${{ parameters.environment }}
-              dock.tech/aws-account-id: "${{ steps.deriveAccount.output.result.accountId }}"
-              dock.tech/aws-account-name: ${{ steps.deriveAccount.output.result.accountName }}
-              dock.tech/managed-by: scaffolder
-              dock.tech/scaffolder-parameters: '${{ steps.editFormData.output.result | dump }}'
-              backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=${{ steps.editFormData.output.result | dump | urlencode }}
-              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/${{ parameters.environment }}/resources/aws/${{ steps.deriveZoneName.output.result }}/record-${{ steps.computeRecordName.output.result if steps.computeRecordName.output.result else ('apex-' + (parameters.existingRecord.type | lower)) }}.yaml"
-            tags:
-              - aws
-              - dns
-              - route53
-              - record
-              - ${{ parameters.existingRecord.type | lower }}
-              - ${{ parameters.environment }}
-          spec:
-            type: aws-dns-record
-            owner: ${{ steps.deriveOwner.output.result }}
-            system: infrastructure
-            dependsOn:
-              - resource:default/zone-${{ steps.deriveZoneName.output.result }}
+        action: created
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ steps.composeName.output.result }}
+        payload: ${{ parameters }}
 
-    - id: openPR
-      name: Open PR
-      action: publish:github:pull-request
-      input:
-        repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-claim-${{ parameters.existingRecord.name | replace('.', '-') }}-${{ parameters.existingRecord.type | lower }}-${{ parameters.environment }}-${{ steps.branchSuffix.output.result }}
-        targetBranchName: feature/ape-platform-alignment
-        title: "chore(dns): claim existing ${{ parameters.existingRecord.type }} record ${{ parameters.existingRecord.name }} (${{ parameters.environment }})"
-        description: |
-          Claim request — requires manual review and merge.
+    - $yaml: ../../../shared/entities/refresh-entities.yaml
+    - $yaml: ../../../shared/notify.yaml
 
-          Record: ${{ parameters.existingRecord.name }} (${{ parameters.existingRecord.type }})
-          Environment: ${{ parameters.environment }}
-          Owner: ${{ steps.deriveOwner.output.result }}
-
-  output:
-    links:
-      - title: Pull Request
-        url: ${{ steps.openPR.output.remoteUrl }}
+  output: {}

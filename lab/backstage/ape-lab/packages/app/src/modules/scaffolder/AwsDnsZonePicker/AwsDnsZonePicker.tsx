@@ -30,7 +30,7 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
   const environmentFromForm = formContext?.formData?.[environmentFieldName];
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
   const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
-  const zoneValue = typeof formData === 'string' ? formData : '';
+  const zoneValue = formData && typeof formData === 'object' ? (formData as { id: string; name: string }) : undefined;
 
   const {
     value: zones = [],
@@ -41,8 +41,8 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
       return [] as Zone[];
     }
 
-    const baseUrl = await discoveryApi.getBaseUrl('dns');
-    const response = await fetchApi.fetch(`${baseUrl}/zones?environment=${encodeURIComponent(environment)}`);
+    const baseUrl = await discoveryApi.getBaseUrl('aws');
+    const response = await fetchApi.fetch(`${baseUrl}/dns-zones?environment=${encodeURIComponent(environment)}`);
 
     if (!response.ok) {
       throw new Error(`Failed to load DNS zones (${response.status})`);
@@ -53,7 +53,7 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
   }, [discoveryApi, fetchApi, environment]);
 
   useEffect(() => {
-    if (zoneValue && zones.length > 0 && !zones.some((zone) => zone.id === zoneValue)) {
+    if (zoneValue && zones.length > 0 && !zones.some((zone) => zone.id === zoneValue.id)) {
       onChange(undefined);
     }
   }, [zones, zoneValue, onChange]);
@@ -84,8 +84,8 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
           options={zones}
           getOptionLabel={(zone) => zone.name}
           getOptionSelected={(option, val) => option.id === val.id}
-          value={zones.find((zone) => zone.id === zoneValue) ?? null}
-          onChange={(_, selected) => onChange(selected ? selected.id : undefined)}
+          value={zones.find((zone) => zone.id === zoneValue?.id) ?? null}
+          onChange={(_, selected) => onChange(selected ? { id: selected.id, name: selected.name } : undefined)}
           renderOption={(zone) => zone.name}
           renderInput={(params) => (
             <TextField {...params} label={schema.title ?? 'DNS Zone'} margin="dense" variant="outlined" required={required} fullWidth />
