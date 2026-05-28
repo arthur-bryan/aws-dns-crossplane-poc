@@ -52,13 +52,11 @@ spec:
 
         zone:
           title: Parent Zone
-          type: string
-          description: Select the DNS zone where this record will be created
-          ui:field: EntityPicker
+          type: object
+          description: Live Route53 hosted zones in the selected environment
+          ui:field: AwsDnsZonePicker
           ui:options:
-            catalogFilter:
-              - kind: Resource
-                spec.type: Zone
+            environmentFieldName: environment
 
         kind:
           title: Kind
@@ -404,12 +402,19 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: fetchZone
-      name: Fetch Zone Entity
-      action: catalog:fetch
+    - id: deriveAccount
+      name: Derive AWS account from the selected environment
+      action: roadiehq:utils:jsonata
       input:
-        entityRef: ${{ parameters.zone }}
-        defaultKind: Resource
+        data:
+          env: ${{ parameters.environment }}
+          systemEnvironments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+        expression: >-
+          (
+            $e := $filter(systemEnvironments, function($x) { $x.name = env })[0];
+            $e ? { "account": $string($e.aws.account), "accountName": $e.aws.accountName }
+               : { "account": "", "accountName": "" }
+          )
 
     - id: checkIffileAlreadyExists
       name: Check If File Already Exists
@@ -444,7 +449,14 @@ spec:
             cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
             system: ${{ parameters.system }}
-            zone: ${{ parameters.zone }}
+            environment: ${{ parameters.environment }}
+            domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
+            subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
+            aws:
+              account: ${{ steps.deriveAccount.output.result.account }}
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            zoneId: ${{ parameters.zone.id }}
+            zoneName: ${{ parameters.zone.name }}
             recordName: ${{ parameters.recordName }}
             recordType: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}

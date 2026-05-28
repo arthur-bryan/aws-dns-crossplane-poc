@@ -35,8 +35,17 @@ spec:
   domain: cloud
   environments:
     - name: dev
+      aws:
+        account: "309670275661"
+        accountName: dev-account
     - name: hml
+      aws:
+        account: "382598791794"
+        accountName: hml-account
     - name: prd
+      aws:
+        account: "597230762851"
+        accountName: prd-account
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource
