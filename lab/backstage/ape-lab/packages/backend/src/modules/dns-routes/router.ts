@@ -93,7 +93,7 @@ export async function createDnsRouter(opts: {
   const { logger, config } = opts;
   const router = Router();
 
-  router.get('/zones', async (req, res) => {
+  router.get('/dns-zones', async (req, res) => {
     const environment = req.query.environment as string;
     if (!environment) {
       res.status(400).json({ error: 'environment query param required' });
@@ -119,7 +119,7 @@ export async function createDnsRouter(opts: {
     }
   });
 
-  router.get('/records', async (req, res) => {
+  router.get('/dns-records', async (req, res) => {
     const environment = req.query.environment as string;
     const zoneId = req.query.zoneId as string;
 

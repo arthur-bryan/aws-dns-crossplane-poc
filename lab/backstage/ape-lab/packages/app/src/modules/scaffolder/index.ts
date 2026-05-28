@@ -7,8 +7,8 @@ import { z } from 'zod';
 import { ZoneFqdnPreview } from './ZoneFqdnPreview';
 import { RecordFqdnPreview } from './RecordFqdnPreview';
 import { EnvironmentPicker } from './EnvironmentPicker';
-import { AwsDnsZonePicker } from './AwsDnsZonePicker';
-import { AwsDnsRecordPicker } from './AwsDnsRecordPicker';
+import { AwsDnsZonePicker } from './AwsDnsZonePicker/AwsDnsZonePicker';
+import { AwsDnsRecordPicker } from './AwsDnsRecordPicker/AwsDnsRecordPicker';
 
 const zoneFqdnPreviewField = FormFieldBlueprint.make({
   name: 'zone-fqdn-preview',
@@ -60,7 +60,9 @@ const awsDnsZonePickerField = FormFieldBlueprint.make({
         name: 'AwsDnsZonePicker',
         component: AwsDnsZonePicker,
         schema: {
-          returnValue: z.string().optional(),
+          returnValue: z
+            .object({ id: z.string(), name: z.string() })
+            .optional(),
         },
       }),
   },

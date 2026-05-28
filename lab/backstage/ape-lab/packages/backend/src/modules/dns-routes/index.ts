@@ -5,7 +5,7 @@ import {
 import { createDnsRouter } from './router';
 
 export const dnsPlugin = createBackendPlugin({
-  pluginId: 'dns',
+  pluginId: 'aws',
   register(env) {
     env.registerInit({
       deps: {
@@ -16,11 +16,11 @@ export const dnsPlugin = createBackendPlugin({
       async init({ logger, config, httpRouter }) {
         httpRouter.use(await createDnsRouter({ logger, config }));
         httpRouter.addAuthPolicy({
-          path: '/zones',
+          path: '/dns-zones',
           allow: 'unauthenticated',
         });
         httpRouter.addAuthPolicy({
-          path: '/records',
+          path: '/dns-records',
           allow: 'unauthenticated',
         });
       },

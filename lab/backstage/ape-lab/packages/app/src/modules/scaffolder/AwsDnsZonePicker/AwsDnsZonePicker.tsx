@@ -25,7 +25,7 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
 
-  const uiOptions = uiSchema['ui:options'] ?? {};
+  const uiOptions = (uiSchema?.['ui:options'] ?? {}) as Record<string, any>;
   const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
   const environmentFromForm = formContext?.formData?.[environmentFieldName];
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
