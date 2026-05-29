@@ -76,10 +76,16 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     for (const e of managed) {
       const ann = (e.metadata.annotations ?? {}) as Record<string, string>;
       const spec = (e.spec ?? {}) as Record<string, any>;
-      const fqdn = norm(
-        ann['dock.tech/record-fqdn'] ||
-          (e.metadata.name.startsWith('record-') ? e.metadata.name.slice('record-'.length) : ''),
-      );
+      // FQDN can come from (in priority order): the record-fqdn annotation
+      // (lab shape), spec.recordName + spec.zoneName (APE shape), or the
+      // entity name `record-<fqdn>` (legacy lab naming).
+      let fqdn = norm(ann['dock.tech/record-fqdn']);
+      if (!fqdn && spec.zoneName) {
+        fqdn = norm(spec.recordName ? `${spec.recordName}.${spec.zoneName}` : spec.zoneName);
+      }
+      if (!fqdn && e.metadata.name.startsWith('record-')) {
+        fqdn = norm(e.metadata.name.slice('record-'.length));
+      }
       const rtype = (ann['dock.tech/record-type'] || spec.recordType || '').toString().toUpperCase();
       if (fqdn) onboarded.add(`${fqdn}|${rtype}`);
     }
