@@ -20,9 +20,8 @@ spec:
         - name
         - system
         - environment
-        - zoneId
+        - zone
         - existingRecord
-        - owner
       properties:
         name:
           title: Resource Name
@@ -53,9 +52,9 @@ spec:
           ui:options:
             systemFieldName: system
 
-        zoneId:
+        zone:
           title: DNS Zone
-          type: string
+          type: object
           description: Live list of Route53 hosted zones in the selected environment
           ui:field: AwsDnsZonePicker
           ui:options:
@@ -68,7 +67,7 @@ spec:
           ui:field: AwsDnsRecordPicker
           ui:options:
             environmentFieldName: environment
-            zoneFieldName: zoneId
+            zoneFieldName: zone
           properties:
             name:    { type: string }
             type:    { type: string }
@@ -81,15 +80,23 @@ spec:
                 hostedZoneId:         { type: string }
                 evaluateTargetHealth: { type: boolean }
 
-        owner:
-          title: Claiming Team
-          type: string
-          description: Your team will become the owner of this record
-          ui:field: MyGroupsPicker
-
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
     - $yaml: ../../../shared/entities/fetch-system.yaml
+
+    - id: deriveAccount
+      name: Derive AWS account from the selected environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          env: ${{ parameters.environment }}
+          systemEnvironments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+        expression: >-
+          (
+            $e := $filter(systemEnvironments, function($x) { $x.name = env })[0];
+            $e ? { "account": $string($e.aws.account), "accountName": $e.aws.accountName }
+               : { "account": "", "accountName": "" }
+          )
 
     - id: writeFile
       name: Create Resource File
@@ -110,10 +117,16 @@ spec:
           spec:
             type: Record
             cloud: aws
-            owner: ${{ parameters.owner }}
+            owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
             system: ${{ parameters.system }}
             environment: ${{ parameters.environment }}
-            zoneId: ${{ parameters.zoneId }}
+            domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
+            subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
+            aws:
+              account: ${{ steps.deriveAccount.output.result.account }}
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            zoneId: ${{ parameters.zone.id }}
+            zoneName: ${{ parameters.zone.name }}
             recordName: ${{ parameters.existingRecord.name }}
             recordType: ${{ parameters.existingRecord.type }}
             {%- if parameters.existingRecord.aliasTarget %}
