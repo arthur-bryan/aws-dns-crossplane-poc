@@ -1,4 +1,5 @@
 import { discoveryApiRef, fetchApiRef, useApi } from '@backstage/core-plugin-api';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { ScaffolderField } from '@backstage/plugin-scaffolder-react/alpha';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -28,6 +29,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
 
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
+  const catalogApi = useApi(catalogApiRef);
 
   const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
@@ -36,6 +38,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   const zoneFromForm = formContext?.formData?.[zoneFieldName];
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
   const rawZoneId = uiOptions.zoneId ?? (zoneFromForm && typeof zoneFromForm === 'object' ? (zoneFromForm as { id: string }).id : zoneFromForm);
+  const zoneName = zoneFromForm && typeof zoneFromForm === 'object' ? (zoneFromForm as { name?: string }).name : undefined;
   const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
   const zoneId = typeof rawZoneId === 'string' ? rawZoneId : undefined;
 
@@ -58,8 +61,31 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     }
 
     const data = (await response.json()) as { records?: DnsRecord[] };
-    return data.records ?? [];
-  }, [discoveryApi, fetchApi, environment, zoneId]);
+    const liveRecords = data.records ?? [];
+
+    // Exclude records already onboarded into the platform: a record can only be
+    // claimed once. Onboarded records exist as catalog Resource entities named
+    // `record-<fqdn>`. Build an exclusion set of "<fqdn>|<type>" (lower-cased,
+    // trailing dot stripped) and drop any live record that matches.
+    const { items: managed } = await catalogApi.getEntities({
+      filter: [{ kind: 'resource', 'spec.type': 'Record' }, { kind: 'resource', 'spec.type': 'aws-dns-record' }],
+      fields: ['metadata.name', 'metadata.annotations', 'spec.recordType', 'spec.recordName', 'spec.zoneName'],
+    });
+    const norm = (s?: string) => (s ?? '').replace(/\.$/, '').toLowerCase();
+    const onboarded = new Set<string>();
+    for (const e of managed) {
+      const ann = (e.metadata.annotations ?? {}) as Record<string, string>;
+      const spec = (e.spec ?? {}) as Record<string, any>;
+      const fqdn = norm(
+        ann['dock.tech/record-fqdn'] ||
+          (e.metadata.name.startsWith('record-') ? e.metadata.name.slice('record-'.length) : ''),
+      );
+      const rtype = (ann['dock.tech/record-type'] || spec.recordType || '').toString().toUpperCase();
+      if (fqdn) onboarded.add(`${fqdn}|${rtype}`);
+    }
+
+    return liveRecords.filter(r => !onboarded.has(`${norm(r.name)}|${(r.type ?? '').toUpperCase()}`));
+  }, [discoveryApi, fetchApi, catalogApi, environment, zoneId, zoneName]);
 
   useEffect(() => {
     if (formData && records.length > 0 && !records.some((r) => r.name === formData.name && r.type === formData.type)) {
