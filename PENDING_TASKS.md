@@ -119,6 +119,83 @@ Services" (DNS, SFTP, email, AD…) not "platform networking".
 
 ---
 
+## APE catalog→XR emulation (this session)
+
+Context: the APE-aligned templates (`backstage-templates/templates/
+resources/aws/*.yaml`, loaded by the lab via URL Locations) write
+Backstage **catalog Resource** entities to
+`entities/dock-tech/systems/<ns>/resources/<env>/{record,zone}-*.yaml`.
+Crossplane does **not** reconcile those — it reconciles **XRs** under
+`entities/environments/**` (the ArgoCD `entities` app's watch path).
+In real APE a controller bridges the two; the lab had no such bridge, so
+form submissions never reached Route53. This session built that bridge.
+
+### TASK-17: ✅ Catalog→XR converter
+`lab/tools/catalog_to_xr.py` — maps catalog Resource (`spec.type:
+Record|Zone`) → Crossplane XR (`dock.tech/v1`). Key transforms:
+`recordType→type`, `zone{id,name}→zoneId+zoneName`, FQDN `recordName`
+relativized against `zoneName`, `aws.account` cast string→int (CRD
+requires a number), routing/alias passthrough. Output path:
+`entities/environments/<domain>/<subdomain>/<system>/<env>/resources/
+aws/<zoneName>/...`. `--check` flag for CI drift detection.
+
+### TASK-18: ✅ GitHub Action runs the converter (GitOps-pure)
+`.github/workflows/catalog-to-xr.yml` — on push to
+`feature/ape-platform-alignment` touching `entities/dock-tech/systems/
+**/resources/**`, runs the converter and commits the generated XRs to
+`entities/environments/` (only that path, so no self-trigger loop).
+ArgoCD then applies. Validated end-to-end via API:
+- **create**: `apitest.arthurbryan.com A 300 → 192.0.2.50` reached
+  Route53, XR `Ready=Available`.
+- **claim**: `claimtest.arthurbryan.com A 600 → 203.0.113.77` adopted
+  via external-name; converter relativized the FQDN recordName.
+
+### TASK-19: ✅ Templates emit the denormalized Resource contract
+`record.yaml` (create) + `record-claim.yaml` (claim) now write a
+self-contained Resource (system, environment, domain, subdomain, aws
+account, zoneId, zoneName, recordName, recordType, ttl/values/…) so the
+converter maps 1:1 with no cross-entity lookups. Create's zone field
+switched from a catalog `EntityPicker` to the env-scoped
+`AwsDnsZonePicker` (object); claim's `zoneId(string)` → `zone(object)`;
+claim owner now derived from the System (dropped the unregistered
+`MyGroupsPicker`). `infrastructure` System gained `aws.{account,
+accountName}` per environment (dev/hml/prd) to feed `deriveAccount`.
+
+### TASK-20: ✅ Picker fixes for the new frontend system
+- `AwsDnsZonePicker` registered with `returnValue: z.object({id,name})`
+  (it emits an object; mismatched `z.string` left the object-typed field
+  unbound and the dropdown inert). Pickers imported directly, bypassing
+  the barrel that double-registered them via the legacy
+  `createScaffolderFieldExtension`.
+- `dns` backend plugin → pluginId `aws`, routes `/dns-zones`,
+  `/dns-records` (matches `discoveryApi.getBaseUrl('aws')`).
+- `AwsDnsRecordPicker` excludes already-onboarded records (queries the
+  catalog, builds an `<fqdn>|<type>` set from lab- AND APE-shape
+  entities) so a claimed record can't be claimed again.
+- catalog file-watcher now also ingests `entities/dock-tech/systems/**/
+  resources/**` so onboarded records list under their System.
+
+### TASK-21: ⏳ Edit template (standalone system→env→record)
+**Not done.** Entry point: a record carries `spec.system`, so it lists
+under its System in the catalog; the pencil opens `dns-record-edit`
+pre-filled (zones aren't system-linked, so they don't appear). Remaining:
+(a) fix the pre-existing hardcoded-`dev` write path in `record-edit.yaml`
+(line ~257) — it has no `environment` field to derive the real env;
+(b) make its `roadiehq:utils:merge` writeFile preserve the denormalized
+fields while updating ttl/values/type; (c) verify records list under the
+System and the pencil resolves. **NB:** the pencil-exclusion + standalone
+listing depend on the catalog ingesting the dock-tech/systems Resources
+(TASK-20, done).
+
+### Test artifacts left in place
+`apitest.arthurbryan.com` and `claimtest.arthurbryan.com` were created in
+Route53 + git during API validation and are still live (XRs +
+`entities/dock-tech/systems/.../record-{apitest,claimtest}-prd.yaml` +
+generated XRs). Delete the catalog Resources (and let the converter prune,
+or remove the XRs) when no longer needed.
+
+---
+
 ## Open items (not in original PENDING_TASKS but worth tracking)
 
 - **ZoneAssociation upjet bug** — second non-inline VPC association
