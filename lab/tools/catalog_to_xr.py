@@ -52,6 +52,17 @@ def die(msg: str) -> None:
     sys.exit(1)
 
 
+def aws_block(aws: dict | None) -> dict | None:
+    """Normalize the aws block: account must be an int (the CRD requires a
+    number; templates/catalog emit it as a string)."""
+    if not aws:
+        return None
+    account = aws.get("account")
+    if isinstance(account, str) and account.isdigit():
+        account = int(account)
+    return {"account": account, "accountName": aws.get("accountName")}
+
+
 def warn(name: str, msg: str) -> None:
     print(f"catalog_to_xr: WARN [{name}]: {msg}", file=sys.stderr)
 
@@ -111,9 +122,9 @@ def build_record_xr(res: dict) -> tuple[str, dict] | None:
         "recordName": record_name,
         "type": rtype,
     }
-    aws = spec.get("aws")
+    aws = aws_block(spec.get("aws"))
     if aws:
-        xr_spec["aws"] = {"account": aws.get("account"), "accountName": aws.get("accountName")}
+        xr_spec["aws"] = aws
 
     if rtype == "ALIAS":
         at = spec.get("aliasTarget", {}) or {}
@@ -186,9 +197,9 @@ def build_zone_xr(res: dict) -> tuple[str, dict] | None:
         "environment": env,
         "zoneName": zone_name,
     }
-    aws = spec.get("aws")
+    aws = aws_block(spec.get("aws"))
     if aws:
-        xr_spec["aws"] = {"account": aws.get("account"), "accountName": aws.get("accountName")}
+        xr_spec["aws"] = aws
     for k in ("visibility", "delegatedFromZoneId", "delegatedFromAccountName", "comment"):
         if spec.get(k) is not None:
             xr_spec[k] = spec[k]

@@ -17,7 +17,7 @@ spec:
   recordName: apitest
   type: A
   aws:
-    account: '597230762851'
+    account: 597230762851
     accountName: prd-account
   ttl: 300
   values:
