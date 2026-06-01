@@ -2,13 +2,13 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record
-  title: Create AWS Route53 DNS Record
-  description: Create a new Route53 DNS record
+  title: Create DNS Record
+  description: Create a new DNS record
   labels:
     category: resources
   tags:
     - resource
-    - aws
+    - dns
     - public
 
 spec:
@@ -53,7 +53,7 @@ spec:
         zone:
           title: Parent Zone
           type: object
-          description: Live Route53 hosted zones in the selected environment
+          description: Live DNS zones in the selected environment
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
@@ -300,9 +300,9 @@ spec:
                 type:
                   const: ALIAS
                 serviceType:
-                  title: AWS Service Type
+                  title: Target Service Type
                   type: string
-                  description: Type of AWS service being aliased
+                  description: Type of service being aliased
                   default: CloudFront
                   enum:
                     - CloudFront
@@ -323,7 +323,7 @@ spec:
                 dnsName:
                   title: Target DNS Name
                   type: string
-                  description: DNS name of the AWS resource
+                  description: DNS name of the target
                   ui:help: "Example: d111111abcdef8.cloudfront.net"
                 evaluateTargetHealth:
                   title: Evaluate Target Health
@@ -440,7 +440,7 @@ spec:
           metadata:
             name: ${{ parameters.name }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
-            description: AWS Route53 DNS Record created by template
+            description: DNS Record created via template
             annotations:
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}

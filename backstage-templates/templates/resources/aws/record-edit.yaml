@@ -2,13 +2,13 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: dns-record-edit
-  title: Edit AWS Route53 DNS Record
-  description: Edit an existing AWS Route53 DNS record
+  title: Edit DNS Record
+  description: Edit an existing DNS record
   labels:
     category: resources
   tags:
     - resource
-    - aws
+    - dns
     - public
     - hidden
 
@@ -161,9 +161,9 @@ spec:
                 type:
                   const: ALIAS
                 serviceType:
-                  title: AWS Service Type (immutable)
+                  title: Target Service Type (immutable)
                   type: string
-                  description: Type of AWS service (cannot be changed)
+                  description: Service type (cannot be changed)
                   ui:disabled: true
                   enum:
                     - CloudFront
@@ -176,7 +176,7 @@ spec:
                 dnsName:
                   title: Target DNS Name
                   type: string
-                  description: DNS name of the AWS resource
+                  description: DNS name of the target
                 evaluateTargetHealth:
                   title: Evaluate Target Health
                   type: boolean

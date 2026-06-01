@@ -2,13 +2,13 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-zone
-  title: Create AWS Route53 DNS Zone
-  description: Create a new Route53 hosted zone
+  title: Create DNS Zone
+  description: Create a new DNS zone
   labels:
     category: resources
   tags:
     - resource
-    - aws
+    - dns
     - public
 spec:
   type: resource
@@ -68,7 +68,7 @@ spec:
         tags:
           title: Tags
           type: object
-          description: Additional AWS tags (hierarchy tags are added automatically)
+          description: Additional tags (hierarchy tags are added automatically)
           ui:field: KeyValuePairInput
           ui:help: "Add custom tags for cost tracking or organization"
 
@@ -101,7 +101,7 @@ spec:
           metadata:
             name: ${{ parameters.name }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
-            description: AWS Route53 DNS Zone created by template
+            description: DNS Zone created via template
           spec:
             type: Zone
             cloud: aws

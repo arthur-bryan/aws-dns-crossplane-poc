@@ -2,13 +2,13 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record-claim
-  title: Claim Existing AWS Route53 DNS Record
-  description: Bring an existing Route53 record under platform management
+  title: Claim Existing DNS Record
+  description: Bring an existing DNS record under platform management
   labels:
     category: resources
   tags:
     - resource
-    - aws
+    - dns
     - public
 
 spec:
@@ -55,7 +55,7 @@ spec:
         zone:
           title: DNS Zone
           type: object
-          description: Live list of Route53 hosted zones in the selected environment
+          description: Live DNS zones in the selected environment
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
@@ -109,7 +109,7 @@ spec:
           metadata:
             name: ${{ parameters.name }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
-            description: AWS Route53 DNS Record (claimed)
+            description: DNS Record (claimed)
             annotations:
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
