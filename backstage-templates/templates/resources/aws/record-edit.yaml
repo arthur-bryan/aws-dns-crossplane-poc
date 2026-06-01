@@ -21,6 +21,7 @@ spec:
       required:
         - name
         - system
+        - environment
         - zone
         - recordName
         - type
@@ -43,6 +44,13 @@ spec:
           type: string
           description: Owning system (immutable)
           ui:disabled: true
+
+        environment:
+          title: Environment
+          type: string
+          description: Environment (immutable)
+          ui:disabled: true
+          ui:widget: hidden
 
         zone:
           title: DNS Zone
@@ -256,13 +264,15 @@ spec:
       name: Update Resource File
       action: roadiehq:utils:merge
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/dev/record-${{ parameters.name }}-dev.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ parameters.name }}-${{ parameters.environment }}.yaml
         content: |
           metadata:
             annotations:
               dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+              argocd.argoproj.io/sync-options: Force=true,Replace=true
           spec:
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            recordType: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
             values:

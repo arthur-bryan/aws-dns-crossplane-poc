@@ -156,6 +156,13 @@ def build_record_xr(res: dict) -> tuple[str, dict] | None:
     annotations = {}
     if ann.get("dock.tech/scaffolder-parameters"):
         annotations["dock.tech/scaffolder-parameters"] = ann["dock.tech/scaffolder-parameters"]
+    # Pass through any argocd.argoproj.io/* annotations the template set
+    # (e.g. sync-options: Force=true,Replace=true on type-changing edits, so
+    # ArgoCD does delete-and-create instead of an in-place update that AWS
+    # would reject for an immutable field).
+    for k, v in ann.items():
+        if k.startswith("argocd.argoproj.io/"):
+            annotations[k] = v
 
     xr = {
         "apiVersion": "dock.tech/v1",
