@@ -3,11 +3,12 @@ kind: Resource
 metadata:
   name: e2e-claim
   namespace: system-infrastructure-prd
-  description: DNS Record (claimed)
+  description: DNS Record (claimed; edited)
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"recordName":"e2e-claim","type":"A","ttl":300,"values":["198.51.100.10"]}'
+    dock.tech/scaffolder-parameters: '{"recordName":"e2e-claim","type":"CNAME","ttl":600,"values":["arthurbryan.com"]}'
     dock.tech/import-existing: "true"
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: prd
     cloud: aws
@@ -24,8 +25,8 @@ spec:
     accountName: prd-account
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
-  recordName: e2e-claim.arthurbryan.com
-  recordType: A
-  ttl: 300
+  recordName: e2e-claim
+  recordType: CNAME
+  ttl: 600
   values:
-    - 198.51.100.10
+    - arthurbryan.com
