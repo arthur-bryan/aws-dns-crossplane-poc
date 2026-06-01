@@ -122,7 +122,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   } else if (error) {
     helperText = 'Could not load DNS records.';
   } else if (environment && zoneId) {
-    helperText = records.length > 0 ? `${records.length} record(s) available. Type to filter.` : 'No records found in this zone.';
+    helperText = records.length > 0 ? `${records.length} claimable record(s) — type to filter.` : 'No claimable records found in this zone.';
   }
 
   return (

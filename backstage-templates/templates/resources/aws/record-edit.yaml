@@ -27,8 +27,9 @@ spec:
         entityRef:
           title: Entity Reference
           type: string
-          description: Entity reference of the DNS record
+          description: Internal — pre-filled when opened via the pencil
           ui:disabled: true
+          ui:widget: hidden
 
         name:
           title: Name
@@ -39,7 +40,7 @@ spec:
         system:
           title: System
           type: string
-          description: System of Resource
+          description: Owning system (immutable)
           ui:disabled: true
 
         zone:

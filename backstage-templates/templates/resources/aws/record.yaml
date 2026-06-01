@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record
-  title: AWS Route53 DNS Record Template
-  description: A template for creating an AWS Route53 DNS record
+  title: Create AWS Route53 DNS Record
+  description: Create a new Route53 DNS record
   labels:
     category: resources
   tags:
@@ -35,7 +35,7 @@ spec:
         system:
           title: System
           type: string
-          description: System of Resource
+          description: Owning system
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -44,7 +44,7 @@ spec:
         environment:
           title: Environment
           type: string
-          description: Environment of the DNS record (e.g. dev, hml, prod)
+          description: Environment
           ui:field: EnvironmentPicker
           ui:options:
             rows: 5
@@ -67,7 +67,7 @@ spec:
         recordName:
           title: Record Name
           type: string
-          description: Record name (e.g., 'www', 'api', 'cdn')
+          description: DNS label (zone-relative)
           pattern: '^[a-z0-9]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*$'
           ui:help: "Examples: www, api, cdn, app.staging"
 

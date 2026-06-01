@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-zone
-  title: AWS Route53 DNS Zone Template
-  description: A template for creating an AWS Route53 hosted zone
+  title: Create AWS Route53 DNS Zone
+  description: Create a new Route53 hosted zone
   labels:
     category: resources
   tags:
@@ -31,7 +31,7 @@ spec:
         system:
           title: System
           type: string
-          description: System of Resource
+          description: Owning system
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -39,7 +39,7 @@ spec:
         environment:
           title: Environment
           type: string
-          description: Environment of the DNS zone (e.g. dev, hml, prod)
+          description: Environment
           ui:field: EnvironmentPicker
           ui:options:
             rows: 5

@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: aws-dns-record-claim
   title: Claim Existing AWS Route53 DNS Record
-  description: Claim ownership of an existing AWS Route53 DNS record and register it in the catalog
+  description: Bring an existing Route53 record under platform management
   labels:
     category: resources
   tags:
@@ -15,7 +15,7 @@ spec:
   type: resource
 
   parameters:
-    - title: DNS Record Information
+    - title: Record to Claim
       required:
         - name
         - system
@@ -26,7 +26,7 @@ spec:
         name:
           title: Resource Name
           type: string
-          description: Unique catalog name for this record resource
+          description: Catalog entity name (must be unique)
           ui:autofocus: true
 
         kind:
@@ -47,7 +47,7 @@ spec:
         environment:
           title: Environment
           type: string
-          description: Pick the environment whose AWS account owns the zone
+          description: Environment
           ui:field: EnvironmentPicker
           ui:options:
             systemFieldName: system

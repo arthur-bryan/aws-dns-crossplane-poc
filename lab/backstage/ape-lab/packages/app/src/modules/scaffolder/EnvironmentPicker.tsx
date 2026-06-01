@@ -33,16 +33,16 @@ export const EnvironmentPicker = (
     }
   }, [fallbackEnvironment, formData, onChange, options]);
 
-  let helperText = 'Select a System first to load environments from spec.environments.';
+  let helperText = 'Select a System first.';
   if (systemRef) {
     if (loading) {
-      helperText = 'Loading environments from selected System...';
+      helperText = 'Loading environments…';
     } else if (error) {
-      helperText = 'Could not load environments from System.';
+      helperText = 'Could not load environments for this system.';
     } else if (systemEnvironments.length > 0) {
-      helperText = `Loaded ${systemEnvironments.length} environment(s) from System: ${systemEnvironments.join(', ')}.`;
+      helperText = `Available environments: ${systemEnvironments.join(', ')}.`;
     } else {
-      helperText = 'System has no supported environments in spec.environments.';
+      helperText = 'This system has no environments configured.';
     }
   }
 
