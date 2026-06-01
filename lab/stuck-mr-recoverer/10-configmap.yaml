@@ -200,6 +200,74 @@ data:
         return age >= RECOVER_AFTER
 
 
+    # Separate tracking dict for the create-then-empty-read stuck pattern.
+    # See is_stuck_create_observe below.
+    first_seen_co = {}
+
+
+    def is_stuck_create_observe(mr):
+        """Upjet 'create-then-empty-read': Create succeeded (succeeded
+        annotation stamped), but the subsequent Observe returned empty
+        (atProvider has no .type / no records) and external-create-pending
+        was never cleared. Synced=True (the reconcile didn't raise), but
+        Ready stays at False/Creating forever. The AWS record DOES exist
+        (verified out-of-band) -- upjet just can't see it. Recovery is to
+        clear external-create-pending so the next reconcile drops out of
+        the create code path and goes straight to Observe."""
+        uid = mr["metadata"]["uid"]
+        ann = (mr.get("metadata", {}).get("annotations") or {})
+        pending = ann.get("crossplane.io/external-create-pending")
+        succeeded = ann.get("crossplane.io/external-create-succeeded")
+        conditions = mr.get("status", {}).get("conditions", [])
+        ready = next((c for c in conditions if c.get("type") == "Ready"), None)
+        at = mr.get("status", {}).get("atProvider") or {}
+        # Pattern: both create-state annotations set, atProvider empty,
+        # Ready=False/Creating. (Synced is True/ReconcileSuccess in this
+        # path, but we don't strictly require it -- the annotations + empty
+        # atProvider + Ready=Creating already uniquely identify the case.)
+        signature_match = (
+            bool(pending)
+            and bool(succeeded)
+            and (not at.get("type"))
+            and ready is not None
+            and ready.get("status") == "False"
+            and ready.get("reason") == "Creating"
+        )
+        if not signature_match:
+            first_seen_co.pop(uid, None)
+            return False
+        now = datetime.datetime.now(datetime.timezone.utc)
+        first = first_seen_co.setdefault(uid, now)
+        age = (now - first).total_seconds()
+        return age >= RECOVER_AFTER
+
+
+    def recover_create_observe(mr):
+        ns = mr["metadata"]["namespace"]
+        name = mr["metadata"]["name"]
+        uid = mr["metadata"]["uid"]
+        path = (f"/apis/route53.aws.m.upbound.io/v1beta1/namespaces/"
+                f"{ns}/records/{name}")
+        try:
+            k8s("PATCH", path, headers=HEADERS_MERGE_PATCH, body={
+                "metadata": {"annotations": {
+                    # Setting to null deletes the annotation via merge-patch.
+                    "crossplane.io/external-create-pending": None,
+                }},
+            })
+        except Exception as e:
+            log.warning(f"{ns}/{name} create-observe patch failed: {e}")
+            return
+        emit_event(ns, name, uid, "CreateObserveRecovered",
+                   "cleared external-create-pending; upjet will re-observe and "
+                   "mark Ready (create-then-empty-read pattern)")
+        first_seen_co.pop(uid, None)
+        log.info(
+            f"{ns}/{name} cleared external-create-pending (create-then-empty-"
+            f"read); upjet will mark Ready on next observe"
+        )
+
+
     def emit_event(ns, name, uid, reason, message):
         now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         body = {
@@ -444,21 +512,31 @@ data:
         while True:
             tick += 1
             start = time.monotonic()
-            stuck_records = stuck_assocs = 0
+            stuck_records = stuck_co = stuck_assocs = 0
             try:
                 mrs = list_records()
                 for mr in mrs:
-                    if not is_stuck(mr):
-                        continue
-                    stuck_records += 1
-                    try:
-                        recover(mr)
-                    except Exception as e:
-                        log.error(
-                            f"records recovery failed for "
-                            f"{mr['metadata']['namespace']}/"
-                            f"{mr['metadata']['name']}: {e}"
-                        )
+                    if is_stuck(mr):
+                        stuck_records += 1
+                        try:
+                            recover(mr)
+                        except Exception as e:
+                            log.error(
+                                f"records recovery failed for "
+                                f"{mr['metadata']['namespace']}/"
+                                f"{mr['metadata']['name']}: {e}"
+                            )
+                        continue  # don't double-recover the same MR
+                    if is_stuck_create_observe(mr):
+                        stuck_co += 1
+                        try:
+                            recover_create_observe(mr)
+                        except Exception as e:
+                            log.error(
+                                f"create-observe recovery failed for "
+                                f"{mr['metadata']['namespace']}/"
+                                f"{mr['metadata']['name']}: {e}"
+                            )
                 assocs = list_zone_associations()
                 for mr in assocs:
                     if not is_zone_assoc_stuck(mr):
@@ -475,8 +553,9 @@ data:
                 if tick % 10 == 0:
                     log.info(
                         f"tick={tick} records={len(mrs)} stuck_records={stuck_records} "
+                        f"stuck_create_observe={stuck_co} "
                         f"assocs={len(assocs)} stuck_assocs={stuck_assocs} "
-                        f"tracking={len(first_seen)}"
+                        f"tracking={len(first_seen)+len(first_seen_co)}"
                     )
             except Exception as e:
                 log.error(f"loop error: {type(e).__name__}: {e}")
