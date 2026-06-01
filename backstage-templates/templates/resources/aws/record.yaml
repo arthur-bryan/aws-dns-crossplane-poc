@@ -9,6 +9,7 @@ metadata:
   tags:
     - resource
     - dns
+    - aws
     - public
 
 spec:
