@@ -135,8 +135,16 @@ export async function createDnsRouter(opts: {
       const client = makeRoute53Client(roleArn);
       const records = await listAllRecords(client, zoneId);
 
+      // NS and SOA at the apex are zone-level system records managed by
+      // Route53 itself -- they are not user-onboardable and must never appear
+      // in the claim picker. Filter at the source so the API never surfaces
+      // them to any consumer.
+      const claimable = records.filter(
+        r => r.Type !== 'NS' && r.Type !== 'SOA',
+      );
+
       res.json({
-        records: records.map(r => ({
+        records: claimable.map(r => ({
           name: r.Name?.replace(/\.$/, ''),
           type: r.Type,
           ttl: r.TTL,
