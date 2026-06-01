@@ -76,18 +76,34 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     for (const e of managed) {
       const ann = (e.metadata.annotations ?? {}) as Record<string, string>;
       const spec = (e.spec ?? {}) as Record<string, any>;
-      // FQDN can come from (in priority order): the record-fqdn annotation
-      // (lab shape), spec.recordName + spec.zoneName (APE shape), or the
-      // entity name `record-<fqdn>` (legacy lab naming).
+      // FQDN can come from (priority): record-fqdn annotation (lab shape),
+      // spec.recordName + spec.zoneName (APE shape, with defensive handling
+      // for templates that wrote the FQDN as recordName), or entity name
+      // `record-<fqdn>` (legacy lab naming).
       let fqdn = norm(ann['dock.tech/record-fqdn']);
       if (!fqdn && spec.zoneName) {
-        fqdn = norm(spec.recordName ? `${spec.recordName}.${spec.zoneName}` : spec.zoneName);
+        const rn = norm(spec.recordName);
+        const zn = norm(spec.zoneName);
+        if (!rn || rn === zn) {
+          fqdn = zn; // apex
+        } else if (rn.endsWith('.' + zn)) {
+          fqdn = rn; // recordName already carried the full FQDN
+        } else {
+          fqdn = `${rn}.${zn}`;
+        }
       }
       if (!fqdn && e.metadata.name.startsWith('record-')) {
         fqdn = norm(e.metadata.name.slice('record-'.length));
       }
+      if (!fqdn) continue;
       const rtype = (ann['dock.tech/record-type'] || spec.recordType || '').toString().toUpperCase();
-      if (fqdn) onboarded.add(`${fqdn}|${rtype}`);
+      onboarded.add(`${fqdn}|${rtype}`);
+      // ALIAS records are surfaced by Route53 as type A or AAAA (the AliasTarget
+      // attaches to the A/AAAA RRset). Add those equivalents so we still match.
+      if (rtype === 'ALIAS') {
+        onboarded.add(`${fqdn}|A`);
+        onboarded.add(`${fqdn}|AAAA`);
+      }
     }
 
     return liveRecords.filter(r => !onboarded.has(`${norm(r.name)}|${(r.type ?? '').toUpperCase()}`));
