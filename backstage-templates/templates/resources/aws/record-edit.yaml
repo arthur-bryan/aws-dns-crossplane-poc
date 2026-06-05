@@ -51,6 +51,11 @@ spec:
           type: string
           ui:disabled: true
 
+        zoneId:
+          title: Zone ID
+          type: string
+          ui:widget: hidden
+
         recordName:
           title: Record Name
           type: string
@@ -249,17 +254,59 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
+    - id: deriveAccount
+      name: Derive DNS account from environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            $accounts := {
+              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
+              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
+              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
+            };
+            $accounts[environment]
+          )
+
     - id: writeFile
       name: Update Resource File
-      action: roadiehq:utils:merge
+      # Full rewrite (not merge): switching record type or toggling weighted
+      # routing must NOT leave stale ttl/values/aliasTarget/setIdentifier/
+      # weight keys behind. The template owns the spec shape; emit it whole
+      # so the file always matches the form's current state. Shape matches
+      # what record.yaml (create) and record-claim.yaml emit so all three
+      # paths produce identical Resource entities.
+      action: roadiehq:utils:fs:write
       input:
         path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
           metadata:
+            name: ${{ parameters.name }}
+            namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
+            description: DNS Record managed by template
             annotations:
+              dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+            labels:
+              environment: ${{ parameters.environment }}
+              cloud: aws
           spec:
+            type: dns-record
+            cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            system: ${{ parameters.system }}
+            environment: ${{ parameters.environment }}
+            zoneId: ${{ parameters.zoneId }}
+            zoneName: ${{ parameters.zone }}
+            recordName: "${{ parameters.recordName }}"
+            recordType: ${{ parameters.type }}
+            aws:
+              account: ${{ steps.deriveAccount.output.result.accountId }}
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
             values:
@@ -268,6 +315,7 @@ spec:
             {%- endfor %}
             {%- else %}
             aliasTarget:
+              serviceType: ${{ parameters.serviceType }}
               dnsName: ${{ parameters.dnsName }}
               {%- if parameters.serviceType == 'Custom' %}
               hostedZoneId: ${{ parameters.customZoneId }}

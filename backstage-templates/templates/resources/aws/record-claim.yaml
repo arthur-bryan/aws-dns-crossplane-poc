@@ -110,6 +110,7 @@ spec:
           system: ${{ parameters.system }}
           environment: ${{ parameters.environment }}
           zone: ${{ parameters.zone.name }}
+          zoneId: ${{ parameters.zone.id }}
           recordName: ${{ steps.computeRecordName.output.result.recordName }}
           existingRecord: ${{ parameters.existingRecord }}
         expression: >-
@@ -119,6 +120,7 @@ spec:
               "system": system,
               "environment": environment,
               "zone": zone,
+              "zoneId": zoneId,
               "recordName": recordName,
               "type": existingRecord.type
             };
