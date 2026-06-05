@@ -6,7 +6,7 @@ metadata:
   description: DNS Record claimed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"zone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com"},"existingRecord":{"name":"demo.arthurbryan.com","type":"A","ttl":300,"values":["10.0.0.10"]},"system":"system:default/infrastructure","environment":"prd"}'
+    dock.tech/scaffolder-parameters: '{"name":"infrastructure-demo-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","recordName":"demo","type":"A","ttl":300,"values":["10.0.0.10"]}'
   labels:
     environment: prd
     cloud: aws

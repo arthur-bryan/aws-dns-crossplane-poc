@@ -254,8 +254,7 @@ spec:
         content: |
           metadata:
             annotations:
-              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
-              dock.tech/updated-at: ${{ "'" + now() + "'" }}
+              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
           spec:
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
             {%- if parameters.type != 'ALIAS' %}

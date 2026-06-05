@@ -96,6 +96,46 @@ spec:
             { "recordName": $recordName, "entityName": $entityName }
           )
 
+    - id: buildEditParams
+      name: Build edit-template formData snapshot
+      action: roadiehq:utils:jsonata
+      input:
+        # Project the claim form's inputs into the shape the dns-record-edit
+        # template's `parameters` block expects. The enrichment processor
+        # serialises this annotation straight into ?formData=, so any key
+        # mismatch leaves the edit form with empty disabled fields and no
+        # dependencies firing.
+        data:
+          name: ${{ steps.computeRecordName.output.result.entityName }}
+          system: ${{ parameters.system }}
+          environment: ${{ parameters.environment }}
+          zone: ${{ parameters.zone.name }}
+          recordName: ${{ steps.computeRecordName.output.result.recordName }}
+          existingRecord: ${{ parameters.existingRecord }}
+        expression: >-
+          (
+            $base := {
+              "name": name,
+              "system": system,
+              "environment": environment,
+              "zone": zone,
+              "recordName": recordName,
+              "type": existingRecord.type
+            };
+            $alias := existingRecord.aliasTarget;
+            $alias ?
+              $merge([$base, {
+                "serviceType": "Custom",
+                "dnsName": $alias.dnsName,
+                "customZoneId": $alias.hostedZoneId,
+                "evaluateTargetHealth": $alias.evaluateTargetHealth
+              }]) :
+              $merge([$base, {
+                "ttl": existingRecord.ttl,
+                "values": existingRecord.values
+              }])
+          )
+
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
@@ -123,7 +163,7 @@ spec:
             description: DNS Record claimed by template
             annotations:
               dock.tech/scaffolder-editable-template: dns-record-edit
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
