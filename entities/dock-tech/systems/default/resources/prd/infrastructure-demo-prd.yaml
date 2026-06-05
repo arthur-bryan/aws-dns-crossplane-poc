@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: infrastructure-demo-prd
+  namespace: default
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"zone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com"},"existingRecord":{"name":"demo.arthurbryan.com","type":"A","ttl":300,"values":["10.0.0.10"]},"system":"system:default/infrastructure","environment":"prd"}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: Record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:default/infrastructure
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: "demo"
+  recordType: A
+  aws:
+    account: 
+    accountName: 
+  ttl: 300
+  values:
+    - 10.0.0.10
