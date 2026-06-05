@@ -7,8 +7,11 @@ import { z } from 'zod';
 import { ZoneFqdnPreview } from './ZoneFqdnPreview';
 import { RecordFqdnPreview } from './RecordFqdnPreview';
 import { EnvironmentPicker } from './EnvironmentPicker';
+import { EnvironmentPickerFieldSchema } from './EnvironmentPickerSchema';
 import { AwsDnsZonePicker } from './AwsDnsZonePicker/AwsDnsZonePicker';
+import { AwsDnsZonePickerFieldSchema } from './AwsDnsZonePicker/schema';
 import { AwsDnsRecordPicker } from './AwsDnsRecordPicker/AwsDnsRecordPicker';
+import { AwsDnsRecordPickerFieldSchema } from './AwsDnsRecordPicker/schema';
 
 const zoneFqdnPreviewField = FormFieldBlueprint.make({
   name: 'zone-fqdn-preview',
@@ -45,9 +48,7 @@ const environmentPickerField = FormFieldBlueprint.make({
       createFormField({
         name: 'EnvironmentPicker',
         component: EnvironmentPicker,
-        schema: {
-          returnValue: z.enum(['dev', 'hml', 'prd']).optional(),
-        },
+        schema: EnvironmentPickerFieldSchema,
       }),
   },
 });
@@ -59,11 +60,7 @@ const awsDnsZonePickerField = FormFieldBlueprint.make({
       createFormField({
         name: 'AwsDnsZonePicker',
         component: AwsDnsZonePicker,
-        schema: {
-          returnValue: z
-            .object({ id: z.string(), name: z.string() })
-            .optional(),
-        },
+        schema: AwsDnsZonePickerFieldSchema,
       }),
   },
 });
@@ -75,9 +72,7 @@ const awsDnsRecordPickerField = FormFieldBlueprint.make({
       createFormField({
         name: 'AwsDnsRecordPicker',
         component: AwsDnsRecordPicker,
-        schema: {
-          returnValue: z.any().optional(),
-        },
+        schema: AwsDnsRecordPickerFieldSchema,
       }),
   },
 });

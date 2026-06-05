@@ -3,10 +3,10 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import { useEffect, useMemo } from 'react';
-import type { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
 import { Environment, isEnvironment, useSystemEnvironments } from './hooks/useSystemEnvironments';
+import { EnvironmentPickerProps } from './EnvironmentPickerSchema';
 
-export const EnvironmentPicker = (props: FieldExtensionComponentProps<string>) => {
+export const EnvironmentPicker = (props: EnvironmentPickerProps) => {
   const { onChange, formData, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } = props;
   const uiOptions = uiSchema['ui:options'] ?? {};
   const systemFieldName = uiOptions.systemFieldName ?? 'system';
@@ -28,7 +28,7 @@ export const EnvironmentPicker = (props: FieldExtensionComponentProps<string>) =
       return;
     }
 
-    if (!isEnvironment(formData) || !options.includes(formData as Environment)) {
+    if (!isEnvironment(formData) || !options.includes(formData)) {
       onChange(fallbackEnvironment);
     }
   }, [fallbackEnvironment, formData, onChange, options]);

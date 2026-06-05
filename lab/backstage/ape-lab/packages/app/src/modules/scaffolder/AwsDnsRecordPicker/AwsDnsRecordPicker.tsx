@@ -1,5 +1,4 @@
 import { discoveryApiRef, fetchApiRef, useApi } from '@backstage/core-plugin-api';
-import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { ScaffolderField } from '@backstage/plugin-scaffolder-react/alpha';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -29,7 +28,6 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
 
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
-  const catalogApi = useApi(catalogApiRef);
 
   const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
@@ -38,7 +36,6 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   const zoneFromForm = formContext?.formData?.[zoneFieldName];
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
   const rawZoneId = uiOptions.zoneId ?? (zoneFromForm && typeof zoneFromForm === 'object' ? (zoneFromForm as { id: string }).id : zoneFromForm);
-  const zoneName = zoneFromForm && typeof zoneFromForm === 'object' ? (zoneFromForm as { name?: string }).name : undefined;
   const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
   const zoneId = typeof rawZoneId === 'string' ? rawZoneId : undefined;
 
@@ -61,53 +58,8 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     }
 
     const data = (await response.json()) as { records?: DnsRecord[] };
-    const liveRecords = data.records ?? [];
-
-    // Exclude records already onboarded into the platform: a record can only be
-    // claimed once. Onboarded records exist as catalog Resource entities named
-    // `record-<fqdn>`. Build an exclusion set of "<fqdn>|<type>" (lower-cased,
-    // trailing dot stripped) and drop any live record that matches.
-    const { items: managed } = await catalogApi.getEntities({
-      filter: [{ kind: 'resource', 'spec.type': 'dns-record' }],
-      fields: ['metadata.name', 'metadata.annotations', 'spec.recordType', 'spec.recordName', 'spec.zoneName'],
-    });
-    const norm = (s?: string) => (s ?? '').replace(/\.$/, '').toLowerCase();
-    const onboarded = new Set<string>();
-    for (const e of managed) {
-      const ann = (e.metadata.annotations ?? {}) as Record<string, string>;
-      const spec = (e.spec ?? {}) as Record<string, any>;
-      // FQDN can come from (priority): record-fqdn annotation (lab shape),
-      // spec.recordName + spec.zoneName (APE shape, with defensive handling
-      // for templates that wrote the FQDN as recordName), or entity name
-      // `record-<fqdn>` (legacy lab naming).
-      let fqdn = norm(ann['dock.tech/record-fqdn']);
-      if (!fqdn && spec.zoneName) {
-        const rn = norm(spec.recordName);
-        const zn = norm(spec.zoneName);
-        if (!rn || rn === zn) {
-          fqdn = zn; // apex
-        } else if (rn.endsWith('.' + zn)) {
-          fqdn = rn; // recordName already carried the full FQDN
-        } else {
-          fqdn = `${rn}.${zn}`;
-        }
-      }
-      if (!fqdn && e.metadata.name.startsWith('record-')) {
-        fqdn = norm(e.metadata.name.slice('record-'.length));
-      }
-      if (!fqdn) continue;
-      const rtype = (ann['dock.tech/record-type'] || spec.recordType || '').toString().toUpperCase();
-      onboarded.add(`${fqdn}|${rtype}`);
-      // ALIAS records are surfaced by Route53 as type A or AAAA (the AliasTarget
-      // attaches to the A/AAAA RRset). Add those equivalents so we still match.
-      if (rtype === 'ALIAS') {
-        onboarded.add(`${fqdn}|A`);
-        onboarded.add(`${fqdn}|AAAA`);
-      }
-    }
-
-    return liveRecords.filter(r => !onboarded.has(`${norm(r.name)}|${(r.type ?? '').toUpperCase()}`));
-  }, [discoveryApi, fetchApi, catalogApi, environment, zoneId, zoneName]);
+    return data.records ?? [];
+  }, [discoveryApi, fetchApi, environment, zoneId]);
 
   useEffect(() => {
     if (formData && records.length > 0 && !records.some((r) => r.name === formData.name && r.type === formData.type)) {
@@ -122,7 +74,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   } else if (error) {
     helperText = 'Could not load DNS records.';
   } else if (environment && zoneId) {
-    helperText = records.length > 0 ? `${records.length} claimable record(s) — type to filter.` : 'No claimable records found in this zone.';
+    helperText = records.length > 0 ? `${records.length} record(s) available. Type to filter.` : 'No records found in this zone.';
   }
 
   return (
