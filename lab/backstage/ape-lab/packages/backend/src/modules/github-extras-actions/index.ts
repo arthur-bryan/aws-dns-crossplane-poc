@@ -19,7 +19,6 @@ import {
   ScmIntegrations,
 } from '@backstage/integration';
 import {
-  cloneRepo,
   createTemplateAction,
   scaffolderActionsExtensionPoint,
 } from '@backstage/plugin-scaffolder-node';
@@ -92,14 +91,29 @@ export const githubExtrasActionsModule = createBackendModule({
               };
               const dir = resolveDir(ctx.workspacePath, folder);
               const token = await tokenFor(url, ghCreds);
-              ctx.logger.info(`Cloning ${url} (${branch ?? 'default'}) -> ${dir}`);
-              await cloneRepo({
-                url,
-                dir,
-                ref: branch,
-                auth: { token },
-                logger: ctx.logger,
-              });
+
+              // Embed the token in the HTTPS URL and clone via the system git
+              // CLI. Backstage's isomorphic-git path (cloneRepo + auth:{token})
+              // hits HTTP 401 against github.com here -- the standard git CLI
+              // with token-in-URL authenticates reliably and is what commit /
+              // push below already use, so we keep one auth path everywhere.
+              const authedUrl = url.replace(
+                /^https:\/\//,
+                `https://x-access-token:${token}@`,
+              );
+              const refArgs = branch
+                ? `--branch ${JSON.stringify(branch)} --single-branch`
+                : '';
+              ctx.logger.info(
+                `Cloning ${url} (${branch ?? 'default'}) -> ${dir}`,
+              );
+              await exec(
+                `git clone --depth 1 ${refArgs} ${JSON.stringify(authedUrl)} ${JSON.stringify(dir)}`,
+              );
+              // The token stays embedded in origin's URL inside the
+              // workspace's .git/config so subsequent push can reuse it.
+              // The scaffolder removes the workspace after the task ends,
+              // so this exposure is short-lived and process-local.
             },
           }),
 
