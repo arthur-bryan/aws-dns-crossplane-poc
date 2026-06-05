@@ -158,7 +158,7 @@ def zone_catalog_yaml(ctx: dict, zone_name: str, zone_id: str, xr_relpath: str) 
               url: {REPO_URL}/delete/{REPO_BRANCH}/{xr_relpath}
               icon: delete
         spec:
-          type: aws-dns-zone
+          type: dns-zone
           owner: group:default/infrastructure
           system: {ctx['system']}
     """)
@@ -278,7 +278,7 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
             dock.tech/environment: {ctx['environment']}
             dock.tech/managed-by: batch-import
             dock.tech/scaffolder-parameters: '{scaffolder_params}'
-            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/aws-dns-record-edit?formData={edit_url_form}"
+            backstage.io/edit-url: "{BACKSTAGE_BASE_URL}/create/templates/default/dns-record-edit?formData={edit_url_form}"
             backstage.io/source-location: "url:{REPO_URL}/blob/{REPO_BRANCH}/{xr_relpath}"
           tags:
         """) + "\n".join(f"    - {t}" for t in tags) + dedent(f"""
@@ -290,7 +290,7 @@ def record_catalog_yaml(ctx: dict, rec: dict, xr_relpath: str) -> str:
               url: {REPO_URL}/delete/{REPO_BRANCH}/{xr_relpath}
               icon: delete
         spec:
-          type: aws-dns-record
+          type: dns-record
           owner: group:default/infrastructure
           system: {ctx['system']}
           dependsOn:

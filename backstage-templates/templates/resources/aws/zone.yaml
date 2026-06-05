@@ -1,7 +1,7 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws-dns-zone
+  name: dns-zone
   title: DNS Zone Template
   description: A template for creating a DNS hosted zone
   labels:
@@ -123,7 +123,7 @@ spec:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: Zone
+            type: dns-zone
             cloud: aws
             owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}

@@ -165,7 +165,7 @@ def submit_zone(prefix: str, environment: str, private: bool,
     }
     if private:
         body["vpcs"] = vpc_refs
-    task_id = scaffolder_submit("template:default/aws-dns-zone", body)
+    task_id = scaffolder_submit("template:default/dns-zone", body)
     state = scaffolder_wait(task_id)
     if state != "completed":
         log = "\n".join(scaffolder_log_tail(task_id))
@@ -370,7 +370,7 @@ def s_negative_private_zero_vpc(suffix: str) -> bool:
         "vpcs": [],
     }
     try:
-        task_id = scaffolder_submit("template:default/aws-dns-zone", body)
+        task_id = scaffolder_submit("template:default/dns-zone", body)
     except urllib.error.HTTPError as e:
         msg = e.read().decode()[:240]
         ok(f"scaffolder rejected at submit: {msg}")

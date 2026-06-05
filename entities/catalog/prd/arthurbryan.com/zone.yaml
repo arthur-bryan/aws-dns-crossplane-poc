@@ -27,6 +27,6 @@ metadata:
     - imported
     - prd
 spec:
-  type: aws-dns-zone
+  type: dns-zone
   owner: group:default/infrastructure
   system: infrastructure

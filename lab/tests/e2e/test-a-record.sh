@@ -44,7 +44,7 @@ print(json.dumps({
 " )
 ZONE_REF="$ZONE_REF" RECORD_KEY="$RECORD_KEY" RECORD_TYPE="$RECORD_TYPE" \
   INITIAL_TTL="$INITIAL_TTL" INITIAL_VALUE="$INITIAL_VALUE"
-CREATE_TASK=$(scaffolder_submit "template:default/aws-dns-record" "$CREATE_VALUES")
+CREATE_TASK=$(scaffolder_submit "template:default/dns-record" "$CREATE_VALUES")
 ok "task id: $CREATE_TASK"
 
 step "2/8  wait for scaffolder to finish (writes XR + catalog YAML, opens PR)"
@@ -117,7 +117,7 @@ print(json.dumps({
 }))
 " )
 RECORD_TYPE="$RECORD_TYPE" UPDATED_TTL="$UPDATED_TTL" UPDATED_VALUE="$UPDATED_VALUE"
-EDIT_TASK=$(scaffolder_submit "template:default/aws-dns-record-edit" "$EDIT_VALUES")
+EDIT_TASK=$(scaffolder_submit "template:default/dns-record-edit" "$EDIT_VALUES")
 ok "task id: $EDIT_TASK"
 
 step "EDIT 2/4  wait for scaffolder to finish"

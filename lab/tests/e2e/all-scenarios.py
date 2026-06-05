@@ -315,7 +315,7 @@ def submit_create(scenario: Scenario) -> tuple[Optional[str], Optional[str]]:
     values.update(scenario.create_values)
     values.update(scenario.extra_create)
     info(f"submit create {scenario.name}")
-    task_id = scaffolder_submit("template:default/aws-dns-record", values)
+    task_id = scaffolder_submit("template:default/dns-record", values)
     state = scaffolder_wait(task_id)
     if state != "completed":
         fail(f"create task {task_id} state={state}")
@@ -340,7 +340,7 @@ def submit_edit(scenario: Scenario) -> tuple[Optional[str], Optional[str]]:
     values.update(scenario.edit_values)
     values.update(scenario.extra_edit)
     info(f"submit edit {scenario.name}")
-    task_id = scaffolder_submit("template:default/aws-dns-record-edit", values)
+    task_id = scaffolder_submit("template:default/dns-record-edit", values)
     state = scaffolder_wait(task_id)
     if state != "completed":
         fail(f"edit task {task_id} state={state}")

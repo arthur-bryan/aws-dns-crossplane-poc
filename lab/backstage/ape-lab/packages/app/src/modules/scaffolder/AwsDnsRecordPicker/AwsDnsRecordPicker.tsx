@@ -68,7 +68,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     // `record-<fqdn>`. Build an exclusion set of "<fqdn>|<type>" (lower-cased,
     // trailing dot stripped) and drop any live record that matches.
     const { items: managed } = await catalogApi.getEntities({
-      filter: [{ kind: 'resource', 'spec.type': 'Record' }, { kind: 'resource', 'spec.type': 'aws-dns-record' }],
+      filter: [{ kind: 'resource', 'spec.type': 'dns-record' }],
       fields: ['metadata.name', 'metadata.annotations', 'spec.recordType', 'spec.recordName', 'spec.zoneName'],
     });
     const norm = (s?: string) => (s ?? '').replace(/\.$/, '').toLowerCase();

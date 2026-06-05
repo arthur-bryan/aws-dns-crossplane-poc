@@ -63,7 +63,7 @@ def aws_env_dev():
 
 
 def submit_form(values):
-    body = {"templateRef": "template:default/aws-dns-zone", "values": values}
+    body = {"templateRef": "template:default/dns-zone", "values": values}
     return http_json(f"{BACKSTAGE}/api/scaffolder/v2/tasks", method="POST", body=body,
                      headers={"Authorization": f"Bearer {token()}"})["id"]
 

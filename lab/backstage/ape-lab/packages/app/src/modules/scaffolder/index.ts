@@ -53,7 +53,7 @@ const environmentPickerField = FormFieldBlueprint.make({
 });
 
 const awsDnsZonePickerField = FormFieldBlueprint.make({
-  name: 'aws-dns-zone-picker',
+  name: 'dns-zone-picker',
   params: {
     field: async () =>
       createFormField({
@@ -69,7 +69,7 @@ const awsDnsZonePickerField = FormFieldBlueprint.make({
 });
 
 const awsDnsRecordPickerField = FormFieldBlueprint.make({
-  name: 'aws-dns-record-picker',
+  name: 'dns-record-picker',
   params: {
     field: async () =>
       createFormField({

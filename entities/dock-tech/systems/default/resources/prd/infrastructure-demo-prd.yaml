@@ -11,7 +11,7 @@ metadata:
     environment: prd
     cloud: aws
 spec:
-  type: Record
+  type: dns-record
   cloud: aws
   owner: group:default/infrastructure
   system: system:default/infrastructure

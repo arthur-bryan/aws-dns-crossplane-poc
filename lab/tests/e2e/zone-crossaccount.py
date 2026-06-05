@@ -83,7 +83,7 @@ def submit_form():
         "private": False,
         "deletionProtection": False,
     }
-    body = {"templateRef": "template:default/aws-dns-zone", "values": values}
+    body = {"templateRef": "template:default/dns-zone", "values": values}
     resp = http_json(
         f"{BACKSTAGE}/api/scaffolder/v2/tasks", method="POST", body=body,
         headers={"Authorization": f"Bearer {token()}"},

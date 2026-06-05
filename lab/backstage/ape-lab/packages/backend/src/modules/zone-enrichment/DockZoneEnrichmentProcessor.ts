@@ -7,15 +7,15 @@ import type {
 import type { LoggerService } from '@backstage/backend-plugin-api';
 import { CustomObjectsApi, KubeConfig } from '@kubernetes/client-node';
 
-const ZONE_TYPE = 'aws-dns-zone';
-const RECORD_TYPE = 'aws-dns-record';
+const ZONE_TYPE = 'dns-zone';
+const RECORD_TYPE = 'dns-record';
 const ZONE_NAME_ANNOTATION = 'dock.tech/zone-name';
 const ZONE_ID_ANNOTATION = 'dock.tech/zone-id';
 const NAMESERVERS_ANNOTATION = 'dock.tech/zone-nameservers';
 const READY_ANNOTATION = 'dock.tech/zone-ready';
 const SCAFFOLDER_PARAMS_ANNOTATION = 'dock.tech/scaffolder-parameters';
 const EDIT_URL_ANNOTATION = 'backstage.io/edit-url';
-const RECORD_EDIT_TEMPLATE = '/create/templates/default/aws-dns-record-edit';
+const RECORD_EDIT_TEMPLATE = '/create/templates/default/dns-record-edit';
 const CACHE_TTL_MS = 25_000;
 
 type ZoneStatus = {

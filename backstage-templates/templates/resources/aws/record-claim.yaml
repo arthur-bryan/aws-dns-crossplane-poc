@@ -1,7 +1,7 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws-dns-record-claim
+  name: dns-record-claim
   title: Claim Existing DNS Record
   description: Bring an existing DNS record under platform management
   labels:
@@ -128,7 +128,7 @@ spec:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: Record
+            type: dns-record
             cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
             system: ${{ parameters.system }}

@@ -88,7 +88,7 @@ def assert_scaffolder_rejects(scen: NegativeScenario) -> bool:
     }
     body.update(scen.values)
     try:
-        task_id = scaffolder_submit("template:default/aws-dns-record", body)
+        task_id = scaffolder_submit("template:default/dns-record", body)
     except urllib.error.HTTPError as e:
         raw = e.read().decode()
         if re.search(scen.expected_message_regex, raw, re.IGNORECASE):
@@ -130,7 +130,7 @@ def assert_aws_rejects(scen: NegativeScenario) -> bool:
     }
     body.update(scen.values)
     try:
-        task_id = scaffolder_submit("template:default/aws-dns-record", body)
+        task_id = scaffolder_submit("template:default/dns-record", body)
     except urllib.error.HTTPError as e:
         fail(f"expected AWS rejection but scaffolder API errored at submit: {e.read().decode()[:200]}")
         return False

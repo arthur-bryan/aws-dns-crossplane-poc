@@ -65,7 +65,7 @@ metadata:
  name: my-zone
  namespace: cross-cloud-dns-poc
 spec:
- type: Zone
+ type: dns-zone
  cloud: aws
  owner: team-name
  system: dns-poc
@@ -88,7 +88,7 @@ spec:
 **Básicos:**
 - `name` - Nome do recurso
 - `system` - Sistema (EntityPicker)
-- `zone` - Zona DNS (EntityPicker - Resource type=Zone)
+- `zone` - Zona DNS (EntityPicker - Resource type=dns-zone)
 - `recordName` - Nome do registro (ex: `www`, `api`)
 - `type` - Tipo do registro (A, AAAA, CNAME, TXT, ALIAS)
 
@@ -129,7 +129,7 @@ metadata:
  dock.tech/scaffolder-editable-template: dns-record-edit
  dock.tech/scaffolder-parameters: '{"name":"my-record",...}'
 spec:
- type: Record
+ type: dns-record
  cloud: aws
  owner: team-name
  system: dns-poc

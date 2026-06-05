@@ -82,7 +82,7 @@ def submit_record_create(
 ) -> Optional[str]:
     body = {"zone": ZONE_REF, "recordName": record_name, "type": record_type}
     body.update(values)
-    task_id = scaffolder_submit("template:default/aws-dns-record", body)
+    task_id = scaffolder_submit("template:default/dns-record", body)
     state = scaffolder_wait(task_id)
     if state != "completed":
         log = "\n".join(scaffolder_log_tail(task_id))
@@ -99,7 +99,7 @@ def submit_record_edit(
     if set_identifier:
         body["setIdentifier"] = set_identifier
     body.update(values)
-    task_id = scaffolder_submit("template:default/aws-dns-record-edit", body)
+    task_id = scaffolder_submit("template:default/dns-record-edit", body)
     state = scaffolder_wait(task_id)
     if state != "completed":
         log = "\n".join(scaffolder_log_tail(task_id))

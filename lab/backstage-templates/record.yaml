@@ -1,7 +1,7 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws-dns-record
+  name: dns-record
   title: DNS Record Template
   description: A template for creating a DNS record
   labels:

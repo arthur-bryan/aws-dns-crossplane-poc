@@ -181,7 +181,7 @@ def submit_pr_merge_sync(template_ref, values):
 def test_record_against_internal():
     step("create A record test.internal.arthurbryan.com -> 10.0.0.42 via the form")
     head, err = submit_pr_merge_sync(
-        "template:default/aws-dns-record",
+        "template:default/dns-record",
         {
             "zone": "resource:system-infrastructure-dev/zone-internal.arthurbryan.com",
             "recordName": "test",
@@ -230,7 +230,7 @@ def test_record_against_internal():
 def test_public_zone():
     step("create public zone external.arthurbryan.com via the form")
     head, err = submit_pr_merge_sync(
-        "template:default/aws-dns-zone",
+        "template:default/dns-zone",
         {
             "delegatedZone": "resource:system-infrastructure-dev/zone-arthurbryan.com",
             "prefix": "external",

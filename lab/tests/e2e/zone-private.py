@@ -55,7 +55,7 @@ def submit_form():
         "vpcs": [VPC_ENTITY_REF],
         "deletionProtection": False,
     }
-    body = {"templateRef": "template:default/aws-dns-zone", "values": values}
+    body = {"templateRef": "template:default/dns-zone", "values": values}
     resp = http_json(
         f"{BACKSTAGE}/api/scaffolder/v2/tasks",
         method="POST",
@@ -177,7 +177,7 @@ def wait_catalog(entity_ref, deadline=120):
 
 def list_zone_picker_entities():
     items = http_json(
-        f"{BACKSTAGE}/api/catalog/entities/by-query?filter=spec.type=aws-dns-zone",
+        f"{BACKSTAGE}/api/catalog/entities/by-query?filter=spec.type=dns-zone",
         headers={"Authorization": f"Bearer {token()}"},
     )
     return [
@@ -274,7 +274,7 @@ def main():
     picker = list_zone_picker_entities()
     print(f"  zones in picker: {picker}")
     if any(CHILD_XR in r for r in picker):
-        ok(f"{CHILD_XR} visible to record EntityPicker (filter spec.type=aws-dns-zone)")
+        ok(f"{CHILD_XR} visible to record EntityPicker (filter spec.type=dns-zone)")
     else:
         fail(f"{CHILD_XR} not in record EntityPicker results")
         failures += 1

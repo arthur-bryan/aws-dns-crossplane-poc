@@ -187,7 +187,7 @@ def find_mr(namespace, kind_plural, predicate):
 def test_a_parent_in_dev():
     step("Test A: parent in dev, child in dev (sub-of-sub)")
     head, err = submit_pr_merge_sync(
-        "template:default/aws-dns-zone",
+        "template:default/dns-zone",
         {
             "delegatedZone": PARENT_DEV,
             "prefix": "sub",
@@ -243,7 +243,7 @@ def test_a_parent_in_dev():
 def test_b_record_against_dev_zone():
     step("Test B: record on a scaffolder-built dev zone")
     head, err = submit_pr_merge_sync(
-        "template:default/aws-dns-record",
+        "template:default/dns-record",
         {
             "zone": PARENT_DEV,
             "recordName": "app",
@@ -297,7 +297,7 @@ def test_b_record_against_dev_zone():
 def test_c_cross_account_private_zone():
     step("Test C: private zone in dev with cross-account VPC from prd")
     head, err = submit_pr_merge_sync(
-        "template:default/aws-dns-zone",
+        "template:default/dns-zone",
         {
             "delegatedZone": PARENT_PRD,
             "prefix": "privatecross",

@@ -20,7 +20,7 @@ metadata:
     dock.tech/environment: prd
     dock.tech/managed-by: batch-import
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"cdn","type":"ALIAS","serviceType":"Custom","dnsName":"d111111abcdef8.cloudfront.net","evaluateTargetHealth":false,"customZoneId":"Z2FDTNDATAQYW2","routingPolicy":"simple"}'
-    backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22cdn%22%2C%22type%22%3A%22ALIAS%22%2C%22serviceType%22%3A%22Custom%22%2C%22dnsName%22%3A%22d111111abcdef8.cloudfront.net%22%2C%22evaluateTargetHealth%22%3Afalse%2C%22customZoneId%22%3A%22Z2FDTNDATAQYW2%22%2C%22routingPolicy%22%3A%22simple%22%7D
+    backstage.io/edit-url: /create/templates/default/dns-record-edit?formData=%7B%22zone%22%3A%22resource%3Asystem-infrastructure-prd%2Fzone-arthurbryan.com%22%2C%22recordName%22%3A%22cdn%22%2C%22type%22%3A%22ALIAS%22%2C%22serviceType%22%3A%22Custom%22%2C%22dnsName%22%3A%22d111111abcdef8.cloudfront.net%22%2C%22evaluateTargetHealth%22%3Afalse%2C%22customZoneId%22%3A%22Z2FDTNDATAQYW2%22%2C%22routingPolicy%22%3A%22simple%22%7D
 
     backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/record-cdn.yaml"
   tags:
@@ -32,7 +32,7 @@ metadata:
     - imported
     - prd
 spec:
-  type: aws-dns-record
+  type: dns-record
   owner: group:default/infrastructure
   system: infrastructure
   dependsOn:
