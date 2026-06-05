@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-exemplo.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"name":"exemplo","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"exemplo","type":"A","originalType":"A","ttl":3600,"values":["10.0.0.10"],"enableWeightedRouting":false}'
+spec:
+  name: record-exemplo.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: exemplo
+  type: A
+  aws:
+    account: null
+    accountName: null
+  ttl: 3600
+  values:
+  - 10.0.0.10
