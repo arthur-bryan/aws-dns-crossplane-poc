@@ -291,7 +291,8 @@ spec:
       input:
         data:
           params: ${{ parameters }}
-        expression: $merge([params, {"originalType": params.type}])
+        expression: >-
+          $merge([params, {"originalType": params.type}])
 
     - id: writeFile
       name: Update Resource File
