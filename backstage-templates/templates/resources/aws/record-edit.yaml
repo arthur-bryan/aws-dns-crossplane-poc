@@ -8,12 +8,12 @@ metadata:
     category: resources
   tags:
     - resource
-    - dns
     - aws
-    - public
     - hidden
+    - cloud-infrastructure
 
 spec:
+  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
@@ -29,45 +29,36 @@ spec:
         entityRef:
           title: Entity Reference
           type: string
-          description: Internal — pre-filled when opened via the pencil
           ui:disabled: true
-          ui:widget: hidden
 
         name:
           title: Name
           type: string
-          description: Name of the DNS record resource
           ui:disabled: true
 
         system:
           title: System
           type: string
-          description: Owning system (immutable)
           ui:disabled: true
 
         environment:
           title: Environment
           type: string
-          description: Environment (immutable)
           ui:disabled: true
-          ui:widget: hidden
 
         zone:
           title: DNS Zone
           type: string
-          description: DNS zone (immutable)
           ui:disabled: true
 
         recordName:
           title: Record Name
           type: string
-          description: Record name (immutable)
           ui:disabled: true
 
         type:
           title: Record Type
           type: string
-          description: DNS record type (immutable)
           ui:disabled: true
           enum:
             - A
@@ -79,7 +70,6 @@ spec:
       dependencies:
         type:
           oneOf:
-            # A Record
             - properties:
                 type:
                   const: A
@@ -101,7 +91,6 @@ spec:
               required:
                 - values
 
-            # AAAA Record
             - properties:
                 type:
                   const: AAAA
@@ -122,7 +111,6 @@ spec:
               required:
                 - values
 
-            # CNAME Record
             - properties:
                 type:
                   const: CNAME
@@ -144,7 +132,6 @@ spec:
               required:
                 - values
 
-            # TXT Record
             - properties:
                 type:
                   const: TXT
@@ -165,14 +152,13 @@ spec:
               required:
                 - values
 
-            # ALIAS Record
             - properties:
                 type:
                   const: ALIAS
                 serviceType:
-                  title: Target Service Type (immutable)
+                  title: AWS Service Type (immutable)
                   type: string
-                  description: Service type (cannot be changed)
+                  description: Type of AWS service (cannot be changed)
                   ui:disabled: true
                   enum:
                     - CloudFront
@@ -185,7 +171,7 @@ spec:
                 dnsName:
                   title: Target DNS Name
                   type: string
-                  description: DNS name of the target
+                  description: DNS name of the AWS resource
                 evaluateTargetHealth:
                   title: Evaluate Target Health
                   type: boolean
@@ -264,15 +250,14 @@ spec:
       name: Update Resource File
       action: roadiehq:utils:merge
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ parameters.name }}-${{ parameters.environment }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           metadata:
             annotations:
               dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
-              argocd.argoproj.io/sync-options: Force=true,Replace=true
+              dock.tech/updated-at: ${{ "'" + now() + "'" }}
           spec:
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
-            recordType: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
             values:

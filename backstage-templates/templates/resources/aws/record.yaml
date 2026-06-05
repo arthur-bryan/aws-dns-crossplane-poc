@@ -2,59 +2,48 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record
-  title: Create DNS Record
-  description: Create a new DNS record
+  title: DNS Record Template
+  description: A template for creating a DNS record
   labels:
     category: resources
   tags:
     - resource
-    - dns
     - aws
     - public
-
+    - cloud-infrastructure
 spec:
+  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
     - title: DNS Record Information
       required:
-        - name
         - system
         - environment
         - zone
-        - recordName
+        - name
         - type
       properties:
-        name:
-          title: Name
-          type: string
-          description: Unique name of the DNS record resource
-          ui:autofocus: true
-          ui:options:
-            rows: 5
-
         system:
           title: System
           type: string
-          description: Owning system
+          description: System of Resource
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
               - kind: System
+                metadata.labels.aws: "true"
 
         environment:
           title: Environment
           type: string
-          description: Environment
+          description: Environment where the DNS record will be created
           ui:field: EnvironmentPicker
-          ui:options:
-            rows: 5
-            systemFieldName: system
 
         zone:
           title: Parent Zone
           type: object
-          description: Live DNS zones in the selected environment
+          description: Select the DNS zone where this record will be created
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
@@ -65,12 +54,14 @@ spec:
           default: Record
           ui:widget: hidden
 
-        recordName:
+        name:
           title: Record Name
           type: string
-          description: DNS label (zone-relative)
-          pattern: '^[a-z0-9]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*$'
-          ui:help: "Examples: www, api, cdn, app.staging"
+          description: Record name relative to the zone (e.g., 'www', 'api', 'cdn')
+          ui:autofocus: true
+          ui:field: EntityNameComposerPicker
+          ui:options:
+            rows: 5
 
         type:
           title: Record Type
@@ -92,7 +83,6 @@ spec:
       dependencies:
         type:
           oneOf:
-            # A Record
             - properties:
                 type:
                   const: A
@@ -115,7 +105,6 @@ spec:
               required:
                 - values
 
-            # AAAA Record
             - properties:
                 type:
                   const: AAAA
@@ -137,7 +126,6 @@ spec:
               required:
                 - values
 
-            # CNAME Record
             - properties:
                 type:
                   const: CNAME
@@ -160,7 +148,6 @@ spec:
               required:
                 - values
 
-            # TXT Record
             - properties:
                 type:
                   const: TXT
@@ -182,7 +169,6 @@ spec:
               required:
                 - values
 
-            # MX Record
             - properties:
                 type:
                   const: MX
@@ -205,7 +191,6 @@ spec:
               required:
                 - values
 
-            # SRV Record
             - properties:
                 type:
                   const: SRV
@@ -228,7 +213,6 @@ spec:
               required:
                 - values
 
-            # NS Record
             - properties:
                 type:
                   const: NS
@@ -250,7 +234,6 @@ spec:
               required:
                 - values
 
-            # CAA Record
             - properties:
                 type:
                   const: CAA
@@ -273,7 +256,6 @@ spec:
               required:
                 - values
 
-            # PTR Record
             - properties:
                 type:
                   const: PTR
@@ -296,14 +278,13 @@ spec:
               required:
                 - values
 
-            # ALIAS Record
             - properties:
                 type:
                   const: ALIAS
                 serviceType:
-                  title: Target Service Type
+                  title: AWS Service Type
                   type: string
-                  description: Type of service being aliased
+                  description: Type of AWS service being aliased
                   default: CloudFront
                   enum:
                     - CloudFront
@@ -324,7 +305,7 @@ spec:
                 dnsName:
                   title: Target DNS Name
                   type: string
-                  description: DNS name of the target
+                  description: DNS name of the AWS resource
                   ui:help: "Example: d111111abcdef8.cloudfront.net"
                 evaluateTargetHealth:
                   title: Evaluate Target Health
@@ -403,29 +384,31 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: deriveAccount
-      name: Derive AWS account from the selected environment
+    - id: extractRecordName
+      name: Extract record name from composed entity name
       action: roadiehq:utils:jsonata
       input:
         data:
-          env: ${{ parameters.environment }}
-          systemEnvironments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+          composedName: ${{ parameters.name }}
+          systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
+          environment: ${{ parameters.environment }}
         expression: >-
           (
-            $e := $filter(systemEnvironments, function($x) { $x.name = env })[0];
-            $e ? { "account": $string($e.aws.account), "accountName": $e.aws.accountName }
-               : { "account": "", "accountName": "" }
+            $prefix := systemName & "-";
+            $suffix := "-" & environment;
+            $s := $substringAfter(composedName, $prefix);
+            $substringBefore($s, $suffix)
           )
 
-    - id: checkIffileAlreadyExists
+    - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ parameters.name }}-${{ parameters.environment }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
-      if: ${{ steps.checkIffileAlreadyExists.output.exists }}
+      if: ${{ steps.checkIfFileAlreadyExists.output.exists }}
       action: error:launch
       input:
         message: A resource file for this DNS record already exists. Please choose a different name.
@@ -434,31 +417,30 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ parameters.name }}-${{ parameters.environment }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
             name: ${{ parameters.name }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
-            description: DNS Record created via template
+            description: DNS Record created by template
             annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+            labels:
+              environment: ${{ parameters.environment }}
+              cloud: aws
           spec:
             type: Record
             cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
             system: ${{ parameters.system }}
             environment: ${{ parameters.environment }}
-            domain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/domain'] }}
-            subdomain: ${{ steps.fetchSystem.output.entity.metadata.annotations['dock.tech/subdomain'] }}
-            aws:
-              account: ${{ steps.deriveAccount.output.result.account }}
-              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
-            recordName: ${{ parameters.recordName }}
+            recordName: ${{ steps.extractRecordName.output.result }}
             recordType: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}

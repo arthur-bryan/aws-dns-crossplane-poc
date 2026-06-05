@@ -30,6 +30,8 @@ metadata:
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
     dock.tech/system: infrastructure
+  labels:
+    aws: "true"
 spec:
   owner: group:default/infrastructure
   domain: cloud
