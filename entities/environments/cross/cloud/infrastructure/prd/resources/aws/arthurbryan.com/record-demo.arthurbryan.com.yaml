@@ -1,28 +1,24 @@
-apiVersion: backstage.io/v1alpha1
-kind: Resource
+---
+apiVersion: dock.tech/v1
+kind: Record
 metadata:
-  name: infrastructure-demo-prd
-  namespace: default
-  description: DNS Record managed by template
+  name: record-demo.arthurbryan.com
+  namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-editable-template: dns-record-edit
     dock.tech/scaffolder-parameters: '{"name":"infrastructure-demo-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"demo","type":"CNAME","ttl":300,"values":["arthurbryan.com"],"enableWeightedRouting":false,"weight":100}'
-  labels:
-    environment: prd
-    cloud: aws
 spec:
-  type: dns-record
-  cloud: aws
-  owner: group:default/infrastructure
-  system: system:default/infrastructure
+  name: record-demo.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
   environment: prd
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
-  recordName: "demo"
-  recordType: CNAME
+  recordName: demo
+  type: CNAME
   aws:
-    account: "597230762851"
+    account: 597230762851
     accountName: prd-account
   ttl: 300
   values:
-    - arthurbryan.com
+  - arthurbryan.com

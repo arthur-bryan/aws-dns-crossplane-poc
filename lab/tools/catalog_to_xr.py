@@ -45,6 +45,30 @@ import yaml
 
 SOURCE_GLOB = "entities/dock-tech/systems/**/resources/**/*.yaml"
 ENV_BASE = "entities/environments"
+SYSTEM_CATALOG_GLOB = "entities/**/catalog-info.yaml"
+
+
+def build_system_index(root: Path) -> dict[str, tuple[str, str]]:
+    """Map bare system name -> (domain, subdomain). APE-aligned Resources
+    don't carry domain/subdomain in spec; we resolve them from the System
+    entity's `dock.tech/{domain,subdomain}` annotations and stitch them
+    onto the XR (which the XRD requires)."""
+    index: dict[str, tuple[str, str]] = {}
+    for src in root.glob(SYSTEM_CATALOG_GLOB):
+        try:
+            docs = list(yaml.safe_load_all(src.read_text()))
+        except yaml.YAMLError:
+            continue
+        for doc in docs:
+            if not isinstance(doc, dict) or doc.get("kind") != "System":
+                continue
+            name = (doc.get("metadata") or {}).get("name")
+            ann = (doc.get("metadata") or {}).get("annotations") or {}
+            d = ann.get("dock.tech/domain")
+            s = ann.get("dock.tech/subdomain")
+            if name and d and s:
+                index[name] = (d, s)
+    return index
 
 
 def die(msg: str) -> None:
@@ -75,6 +99,13 @@ def require(spec: dict, keys: list[str], name: str) -> bool:
     return True
 
 
+def normalize_system(value: str) -> str:
+    """`spec.system` can be a bare name (`infrastructure`) or an EntityRef
+    (`system:default/infrastructure`). The XR namespace and output path
+    only want the bare name -- take the trailing path segment."""
+    return value.rsplit("/", 1)[-1]
+
+
 def record_xr_name(record_name: str, zone_name: str, rtype: str, set_id: str | None) -> str:
     if record_name:
         base = f"record-{record_name}.{zone_name}"
@@ -85,19 +116,29 @@ def record_xr_name(record_name: str, zone_name: str, rtype: str, set_id: str | N
     return base
 
 
-def build_record_xr(res: dict) -> tuple[str, dict] | None:
+def build_record_xr(
+    res: dict, system_index: dict[str, tuple[str, str]]
+) -> tuple[str, dict] | None:
     spec = res.get("spec", {}) or {}
     ann = (res.get("metadata", {}) or {}).get("annotations", {}) or {}
     name = res.get("metadata", {}).get("name", "<unknown>")
 
-    if not require(spec, ["system", "environment", "domain", "subdomain",
-                          "zoneName", "zoneId", "recordType"], name):
+    if not require(spec, ["system", "environment", "zoneName", "zoneId",
+                          "recordType"], name):
         return None
 
-    system = spec["system"]
+    system = normalize_system(spec["system"])
     env = spec["environment"]
-    domain = spec["domain"]
-    subdomain = spec["subdomain"]
+    # APE-aligned Resources don't carry domain/subdomain in spec; pick them
+    # off the System entity. Fall back to spec.{domain,subdomain} for back-
+    # compat with previously-imported Resources that still inline them.
+    resolved = system_index.get(system)
+    domain = spec.get("domain") or (resolved[0] if resolved else None)
+    subdomain = spec.get("subdomain") or (resolved[1] if resolved else None)
+    if not domain or not subdomain:
+        warn(name, f"could not resolve domain/subdomain for system '{system}' "
+                   f"(neither in spec nor catalog System annotations); skipping")
+        return None
     zone_name = str(spec["zoneName"]).rstrip(".")
     record_name = (spec.get("recordName") or "").rstrip(".")
     # Defensive: if recordName came through as an FQDN, strip the zone suffix.
@@ -180,18 +221,25 @@ def build_record_xr(res: dict) -> tuple[str, dict] | None:
     return out_path, xr
 
 
-def build_zone_xr(res: dict) -> tuple[str, dict] | None:
+def build_zone_xr(
+    res: dict, system_index: dict[str, tuple[str, str]]
+) -> tuple[str, dict] | None:
     spec = res.get("spec", {}) or {}
     ann = (res.get("metadata", {}) or {}).get("annotations", {}) or {}
     name = res.get("metadata", {}).get("name", "<unknown>")
 
-    if not require(spec, ["system", "environment", "domain", "subdomain", "zoneName"], name):
+    if not require(spec, ["system", "environment", "zoneName"], name):
         return None
 
-    system = spec["system"]
+    system = normalize_system(spec["system"])
     env = spec["environment"]
-    domain = spec["domain"]
-    subdomain = spec["subdomain"]
+    resolved = system_index.get(system)
+    domain = spec.get("domain") or (resolved[0] if resolved else None)
+    subdomain = spec.get("subdomain") or (resolved[1] if resolved else None)
+    if not domain or not subdomain:
+        warn(name, f"could not resolve domain/subdomain for system '{system}' "
+                   f"(neither in spec nor catalog System annotations); skipping")
+        return None
     zone_name = str(spec["zoneName"]).rstrip(".")
     xr_name = f"zone-{zone_name}"
     ns = f"system-{system}-{env}"
@@ -230,14 +278,20 @@ def build_zone_xr(res: dict) -> tuple[str, dict] | None:
     return out_path, xr
 
 
-def convert_one(res: dict) -> tuple[str, dict] | None:
+RECORD_TYPES = {"dns-record", "Record"}
+ZONE_TYPES = {"dns-zone", "Zone"}
+
+
+def convert_one(
+    res: dict, system_index: dict[str, tuple[str, str]]
+) -> tuple[str, dict] | None:
     if res.get("kind") != "Resource":
         return None
     spec_type = (res.get("spec", {}) or {}).get("type")
-    if spec_type == "Record":
-        return build_record_xr(res)
-    if spec_type == "Zone":
-        return build_zone_xr(res)
+    if spec_type in RECORD_TYPES:
+        return build_record_xr(res, system_index)
+    if spec_type in ZONE_TYPES:
+        return build_zone_xr(res, system_index)
     return None
 
 
@@ -254,6 +308,7 @@ def main() -> int:
         print("catalog_to_xr: no catalog Resources found under "
               f"{SOURCE_GLOB}", file=sys.stderr)
         return 0
+    system_index = build_system_index(root)
 
     changed = 0
     written = 0
@@ -266,7 +321,7 @@ def main() -> int:
         for doc in docs:
             if not isinstance(doc, dict):
                 continue
-            result = convert_one(doc)
+            result = convert_one(doc, system_index)
             if not result:
                 continue
             rel_path, xr = result
