@@ -122,9 +122,8 @@ spec:
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record claimed by template
             annotations:
-              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
-              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
