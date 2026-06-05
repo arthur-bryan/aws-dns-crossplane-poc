@@ -37,12 +37,9 @@ spec:
         name:
           title: Context
           type: string
-          description: Context to compose the name of the zone
+          description: Context for the zone (e.g. 'main', 'internal'). The catalog entity will be named ${system}-${this}-${environment}.
           ui:autofocus: true
-          ui:field: EntityNameComposerPicker
-          ui:options:
-            systemRef: system:default/infrastructure
-            suffix: zone
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
 
         zoneName:
           title: Zone Name
@@ -137,11 +134,24 @@ spec:
             }
           )
 
+    - id: composeEntityName
+      name: Compose catalog entity name as <system>-<context>-<env>
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          context: ${{ parameters.name }}
+          systemName: ${{ steps.fetchDnsSystem.output.entity.metadata.name }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            systemName & "-" & context & "-" & environment
+          )
+
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -154,12 +164,12 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ parameters.name }}
+            name: ${{ steps.composeEntityName.output.result }}
             namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
             description: DNS Zone created by template
             annotations:
@@ -203,7 +213,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
+        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.composeEntityName.output.result }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

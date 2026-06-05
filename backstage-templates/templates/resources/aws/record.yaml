@@ -57,11 +57,9 @@ spec:
         name:
           title: Record Name
           type: string
-          description: Record name relative to the zone (e.g., 'www', 'api', 'cdn')
+          description: Record name relative to the zone (e.g., 'www', 'api', 'cdn'). The catalog entity will be named ${system}-${this}-${environment}.
           ui:autofocus: true
-          ui:field: EntityNameComposerPicker
-          ui:options:
-            rows: 5
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
 
         type:
           title: Record Type
@@ -384,20 +382,21 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: extractRecordName
-      name: Extract record name from composed entity name
+    - id: composeEntityName
+      name: Compose catalog entity name as <system>-<context>-<env>
+      # User types only the zone-relative record name (the 'context'); the
+      # catalog entity name is stitched here so every flow (create/claim/
+      # zone) produces the same naming shape. Matches the algorithm in
+      # record-claim.yaml's computeRecordName step.
       action: roadiehq:utils:jsonata
       input:
         data:
-          composedName: ${{ parameters.name }}
+          context: ${{ parameters.name }}
           systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
         expression: >-
           (
-            $prefix := systemName & "-";
-            $suffix := "-" & environment;
-            $s := $substringAfter(composedName, $prefix);
-            $substringBefore($s, $suffix)
+            systemName & "-" & context & "-" & environment
           )
 
     - id: deriveAccount
@@ -426,12 +425,12 @@ spec:
         # annotation verbatim as ?formData=, so it must match the
         # dns-record-edit template's parameter schema.
         data:
-          name: ${{ parameters.name }}
+          name: ${{ steps.composeEntityName.output.result }}
           system: ${{ parameters.system }}
           environment: ${{ parameters.environment }}
           zone: ${{ parameters.zone.name }}
           zoneId: ${{ parameters.zone.id }}
-          recordName: ${{ steps.extractRecordName.output.result }}
+          recordName: ${{ parameters.name }}
           recordType: ${{ parameters.type }}
           ttl: ${{ parameters.ttl }}
           values: ${{ parameters.values }}
@@ -479,7 +478,7 @@ spec:
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -492,12 +491,12 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ parameters.name }}
+            name: ${{ steps.composeEntityName.output.result }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record created by template
             annotations:
@@ -514,7 +513,7 @@ spec:
             environment: ${{ parameters.environment }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
-            recordName: ${{ steps.extractRecordName.output.result }}
+            recordName: ${{ parameters.name }}
             recordType: ${{ parameters.type }}
             aws:
               account: ${{ steps.deriveAccount.output.result.accountId }}
@@ -546,7 +545,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ steps.composeEntityName.output.result }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml
