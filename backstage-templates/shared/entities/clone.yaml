@@ -4,4 +4,4 @@ action: github:extras:clone
 input:
   url: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
   branch: feature/ape-platform-alignment
-  folder: entities
+  folder: "."
