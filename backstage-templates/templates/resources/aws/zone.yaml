@@ -21,6 +21,7 @@ spec:
         - environment
         - name
         - zoneName
+        - visibility
       properties:
         environment:
           title: Environment
@@ -40,7 +41,7 @@ spec:
           ui:autofocus: true
           ui:field: EntityNameComposerPicker
           ui:options:
-            systemRef: system:dns-eds437/dns
+            systemRef: system:default/infrastructure
             suffix: zone
 
         zoneName:
@@ -50,11 +51,53 @@ spec:
           pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
           ui:help: "Example: test.dev.dock.tech (no trailing dot)"
 
+        visibility:
+          title: Visibility
+          type: string
+          description: Public zones are resolvable from the internet. Private zones only resolve from associated VPCs.
+          default: public
+          enum:
+            - public
+            - private
+
         comment:
           title: Comment
           type: string
           description: Optional comment for the zone (max 256 characters)
           maxLength: 256
+
+      dependencies:
+        visibility:
+          oneOf:
+            - properties:
+                visibility:
+                  const: public
+            - properties:
+                visibility:
+                  const: private
+                vpcs:
+                  title: Associated VPCs
+                  type: array
+                  description: VPCs that may resolve this private zone (same AWS account as the zone).
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - vpcId
+                      - vpcRegion
+                    properties:
+                      vpcId:
+                        title: VPC ID
+                        type: string
+                        pattern: '^vpc-[a-f0-9]+$'
+                        description: e.g. vpc-0a1b2c3d4e5f
+                      vpcRegion:
+                        title: VPC Region
+                        type: string
+                        default: us-east-1
+                        description: AWS region where the VPC lives
+              required:
+                - vpcs
 
     - title: Additional Tags (Optional)
       properties:
@@ -71,23 +114,26 @@ spec:
       name: Fetch DNS System Entity
       action: catalog:fetch
       input:
-        entityRef: system:dns-eds437/dns
+        entityRef: system:default/infrastructure
         defaultKind: System
 
     - id: deriveAccount
       name: Derive DNS account from environment
+      # Source from the System entity's spec.environments[] so account
+      # numbers stay consistent with catalog truth (same pattern as the
+      # record / record-claim / record-edit templates).
       action: roadiehq:utils:jsonata
       input:
         data:
-          environment: ${{ parameters.environment }}
+          env: ${{ parameters.environment }}
+          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
         expression: >-
           (
-            $accounts := {
-              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
-              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
-              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
-            };
-            $accounts[environment]
+            $envCfg := environments[name = env];
+            {
+              "accountId": $envCfg.aws.account,
+              "accountName": $envCfg.aws.accountName
+            }
           )
 
     - id: checkIfFileAlreadyExists
@@ -116,9 +162,8 @@ spec:
             namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
             description: DNS Zone created by template
             annotations:
-              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-zone-edit
-              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
@@ -129,9 +174,17 @@ spec:
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
             zoneName: ${{ parameters.zoneName }}
+            visibility: ${{ parameters.visibility }}
             aws:
               account: ${{ steps.deriveAccount.output.result.accountId }}
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            {%- if parameters.visibility == 'private' %}
+            vpcs:
+            {%- for v in parameters.vpcs %}
+              - vpcId: ${{ v.vpcId }}
+                vpcRegion: ${{ v.vpcRegion }}
+            {%- endfor %}
+            {%- endif %}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
             {%- endif %}

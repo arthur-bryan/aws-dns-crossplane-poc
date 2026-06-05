@@ -255,7 +255,8 @@ def build_zone_xr(
     aws = aws_block(spec.get("aws"))
     if aws:
         xr_spec["aws"] = aws
-    for k in ("visibility", "delegatedFromZoneId", "delegatedFromAccountName", "comment"):
+    for k in ("visibility", "delegatedFromZoneId", "delegatedFromAccountName",
+              "comment", "vpcs"):
         if spec.get(k) is not None:
             xr_spec[k] = spec[k]
     if spec.get("import"):
