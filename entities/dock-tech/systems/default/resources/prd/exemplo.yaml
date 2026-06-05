@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: exemplo
+  namespace: default
+  description: DNS Record created by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"exemplo","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"exemplo","type":"A","originalType":"A","ttl":3600,"values":["10.0.0.10"],"enableWeightedRouting":false}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:default/infrastructure
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: exemplo
+  recordType: A
+  aws:
+    account: 
+    accountName: 
+  ttl: 3600
+  values:
+    - 10.0.0.10
