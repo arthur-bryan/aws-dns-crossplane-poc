@@ -14,7 +14,10 @@ import {
   coreServices,
   createBackendModule,
 } from '@backstage/backend-plugin-api';
-import { ScmIntegrations } from '@backstage/integration';
+import {
+  DefaultGithubCredentialsProvider,
+  ScmIntegrations,
+} from '@backstage/integration';
 import {
   cloneRepo,
   createTemplateAction,
@@ -26,13 +29,16 @@ import { promisify } from 'util';
 
 const exec = promisify(execCb);
 
-async function tokenFor(url: string, integrations: ScmIntegrations): Promise<string> {
-  const integ = integrations.github.byUrl(url);
-  const token = integ?.config?.token;
+async function tokenFor(
+  url: string,
+  provider: DefaultGithubCredentialsProvider,
+): Promise<string> {
+  const creds = await provider.getCredentials({ url });
+  const token = creds?.token;
   if (!token) {
     throw new Error(
-      `No GitHub integration token configured for ${url}; ` +
-        `expected integrations.github[].token in app-config`,
+      `No GitHub credentials resolved for ${url}; ` +
+        `check integrations.github[].token in app-config`,
     );
   }
   return token;
@@ -54,6 +60,8 @@ export const githubExtrasActionsModule = createBackendModule({
       },
       async init({ scaffolderActions, config, logger }) {
         const integrations = ScmIntegrations.fromConfig(config);
+        const ghCreds =
+          DefaultGithubCredentialsProvider.fromIntegrations(integrations);
 
         scaffolderActions.addActions(
           createTemplateAction({
@@ -83,7 +91,7 @@ export const githubExtrasActionsModule = createBackendModule({
                 folder?: string;
               };
               const dir = resolveDir(ctx.workspacePath, folder);
-              const token = await tokenFor(url, integrations);
+              const token = await tokenFor(url, ghCreds);
               ctx.logger.info(`Cloning ${url} (${branch ?? 'default'}) -> ${dir}`);
               await cloneRepo({
                 url,
