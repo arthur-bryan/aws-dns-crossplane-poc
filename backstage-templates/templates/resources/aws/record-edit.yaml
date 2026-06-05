@@ -59,7 +59,10 @@ spec:
         type:
           title: Record Type
           type: string
-          ui:disabled: true
+          description: >-
+            Changing the record type destroys the existing record in Route53 and
+            re-creates it with the new type. Expect brief DNS unavailability
+            during the swap.
           enum:
             - A
             - AAAA
