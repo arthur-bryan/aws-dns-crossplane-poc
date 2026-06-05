@@ -3,10 +3,17 @@ kind: Resource
 metadata:
   name: wat-infra
   namespace: default
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"wat-infra","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"wat-infra","type":"A","originalType":"A","ttl":3600,"values":["10.0.0.15"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"name":"wat-infra","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"wat-infra","type":"CNAME","originalType":"CNAME","ttl":3000,"values":["test.com.br"],"enableWeightedRouting":false,"evaluateTargetHealth":false}'
+    # Type change (e.g. A -> CNAME). The converter copies this
+    # argocd.argoproj.io/* annotation onto the XR, which makes
+    # ArgoCD delete-and-recreate the XR (and therefore the MR),
+    # which lets Crossplane drop the old AWS record before
+    # creating the new-type one. Without this, Route53 rejects
+    # the create with InvalidChangeBatch (name+type collision).
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: prd
     cloud: aws
@@ -18,11 +25,11 @@ spec:
   environment: prd
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
-  recordName: wat-infra
-  recordType: A
+  recordName: "wat-infra"
+  recordType: CNAME
   aws:
     account: 597230762851
     accountName: prd-account
-  ttl: 3600
+  ttl: 3000
   values:
-    - 10.0.0.15
+    - test.com.br
