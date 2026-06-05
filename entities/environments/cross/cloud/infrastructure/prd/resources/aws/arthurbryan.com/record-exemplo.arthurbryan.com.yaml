@@ -17,8 +17,8 @@ spec:
   recordName: exemplo
   type: A
   aws:
-    account: null
-    accountName: null
+    account: 597230762851
+    accountName: prd-account
   ttl: 3600
   values:
   - 10.0.0.10
