@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-zone
-  title: AWS Route53 DNS Zone Template
-  description: A template for creating an AWS Route53 hosted zone
+  title: DNS Zone Template
+  description: A template for creating a DNS hosted zone
   labels:
     category: resources
   tags:
@@ -19,6 +19,7 @@ spec:
     - title: DNS Zone Information
       required:
         - environment
+        - name
         - zoneName
       properties:
         environment:
@@ -31,6 +32,16 @@ spec:
           type: string
           default: Zone
           ui:widget: hidden
+
+        name:
+          title: Context
+          type: string
+          description: Context to compose the name of the zone
+          ui:autofocus: true
+          ui:field: EntityNameComposerPicker
+          ui:options:
+            systemRef: system:dns-eds437/dns
+            suffix: zone
 
         zoneName:
           title: Zone Name
@@ -52,20 +63,16 @@ spec:
           type: object
           description: Additional AWS tags (hierarchy tags are added automatically)
           ui:field: KeyValuePairInput
-          ui:help: "Add custom tags for cost tracking or organization"
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
 
-    - id: composeName
-      name: Compose resource name from zone and environment
-      action: roadiehq:utils:jsonata
+    - id: fetchDnsSystem
+      name: Fetch DNS System Entity
+      action: catalog:fetch
       input:
-        data:
-          zoneName: ${{ parameters.zoneName }}
-          environment: ${{ parameters.environment }}
-        expression: >-
-          $join($split($replace(zoneName, /\.$/, ""), "."), "-") & "-" & environment
+        entityRef: system:dns-eds437/dns
+        defaultKind: System
 
     - id: deriveAccount
       name: Derive DNS account from environment
@@ -83,15 +90,15 @@ spec:
             $accounts[environment]
           )
 
-    - id: checkIffileAlreadyExists
+    - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/resources/aws/${{ parameters.environment }}/zone-${{ steps.composeName.output.result }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
-      if: ${{ steps.checkIffileAlreadyExists.output.exists }}
+      if: ${{ steps.checkIfFileAlreadyExists.output.exists }}
       action: error:launch
       input:
         message: A resource file for this DNS zone already exists.
@@ -100,14 +107,14 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/resources/aws/${{ parameters.environment }}/zone-${{ steps.composeName.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ steps.composeName.output.result }}
-            namespace: default
-            description: AWS Route53 DNS Zone created by template
+            name: ${{ parameters.name }}
+            namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
+            description: DNS Zone created by template
             annotations:
               dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-zone-edit
@@ -118,7 +125,8 @@ spec:
           spec:
             type: Zone
             cloud: aws
-            owner: group:dock-tech/cloud-infrastructure
+            owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
+            system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
             zoneName: ${{ parameters.zoneName }}
             aws:
@@ -141,7 +149,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:default/${{ steps.composeName.output.result }}
+        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

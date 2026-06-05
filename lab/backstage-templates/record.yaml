@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record
-  title: AWS Route53 DNS Record Template
-  description: A template for creating an AWS Route53 DNS record
+  title: DNS Record Template
+  description: A template for creating a DNS record
   labels:
     category: resources
   tags:
@@ -21,7 +21,7 @@ spec:
         - system
         - environment
         - zone
-        - recordName
+        - name
         - type
       properties:
         system:
@@ -54,12 +54,14 @@ spec:
           default: Record
           ui:widget: hidden
 
-        recordName:
+        name:
           title: Record Name
           type: string
-          description: Record name (e.g., 'www', 'api', 'cdn')
-          pattern: '^[a-z0-9]([a-z0-9\-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9\-]*[a-z0-9])?)*$'
-          ui:help: "Examples: www, api, cdn, app.staging"
+          description: Record name relative to the zone (e.g., 'www', 'api', 'cdn')
+          ui:autofocus: true
+          ui:field: EntityNameComposerPicker
+          ui:options:
+            rows: 5
 
         type:
           title: Record Type
@@ -81,7 +83,6 @@ spec:
       dependencies:
         type:
           oneOf:
-            # A Record
             - properties:
                 type:
                   const: A
@@ -104,7 +105,6 @@ spec:
               required:
                 - values
 
-            # AAAA Record
             - properties:
                 type:
                   const: AAAA
@@ -126,7 +126,6 @@ spec:
               required:
                 - values
 
-            # CNAME Record
             - properties:
                 type:
                   const: CNAME
@@ -149,7 +148,6 @@ spec:
               required:
                 - values
 
-            # TXT Record
             - properties:
                 type:
                   const: TXT
@@ -171,7 +169,6 @@ spec:
               required:
                 - values
 
-            # MX Record
             - properties:
                 type:
                   const: MX
@@ -194,7 +191,6 @@ spec:
               required:
                 - values
 
-            # SRV Record
             - properties:
                 type:
                   const: SRV
@@ -217,7 +213,6 @@ spec:
               required:
                 - values
 
-            # NS Record
             - properties:
                 type:
                   const: NS
@@ -239,7 +234,6 @@ spec:
               required:
                 - values
 
-            # CAA Record
             - properties:
                 type:
                   const: CAA
@@ -262,7 +256,6 @@ spec:
               required:
                 - values
 
-            # PTR Record
             - properties:
                 type:
                   const: PTR
@@ -285,7 +278,6 @@ spec:
               required:
                 - values
 
-            # ALIAS Record
             - properties:
                 type:
                   const: ALIAS
@@ -392,23 +384,27 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: composeName
-      name: Compose resource name from record fields
+    - id: extractRecordName
+      name: Extract record name from composed entity name
       action: roadiehq:utils:jsonata
       input:
         data:
-          recordName: ${{ parameters.recordName }}
-          type: ${{ parameters.type }}
-          zoneName: ${{ parameters.zone.name }}
+          composedName: ${{ parameters.name }}
+          systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
         expression: >-
-          $join($split($replace(recordName, /\.$/, ""), "."), "-") & "-" & $lowercase(type) & "-" & $join($split($replace(zoneName, /\.$/, ""), "."), "-") & "-" & environment
+          (
+            $prefix := systemName & "-";
+            $suffix := "-" & environment;
+            $s := $substringAfter(composedName, $prefix);
+            $substringBefore($s, $suffix)
+          )
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ steps.composeName.output.result }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -421,14 +417,14 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ steps.composeName.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ steps.composeName.output.result }}
+            name: ${{ parameters.name }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
-            description: AWS Route53 DNS Record created by template
+            description: DNS Record created by template
             annotations:
               dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
@@ -444,7 +440,7 @@ spec:
             environment: ${{ parameters.environment }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
-            recordName: ${{ parameters.recordName }}
+            recordName: ${{ steps.extractRecordName.output.result }}
             recordType: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
@@ -473,7 +469,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ steps.composeName.output.result }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

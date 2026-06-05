@@ -1,411 +1,292 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: aws-dns-record-edit
-  title: Edit AWS Route53 DNS Record
-  description: Edit an existing AWS Route53 DNS record
+  name: dns-record-edit
+  title: Edit DNS Record
+  description: Edit an existing DNS record
   labels:
     category: resources
   tags:
     - resource
     - aws
-    - public
     - hidden
+    - cloud-infrastructure
+
 spec:
+  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
-    - title: Target Record
+    - title: DNS Record Information
       required:
+        - name
+        - system
+        - environment
         - zone
         - recordName
         - type
       properties:
-        zone:
-          title: Zone
+        entityRef:
+          title: Entity Reference
           type: string
-          ui:field: EntityPicker
           ui:disabled: true
-          ui:options:
-            catalogFilter:
-              - kind: Resource
-                spec.type: aws-dns-zone
+
+        name:
+          title: Name
+          type: string
+          ui:disabled: true
+
+        system:
+          title: System
+          type: string
+          ui:disabled: true
+
+        environment:
+          title: Environment
+          type: string
+          ui:disabled: true
+
+        zone:
+          title: DNS Zone
+          type: string
+          ui:disabled: true
+
         recordName:
           title: Record Name
           type: string
-          minLength: 0
-          maxLength: 253
           ui:disabled: true
+
         type:
           title: Record Type
           type: string
-          enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
-        setIdentifier:
-          title: Set Identifier
-          type: string
           ui:disabled: true
-        weight:
-          title: Weight
-          type: integer
-          minimum: 0
-          maximum: 255
-        failoverType:
-          title: Failover Role
-          type: string
-          enum: [PRIMARY, SECONDARY]
-        healthCheckId:
-          title: Health Check ID
-          type: string
-        latencyRegion:
-          title: Latency Region
-          type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - TXT
+            - ALIAS
 
       dependencies:
         type:
           oneOf:
             - properties:
-                type: { const: A }
+                type:
+                  const: A
                 ttl:
                   title: TTL (seconds)
                   type: integer
+                  description: Time to live in seconds
                   default: 3600
                   minimum: 60
-                  maximum: 604800
+                  maximum: 86400
                 values:
                   title: IPv4 Addresses
                   type: array
-                  items: { type: string, pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}$' }
+                  description: List of IPv4 addresses
+                  items:
+                    type: string
+                    pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}$'
                   minItems: 1
-              required: [values]
+              required:
+                - values
+
             - properties:
-                type: { const: AAAA }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
+                type:
+                  const: AAAA
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
                 values:
                   title: IPv6 Addresses
                   type: array
-                  items: { type: string }
+                  description: List of IPv6 addresses
+                  items:
+                    type: string
                   minItems: 1
-              required: [values]
+              required:
+                - values
+
             - properties:
-                type: { const: CNAME }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
+                type:
+                  const: CNAME
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
                 values:
                   title: Target Hostname
                   type: array
-                  items: { type: string }
-                  minItems: 1
+                  description: Target canonical name
+                  items:
+                    type: string
                   maxItems: 1
-              required: [values]
-            - properties:
-                type: { const: TXT }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
-                values:
-                  title: Text values
-                  type: array
-                  items: { type: string }
                   minItems: 1
-              required: [values]
+              required:
+                - values
+
             - properties:
-                type: { const: MX }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
+                type:
+                  const: TXT
+                ttl:
+                  title: TTL (seconds)
+                  type: integer
+                  description: Time to live in seconds
+                  default: 3600
+                  minimum: 60
+                  maximum: 86400
                 values:
-                  title: MX records
+                  title: Text Values
                   type: array
-                  description: Each value is "<priority> <mail-server-fqdn>"
-                  items: { type: string, pattern: '^\s*[0-9]+\s+\S+\s*$' }
+                  description: Text values for the record
+                  items:
+                    type: string
                   minItems: 1
-              required: [values]
+              required:
+                - values
+
             - properties:
-                type: { const: SRV }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
-                values:
-                  title: SRV records
-                  type: array
-                  items: { type: string, pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$' }
-                  minItems: 1
-              required: [values]
-            - properties:
-                type: { const: NS }
-                ttl: { title: TTL (seconds), type: integer, default: 172800, minimum: 60, maximum: 604800 }
-                values:
-                  title: Nameservers
-                  type: array
-                  items: { type: string }
-                  minItems: 1
-              required: [values]
-            - properties:
-                type: { const: CAA }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
-                values:
-                  title: CAA records
-                  type: array
-                  items: { type: string, pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$' }
-                  minItems: 1
-              required: [values]
-            - properties:
-                type: { const: PTR }
-                ttl: { title: TTL (seconds), type: integer, default: 3600, minimum: 60, maximum: 604800 }
-                values:
-                  title: Target hostname
-                  type: array
-                  items: { type: string }
-                  minItems: 1
-                  maxItems: 1
-              required: [values]
-            - properties:
-                type: { const: ALIAS }
+                type:
+                  const: ALIAS
                 serviceType:
-                  title: AWS Service Type
+                  title: AWS Service Type (immutable)
                   type: string
-                  description: Immutable — matches the existing record's service type
-                  enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, ElasticBeanstalk, Custom]
+                  description: Type of AWS service (cannot be changed)
+                  ui:disabled: true
+                  enum:
+                    - CloudFront
+                    - ALB
+                    - NLB
+                    - S3Website
+                    - APIGateway
+                    - GlobalAccelerator
+                    - Custom
                 dnsName:
                   title: Target DNS Name
                   type: string
+                  description: DNS name of the AWS resource
                 evaluateTargetHealth:
                   title: Evaluate Target Health
                   type: boolean
+                  description: Whether to evaluate the health of the target
                   default: false
-              required: [serviceType, dnsName]
+              required:
+                - serviceType
+                - dnsName
+              dependencies:
+                serviceType:
+                  oneOf:
+                    - properties:
+                        serviceType:
+                          enum:
+                            - CloudFront
+                            - GlobalAccelerator
+                            - S3Website
+                            - APIGateway
+                    - properties:
+                        serviceType:
+                          const: Custom
+                        customZoneId:
+                          title: Custom Hosted Zone ID
+                          type: string
+                          description: Hosted zone ID for custom alias target
+                          pattern: "^Z[A-Z0-9]+$"
+                      required:
+                        - customZoneId
+                    - properties:
+                        serviceType:
+                          enum:
+                            - ALB
+                            - NLB
+
+    - title: Weighted Routing (Optional)
+      description: Enable weighted routing to distribute traffic across multiple records
+      properties:
+        enableWeightedRouting:
+          title: Enable Weighted Routing
+          type: boolean
+          description: Enable traffic distribution based on weight
+          default: false
+
+      dependencies:
+        enableWeightedRouting:
+          oneOf:
+            - properties:
+                enableWeightedRouting:
+                  const: false
+            - properties:
+                enableWeightedRouting:
+                  const: true
+                setIdentifier:
+                  title: Set Identifier
+                  type: string
+                  description: Unique identifier for this weighted record
+                  minLength: 1
+                  maxLength: 128
+                weight:
+                  title: Weight
+                  type: integer
+                  description: Traffic weight (0-255)
+                  minimum: 0
+                  maximum: 255
+                  default: 100
+              required:
+                - setIdentifier
+                - weight
 
   steps:
-    - id: fetchZone
-      name: Fetch parent Zone entity
-      action: catalog:fetch
-      input:
-        entityRef: ${{ parameters.zone }}
+    - $yaml: ../../../shared/entities/clone.yaml
+    - $yaml: ../../../shared/entities/fetch-system.yaml
+    - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: computeKey
-      name: Derive resource key
-      action: roadiehq:utils:jsonata
+    - id: writeFile
+      name: Update Resource File
+      action: roadiehq:utils:merge
       input:
-        data:
-          recordName: ${{ parameters.recordName }}
-          type: ${{ parameters.type }}
-          setIdentifier: ${{ parameters.setIdentifier }}
-        expression: '$lowercase((recordName ? recordName : "apex-" & type) & (setIdentifier ? "-" & setIdentifier : ""))'
-
-    - id: fetchRecord
-      name: Fetch existing Record entity
-      action: catalog:fetch
-      input:
-        entityRef: resource:system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-
-    - id: writeOriginalParams
-      name: Stage original form parameters as JSON
-      action: roadiehq:utils:fs:write
-      input:
-        path: .e2e/merged-params.json
-        content: ${{ steps.fetchRecord.output.entity.metadata.annotations['dock.tech/scaffolder-parameters'] }}
-
-    - id: snapshotOriginal
-      name: Snapshot original parameters before merge
-      action: roadiehq:utils:jsonata:json:transform
-      input:
-        path: .e2e/merged-params.json
-        expression: '$'
-        as: object
-
-    - id: applyEdits
-      name: Merge user edits into original parameters
-      action: roadiehq:utils:json:merge
-      input:
-        path: .e2e/merged-params.json
-        content: ${{ parameters }}
-
-    - id: mergeParams
-      name: Read merged parameters back as object
-      action: roadiehq:utils:jsonata:json:transform
-      input:
-        path: .e2e/merged-params.json
-        expression: '$'
-        as: object
-
-    - id: cleanParams
-      name: Drop legacy import.existing flag from merged params
-      action: roadiehq:utils:jsonata
-      input:
-        data: ${{ steps.mergeParams.output.result }}
-        expression: '$sift($, function($v, $k) { $k != "import" })'
-
-    - id: writeXR
-      name: Write Record XR manifest
-      action: roadiehq:utils:fs:write
-      input:
-        path: >-
-          entities/environments/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain']
-          }}/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain']
-          }}/${{
-            steps.fetchZone.output.entity.metadata.annotations['dock.tech/system']
-          }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
-          ---
-          apiVersion: dock.tech/v1
-          kind: Record
           metadata:
-            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-            namespace: system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
             annotations:
-              dock.tech/scaffolder-parameters: '${{ steps.cleanParams.output.result | dump }}'
-              {%- if steps.snapshotOriginal.output.result.type != parameters.type or steps.snapshotOriginal.output.result.routingPolicy != 'simple' %}
-              argocd.argoproj.io/sync-options: Force=true,Replace=true
-              {%- endif %}
+              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+              dock.tech/updated-at: ${{ "'" + now() + "'" }}
           spec:
-            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-            domain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}
-            subdomain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}
-            system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
-            environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
-            aws:
-              account: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-id'] | int }}
-              accountName: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
-            zoneId: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
-            zoneName: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-            recordName: "${{ parameters.recordName }}"
-            type: ${{ parameters.type }}
+            owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ parameters.ttl }}
             values:
-            {%- for v in parameters.values %}
-              - ${{ v }}
+            {%- for value in parameters.values %}
+              - ${{ value }}
             {%- endfor %}
             {%- else %}
             aliasTarget:
-              serviceType: ${{ parameters.serviceType }}
               dnsName: ${{ parameters.dnsName }}
+              {%- if parameters.serviceType == 'Custom' %}
+              hostedZoneId: ${{ parameters.customZoneId }}
+              {%- endif %}
               evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
-              {%- if steps.mergeParams.output.result.targetRegion %}
-              region: ${{ steps.mergeParams.output.result.targetRegion }}
-              {%- endif %}
-              {%- if parameters.serviceType == 'Custom' and steps.mergeParams.output.result.customZoneId %}
-              hostedZoneId: ${{ steps.mergeParams.output.result.customZoneId }}
-              {%- endif %}
             {%- endif %}
-            {%- if steps.mergeParams.output.result.routingPolicy == 'weighted' %}
-            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
-            weight: ${{ steps.mergeParams.output.result.weight }}
-            {%- elif steps.mergeParams.output.result.routingPolicy == 'failover' %}
-            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
-            failoverRoutingPolicy:
-              type: ${{ steps.mergeParams.output.result.failoverType }}
-              {%- if steps.mergeParams.output.result.healthCheckId %}
-            healthCheckId: ${{ steps.mergeParams.output.result.healthCheckId }}
-              {%- endif %}
-            {%- elif steps.mergeParams.output.result.routingPolicy == 'latency' %}
-            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
-            latencyRoutingPolicy:
-              region: ${{ steps.mergeParams.output.result.latencyRegion }}
-            {%- elif steps.mergeParams.output.result.routingPolicy == 'geolocation' %}
-            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
-            geolocationRoutingPolicy:
-              {%- if steps.mergeParams.output.result.geoContinent %}
-              continent: ${{ steps.mergeParams.output.result.geoContinent }}
-              {%- endif %}
-              {%- if steps.mergeParams.output.result.geoCountry %}
-              country: ${{ steps.mergeParams.output.result.geoCountry }}
-              {%- endif %}
-              {%- if steps.mergeParams.output.result.geoSubdivision %}
-              subdivision: ${{ steps.mergeParams.output.result.geoSubdivision }}
-              {%- endif %}
-            {%- elif steps.mergeParams.output.result.routingPolicy == 'geoproximity' %}
-            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
-            geoproximityRoutingPolicy:
-              {%- if steps.mergeParams.output.result.geoproxAwsRegion %}
-              awsRegion: ${{ steps.mergeParams.output.result.geoproxAwsRegion }}
-              {%- endif %}
-              {%- if steps.mergeParams.output.result.geoproxLatitude and steps.mergeParams.output.result.geoproxLongitude %}
-              coordinates:
-                latitude: "${{ steps.mergeParams.output.result.geoproxLatitude }}"
-                longitude: "${{ steps.mergeParams.output.result.geoproxLongitude }}"
-              {%- endif %}
-              {%- if steps.mergeParams.output.result.geoproxBias %}
-              bias: ${{ steps.mergeParams.output.result.geoproxBias }}
-              {%- endif %}
-            {%- elif steps.mergeParams.output.result.routingPolicy == 'multivalue' %}
-            setIdentifier: ${{ steps.mergeParams.output.result.setIdentifier }}
-            multivalueAnswerRoutingPolicy: true
-              {%- if steps.mergeParams.output.result.healthCheckId %}
-            healthCheckId: ${{ steps.mergeParams.output.result.healthCheckId }}
-              {%- endif %}
+            {%- if parameters.enableWeightedRouting %}
+            setIdentifier: ${{ parameters.setIdentifier }}
+            weight: ${{ parameters.weight }}
             {%- endif %}
 
-    - id: writeCatalogEntity
-      name: Rewrite Backstage Resource entity
-      action: roadiehq:utils:fs:write
+    - $yaml: ../../../shared/entities/commit.yaml
+    - $yaml: ../../../shared/entities/push.yaml
+
+    - id: publish-activity-log
+      action: activity-log:publish
       input:
-        path: entities/catalog/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml
-        content: |
-          ---
-          apiVersion: backstage.io/v1alpha1
-          kind: Resource
-          metadata:
-            name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-            namespace: system-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
-            title: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-            description: "DNS ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }} (${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }})"
-            annotations:
-              dock.tech/xr-kind: Record
-              dock.tech/xr-name: record-${{ steps.computeKey.output.result }}.${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-              dock.tech/zone-name: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-              dock.tech/zone-id: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-id'] }}
-              dock.tech/record-name: "${{ parameters.recordName }}"
-              dock.tech/record-type: ${{ parameters.type }}
-              dock.tech/record-fqdn: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
-              dock.tech/domain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}
-              dock.tech/subdomain: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}
-              dock.tech/system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
-              dock.tech/environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
-              dock.tech/aws-account-id: "${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-id'] }}"
-              dock.tech/aws-account-name: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/aws-account-name'] }}
-              dock.tech/managed-by: scaffolder
-              dock.tech/scaffolder-parameters: '${{ steps.cleanParams.output.result | dump }}'
-              backstage.io/edit-url: /create/templates/default/aws-dns-record-edit?formData=${{ steps.cleanParams.output.result | dump | urlencode }}
-              backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/domain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/subdomain'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}/resources/aws/${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}/record-${{ steps.computeKey.output.result }}.yaml"
-            tags:
-              - aws
-              - dns
-              - route53
-              - record
-              - ${{ parameters.type | lower }}
-              - ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
-          spec:
-            type: aws-dns-record
-            owner: ${{ steps.fetchZone.output.entity.spec.owner }}
-            system: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/system'] }}
-            dependsOn:
-              - resource:default/zone-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}
+        action: updated
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
+        payload: ${{ parameters }}
 
-    - id: cleanupStaging
-      name: Remove staging artifacts before publishing
-      action: fs:delete
-      input:
-        files:
-          - .e2e
+    - $yaml: ../../../shared/notify.yaml
 
-    - id: branchSuffix
-      name: Compute unique branch suffix
-      action: roadiehq:utils:jsonata
-      input:
-        data: {}
-        expression: '$string($millis())'
-
-    - id: openPR
-      name: Open PR with edited record
-      action: publish:github:pull-request
-      input:
-        repoUrl: github.com?owner=arthur-bryan&repo=aws-dns-crossplane-poc
-        branchName: scaffolder/record-edit-${{ steps.computeKey.output.result }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] }}-${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}-${{ steps.branchSuffix.output.result }}
-        targetBranchName: feature/ape-platform-alignment
-        title: "chore(dns): update ${{ parameters.type }} record ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else ('at apex of ' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) }}"
-        description: |
-          Scaffolder-generated edit to Record XR.
-
-          Environment: ${{ steps.fetchZone.output.entity.metadata.annotations['dock.tech/environment'] }}
-          Record: ${{ (parameters.recordName + '.' + steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name']) if parameters.recordName else (steps.fetchZone.output.entity.metadata.annotations['dock.tech/zone-name'] + ' (apex)') }} (${{ parameters.type }})
-
-  output:
-    links:
-      - title: Pull Request
-        url: ${{ steps.openPR.output.remoteUrl }}
+  output: {}

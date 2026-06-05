@@ -39,13 +39,20 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const stripZonePrefix = (name: string) =>
-  name.startsWith('zone-') ? name.slice('zone-'.length) : name;
-
-const parseRefName = (ref: string): string => {
-  const last = ref.includes('/') ? ref.split('/').pop()! : ref;
-  return last.includes(':') ? last.split(':').pop()! : last;
-};
+function extractContext(composedName: string, system: string, environment: string): string {
+  const ref = system.includes('/') ? system.split('/').pop()! : system;
+  const systemName = ref.includes(':') ? ref.split(':').pop()! : ref;
+  const prefix = systemName ? `${systemName}-` : '';
+  const suffix = environment ? `-${environment}` : '';
+  let context = composedName;
+  if (prefix && context.startsWith(prefix)) {
+    context = context.slice(prefix.length);
+  }
+  if (suffix && context.endsWith(suffix)) {
+    context = context.slice(0, context.length - suffix.length);
+  }
+  return context;
+}
 
 export const RecordFqdnPreview = (
   props: FieldExtensionComponentProps<string>,
@@ -54,12 +61,14 @@ export const RecordFqdnPreview = (
   const ctx = (props.formContext ?? {}) as { formData?: Record<string, any> };
   const data = ctx.formData ?? {};
 
-  let zoneName = '';
-  if (typeof data.zone === 'string' && data.zone) {
-    zoneName = stripZonePrefix(parseRefName(data.zone));
-  }
+  const zone = data.zone;
+  const zoneName = zone && typeof zone === 'object' ? String(zone.name ?? '').replace(/\.$/, '') : '';
 
-  const recordName = String(data.recordName ?? '').trim().toLowerCase();
+  const composedName = String(data.name ?? '').trim();
+  const system = String(data.system ?? '').trim();
+  const environment = String(data.environment ?? '').trim();
+  const recordName = composedName ? extractContext(composedName, system, environment) : '';
+
   const fqdn = zoneName
     ? recordName
       ? `${recordName}.${zoneName}`

@@ -2,15 +2,14 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record-claim
-  title: Claim Existing AWS Route53 DNS Record
-  description: Bring an existing Route53 record under platform management
+  title: Claim Existing DNS Record
+  description: Bring an existing DNS record under platform management
   labels:
     category: resources
   tags:
     - resource
     - aws
     - public
-    - hidden
     - cloud-infrastructure
 spec:
   owner: group:dock-tech/cloud-infrastructure
@@ -43,7 +42,7 @@ spec:
         zone:
           title: DNS Zone
           type: object
-          description: The Route53 hosted zone containing this record
+          description: The hosted zone containing this record
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
@@ -51,7 +50,7 @@ spec:
         existingRecord:
           title: Existing Record
           type: object
-          description: Select the existing Route53 record to bring under management
+          description: Select the existing DNS record to bring under management
           ui:field: AwsDnsRecordPicker
           ui:options:
             environmentFieldName: environment
@@ -67,46 +66,41 @@ spec:
       action: roadiehq:utils:jsonata
       input:
         data:
-          env: ${{ parameters.environment }}
-          systemEnvironments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+          environment: ${{ parameters.environment }}
         expression: >-
           (
-            $env := $filter(systemEnvironments, function($e) { $e.name = env })[0];
-            $env ? { "accountId": $string($env.aws.account), "accountName": $env.aws.accountName }
-                 : { "accountId": "", "accountName": "" }
+            $accounts := {
+              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
+              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
+              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
+            };
+            $accounts[environment]
           )
 
     - id: computeRecordName
-      name: Compute zone-relative record name
+      name: Compute zone-relative record name and entity name
       action: roadiehq:utils:jsonata
       input:
         data:
           fqdn: ${{ parameters.existingRecord.name }}
           zoneName: ${{ parameters.zone.name }}
+          systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
+          environment: ${{ parameters.environment }}
         expression: >-
           (
             $f := $replace(fqdn, /\.$/, "");
             $z := $replace(zoneName, /\.$/, "");
-            $f = $z ? "" : $replace($f, "." & $z, "")
+            $recordName := $f = $z ? "" : $replace($f, "." & $z, "");
+            $context := $recordName != "" ? $recordName : $z;
+            $entityName := systemName & "-" & $context & "-" & environment;
+            { "recordName": $recordName, "entityName": $entityName }
           )
-
-    - id: composeName
-      name: Compose resource name from record fields
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          recordName: ${{ steps.computeRecordName.output.result }}
-          type: ${{ parameters.existingRecord.type }}
-          zoneName: ${{ parameters.zone.name }}
-          environment: ${{ parameters.environment }}
-        expression: >-
-          $join($split($replace(recordName, /\.$/, ""), "."), "-") & "-" & $lowercase(type) & "-" & $join($split($replace(zoneName, /\.$/, ""), "."), "-") & "-" & environment
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ steps.composeName.output.result }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordName.output.result.entityName }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -119,14 +113,14 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/record-${{ steps.composeName.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordName.output.result.entityName }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ steps.composeName.output.result }}
+            name: ${{ steps.computeRecordName.output.result.entityName }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
-            description: AWS Route53 DNS Record claimed by template
+            description: DNS Record claimed by template
             annotations:
               dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
@@ -142,7 +136,7 @@ spec:
             environment: ${{ parameters.environment }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
-            recordName: "${{ steps.computeRecordName.output.result }}"
+            recordName: "${{ steps.computeRecordName.output.result.recordName }}"
             recordType: ${{ parameters.existingRecord.type }}
             aws:
               account: ${{ steps.deriveAccount.output.result.accountId }}
@@ -168,7 +162,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ steps.composeName.output.result }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ steps.computeRecordName.output.result.entityName }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

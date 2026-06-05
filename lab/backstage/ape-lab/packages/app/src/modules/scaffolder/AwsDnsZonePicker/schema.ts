@@ -1,7 +1,13 @@
 import { makeFieldSchema } from '@backstage/plugin-scaffolder-react';
 
 export const AwsDnsZonePickerFieldSchema = makeFieldSchema({
-  output: (z) => z.string().describe('The selected Route53 hosted zone ID'),
+  output: (z) =>
+    z
+      .object({
+        id: z.string(),
+        name: z.string(),
+      })
+      .describe('The selected Route53 hosted zone'),
   uiOptions: (z) =>
     z
       .object({
