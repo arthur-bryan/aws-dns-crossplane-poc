@@ -2,6 +2,6 @@ id: clone
 name: Clone Repository
 action: github:extras:clone
 input:
-  url: https://github.com/dock-tech/ape-platform-entities.git
-  branch: master
+  url: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
+  branch: feature/ape-platform-alignment
   folder: entities

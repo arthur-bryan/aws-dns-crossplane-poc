@@ -3,4 +3,4 @@ name: Push changes
 action: github:extras:push
 input:
   folder: entities
-  branch: master
+  branch: feature/ape-platform-alignment

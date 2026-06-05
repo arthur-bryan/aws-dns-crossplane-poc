@@ -40,6 +40,7 @@ backend.add(import('./modules/zone-enrichment'));
 //     end-to-end: new catalog files appear ~30-60s after a PR is merged.
 backend.add(import('./modules/catalog-file-watcher'));
 backend.add(import('./modules/dns-routes'));
+backend.add(import('./modules/github-extras-actions'));
 
 backend.add(import('@backstage/plugin-permission-backend'));
 backend.add(
