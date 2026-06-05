@@ -23,6 +23,7 @@ import {
   scaffolderActionsExtensionPoint,
 } from '@backstage/plugin-scaffolder-node';
 import { exec as execCb } from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
 
@@ -214,10 +215,109 @@ export const githubExtrasActionsModule = createBackendModule({
               if (stderr) ctx.logger.info(stderr.trim());
             },
           }),
+
+          // -------- additional APE shared-step actions --------
+          //
+          // The synced templates also reference fs:file:exists, error:launch,
+          // and activity-log:publish. None ship in this lab's scaffolder
+          // bundle, so the templates fail mid-run with 'action not
+          // registered'. Provide minimal lab equivalents so the templates
+          // can run end-to-end -- semantics match APE's behaviour close
+          // enough that the picker / converter pipeline can be exercised.
+
+          createTemplateAction({
+            id: 'fs:file:exists',
+            description:
+              'Return whether the given path exists in the workspace.',
+            schema: {
+              input: {
+                filepath: z =>
+                  z.string({
+                    description:
+                      'Path relative to the workspace root (or absolute).',
+                  }),
+              },
+              output: {
+                exists: z =>
+                  z.boolean({ description: 'True if the path exists.' }),
+              },
+            },
+            async handler(ctx) {
+              const { filepath } = ctx.input as { filepath: string };
+              const abs = path.isAbsolute(filepath)
+                ? filepath
+                : path.join(ctx.workspacePath, filepath);
+              const exists = fs.existsSync(abs);
+              ctx.output('exists', exists);
+            },
+          }),
+
+          createTemplateAction({
+            id: 'error:launch',
+            description: 'Fail the scaffolder task with the given message.',
+            schema: {
+              input: {
+                message: z =>
+                  z.string({ description: 'Error message to throw.' }),
+              },
+            },
+            async handler(ctx) {
+              const { message } = ctx.input as { message: string };
+              throw new Error(message);
+            },
+          }),
+
+          createTemplateAction({
+            id: 'activity-log:publish',
+            description:
+              'No-op log in the lab. In APE this writes to the platform activity log.',
+            schema: {
+              input: {
+                action: z => z.string().optional(),
+                entityRef: z => z.string().optional(),
+                payload: z => z.any().optional(),
+              },
+            },
+            async handler(ctx) {
+              const { action, entityRef } = ctx.input as {
+                action?: string;
+                entityRef?: string;
+                payload?: unknown;
+              };
+              ctx.logger.info(
+                `activity-log: ${action ?? '<unknown>'} ${entityRef ?? ''}`,
+              );
+            },
+          }),
+
+          createTemplateAction({
+            id: 'catalog:refresh:location',
+            description:
+              'No-op in the lab. URL Locations are auto-refreshed by the ' +
+              'catalog processor every processingInterval; the chokidar ' +
+              'watcher picks up file changes immediately.',
+            schema: {
+              input: {
+                type: z => z.string().optional(),
+                entityRef: z => z.string().optional(),
+              },
+            },
+            async handler(ctx) {
+              const { type, entityRef } = ctx.input as {
+                type?: string;
+                entityRef?: string;
+              };
+              ctx.logger.info(
+                `catalog:refresh:location requested (type=${type ?? ''} entityRef=${entityRef ?? ''}) — no-op in lab`,
+              );
+            },
+          }),
         );
 
         logger.info(
-          'github-extras-actions: registered github:extras:{clone,commit,push}',
+          'github-extras-actions: registered github:extras:{clone,commit,push}, ' +
+            'fs:file:exists, error:launch, activity-log:publish, ' +
+            'catalog:refresh:location',
         );
       },
     });
