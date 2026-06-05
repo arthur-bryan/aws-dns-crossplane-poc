@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: Record
+metadata:
+  name: record-exemplo-manual.arthurbryan.com
+  namespace: system-infrastructure-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"name":"infrastructure-exemplo-manual-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"exemplo-manual","type":"A","originalType":"A","ttl":300,"values":["10.0.0.10"]}'
+spec:
+  name: record-exemplo-manual.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: infrastructure
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: exemplo-manual
+  type: A
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  ttl: 300
+  values:
+  - 10.0.0.10
