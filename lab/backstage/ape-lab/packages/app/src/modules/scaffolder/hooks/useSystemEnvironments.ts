@@ -25,19 +25,36 @@ export type SystemEnvironment = {
   };
 };
 
+export type SystemAwsAccount = {
+  accountId: string;
+  accountName?: string;
+  value: string;
+};
+
+export type SystemAwsConfig = SystemAwsAccount & {
+  region?: string;
+};
+
 export function isEnvironment(value: unknown): value is Environment {
   return typeof value === 'string' && ALLOWED_ENVIRONMENTS.includes(value as EnvironmentName);
 }
 
 function toOptionalString(value: unknown): string | undefined {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number') return String(value);
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number') {
+    return String(value);
+  }
   return undefined;
 }
 
 function extractSystemEnvironments(entity?: Entity): SystemEnvironment[] {
   const rawEnvironments = entity?.spec?.environments;
-  if (!Array.isArray(rawEnvironments)) return [];
+
+  if (!Array.isArray(rawEnvironments)) {
+    return [];
+  }
 
   const unique = new Map<EnvironmentName, SystemEnvironment>();
   for (const item of rawEnvironments) {
@@ -55,19 +72,55 @@ function extractSystemEnvironments(entity?: Entity): SystemEnvironment[] {
       });
     }
   }
+
   return Array.from(unique.values());
 }
 
 export const useSystemEnvironments = ({ systemRef }: { systemRef?: string }) => {
   const { entity: systemEntity, loading, error } = useEntityByRef({ entityRef: systemRef });
 
-  const systemEnvironments = extractSystemEnvironments(systemEntity);
-  const environments = systemEnvironments.map(e => e.name);
+  const system = systemEntity;
+  const systemEnvironments = extractSystemEnvironments(system);
+  const environments = systemEnvironments.map((environment) => environment.name);
+
+  const getAwsFromEnvironment = (environmentName: EnvironmentName): SystemAwsConfig | undefined => {
+    const match = systemEnvironments.find((environment) => environment.name === environmentName);
+    const accountId = match?.aws?.account;
+
+    if (!accountId) {
+      return undefined;
+    }
+
+    const accountName = match?.aws?.accountName;
+    const region = match?.aws?.region;
+
+    return {
+      accountId,
+      accountName,
+      region,
+      value: accountName ? `${accountId}:${accountName}` : accountId,
+    };
+  };
+
+  const getAwsAccountFromEnvironment = (environmentName: EnvironmentName): SystemAwsAccount | undefined => {
+    const awsConfig = getAwsFromEnvironment(environmentName);
+    if (!awsConfig) {
+      return undefined;
+    }
+
+    return {
+      accountId: awsConfig.accountId,
+      accountName: awsConfig.accountName,
+      value: awsConfig.value,
+    };
+  };
 
   return {
-    system: systemEntity,
+    system,
     systemEnvironments,
     environments,
+    getAwsFromEnvironment,
+    getAwsAccountFromEnvironment,
     loading,
     error,
     systemEntity,

@@ -6,12 +6,9 @@ import { useEffect, useMemo } from 'react';
 import type { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
 import { Environment, isEnvironment, useSystemEnvironments } from './hooks/useSystemEnvironments';
 
-export const EnvironmentPicker = (
-  props: FieldExtensionComponentProps<string>,
-) => {
-  const { onChange, formData, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } =
-    props;
-  const uiOptions = (uiSchema as any)['ui:options'] ?? {};
+export const EnvironmentPicker = (props: FieldExtensionComponentProps<string>) => {
+  const { onChange, formData, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } = props;
+  const uiOptions = uiSchema['ui:options'] ?? {};
   const systemFieldName = uiOptions.systemFieldName ?? 'system';
   const systemFromForm = props.formContext?.formData?.[systemFieldName];
   const rawSystemRef = uiOptions.systemRef ?? systemFromForm;
@@ -25,31 +22,35 @@ export const EnvironmentPicker = (
 
   useEffect(() => {
     if (options.length === 0) {
-      if (formData !== undefined) onChange(undefined);
+      if (formData !== undefined) {
+        onChange(undefined);
+      }
       return;
     }
+
     if (!isEnvironment(formData) || !options.includes(formData as Environment)) {
       onChange(fallbackEnvironment);
     }
   }, [fallbackEnvironment, formData, onChange, options]);
 
-  let helperText = 'Select a System first.';
+  let helperText = 'Select a System first to load environments from spec.environments.';
+
   if (systemRef) {
     if (loading) {
-      helperText = 'Loading environments…';
+      helperText = 'Loading environments from selected System...';
     } else if (error) {
-      helperText = 'Could not load environments for this system.';
+      helperText = 'Could not load environments from System.';
     } else if (systemEnvironments.length > 0) {
-      helperText = `Available environments: ${systemEnvironments.join(', ')}.`;
+      helperText = `Loaded ${systemEnvironments.length} environment(s) from System: ${systemEnvironments.join(', ')}.`;
     } else {
-      helperText = 'This system has no environments configured.';
+      helperText = 'System has no supported environments in spec.environments.';
     }
   }
 
   return (
     <ScaffolderField
       rawErrors={rawErrors}
-      rawDescription={(uiSchema as any)['ui:description'] ?? schema.description}
+      rawDescription={uiSchema['ui:description'] ?? schema.description}
       required={required}
       disabled={disabled}
       errors={errors}
@@ -65,10 +66,10 @@ export const EnvironmentPicker = (
           fullWidth
           value={selectedEnvironment}
           disabled={disabled || loading || !systemRef || options.length === 0}
-          onChange={event => onChange(event.target.value as Environment)}
+          onChange={(event) => onChange(event.target.value as Environment)}
         >
           <MenuItem value="">Select an environment</MenuItem>
-          {options.map(environment => (
+          {options.map((environment) => (
             <MenuItem key={environment} value={environment}>
               {environment}
             </MenuItem>
