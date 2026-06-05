@@ -56,6 +56,16 @@ spec:
           type: string
           ui:widget: hidden
 
+        originalType:
+          # The record type at form-load time. When the user changes `type`,
+          # writeFile detects the diff and stamps the XR with
+          # argocd.argoproj.io/sync-options: Force=true,Replace=true so the
+          # MR gets deleted-and-recreated -- the only way Route53 will let
+          # us swap A <-> CNAME on the same name.
+          title: Original Record Type
+          type: string
+          ui:widget: hidden
+
         recordName:
           title: Record Name
           type: string
@@ -271,6 +281,18 @@ spec:
             }
           )
 
+    - id: nextParams
+      name: Compute next-edit scaffolder-parameters snapshot
+      # After this edit lands, originalType must equal the *new* type so the
+      # next edit sees the post-save state as its baseline. Without this,
+      # every subsequent edit would re-stamp Force=Replace even when the
+      # user didn't change the type.
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          params: ${{ parameters }}
+        expression: $merge([params, {"originalType": params.type}])
+
     - id: writeFile
       name: Update Resource File
       # Full rewrite (not merge): switching record type or toggling weighted
@@ -291,7 +313,16 @@ spec:
             description: DNS Record managed by template
             annotations:
               dock.tech/scaffolder-editable-template: dns-record-edit
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              dock.tech/scaffolder-parameters: '${{ steps.nextParams.output.result | dump }}'
+              {%- if parameters.originalType and parameters.type != parameters.originalType %}
+              # Type change (e.g. A -> CNAME). The converter copies this
+              # argocd.argoproj.io/* annotation onto the XR, which makes
+              # ArgoCD delete-and-recreate the XR (and therefore the MR),
+              # which lets Crossplane drop the old AWS record before
+              # creating the new-type one. Without this, Route53 rejects
+              # the create with InvalidChangeBatch (name+type collision).
+              argocd.argoproj.io/sync-options: Force=true,Replace=true
+              {%- endif %}
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws

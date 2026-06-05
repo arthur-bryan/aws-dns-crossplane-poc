@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"infrastructure-test2-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"test2","type":"CNAME","ttl":3600,"values":["arthurbryan.com"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"name":"infrastructure-test2-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"test2","type":"CNAME","originalType":"CNAME","ttl":3600,"values":["arthurbryan.com"],"enableWeightedRouting":false}'
   labels:
     environment: prd
     cloud: aws

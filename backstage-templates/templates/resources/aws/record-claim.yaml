@@ -126,7 +126,8 @@ spec:
               "zone": zone,
               "zoneId": zoneId,
               "recordName": recordName,
-              "type": existingRecord.type
+              "type": existingRecord.type,
+              "originalType": existingRecord.type
             };
             $alias := existingRecord.aliasTarget;
             $alias ?

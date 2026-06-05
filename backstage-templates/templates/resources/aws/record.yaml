@@ -450,7 +450,8 @@ spec:
               "zone": zone,
               "zoneId": zoneId,
               "recordName": recordName,
-              "type": recordType
+              "type": recordType,
+              "originalType": recordType
             };
             $typed := recordType = "ALIAS" ?
               {
