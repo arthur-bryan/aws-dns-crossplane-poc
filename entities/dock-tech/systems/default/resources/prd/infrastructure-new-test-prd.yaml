@@ -28,8 +28,8 @@ spec:
   recordName: "new-test"
   recordType: CNAME
   aws:
-    account: 
-    accountName: 
+    account: "597230762851"
+    accountName: prd-account
   ttl: 3600
   values:
     - arthurbryan.com

@@ -274,7 +274,8 @@ spec:
           environments: ${{ steps.fetchSystem.output.entity.spec.environments }}
         expression: >-
           (
-            $envCfg := environments[name = env];
+            $envName := env;
+            $envCfg := environments[name = $envName];
             {
               "accountId": $envCfg.aws.account,
               "accountName": $envCfg.aws.accountName

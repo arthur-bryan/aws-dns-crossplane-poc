@@ -18,8 +18,8 @@ spec:
   recordName: new-test
   type: CNAME
   aws:
-    account: null
-    accountName: null
+    account: 597230762851
+    accountName: prd-account
   ttl: 3600
   values:
   - arthurbryan.com
