@@ -1,0 +1,39 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ${{ steps.computeRecordName.output.result.entityName }}
+  namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/created-at: ${{ "'" + now() + "'" }}
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+  labels:
+    environment: ${{ parameters.environment }}
+    cloud: aws
+spec:
+  type: Record
+  cloud: aws
+  owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+  system: ${{ parameters.system }}
+  environment: ${{ parameters.environment }}
+  zoneId: ${{ parameters.zone.id }}
+  zoneName: ${{ parameters.zone.name }}
+  recordName: "${{ steps.computeRecordName.output.result.recordName }}"
+  recordType: ${{ parameters.existingRecord.type }}
+  aws:
+    account: ${{ steps.deriveAccount.output.result.accountId }}
+    accountName: ${{ steps.deriveAccount.output.result.accountName }}
+  {%- if parameters.existingRecord.aliasTarget %}
+  aliasTarget:
+    serviceType: Custom
+    dnsName: ${{ parameters.existingRecord.aliasTarget.dnsName }}
+    hostedZoneId: ${{ parameters.existingRecord.aliasTarget.hostedZoneId }}
+    evaluateTargetHealth: ${{ parameters.existingRecord.aliasTarget.evaluateTargetHealth }}
+  {%- else %}
+  ttl: ${{ parameters.existingRecord.ttl }}
+  values:
+  {%- for v in parameters.existingRecord.values %}
+    - ${{ v }}
+  {%- endfor %}
+  {%- endif %}
