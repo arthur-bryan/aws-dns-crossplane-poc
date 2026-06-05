@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: infrastructure-new-test-prd
+  namespace: default
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"infrastructure-new-test-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"new-test","type":"A","originalType":"A","ttl":300,"values":["10.0.0.77"]}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:default/infrastructure
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: "new-test"
+  recordType: A
+  aws:
+    account: 
+    accountName: 
+  ttl: 300
+  values:
+    - 10.0.0.77
