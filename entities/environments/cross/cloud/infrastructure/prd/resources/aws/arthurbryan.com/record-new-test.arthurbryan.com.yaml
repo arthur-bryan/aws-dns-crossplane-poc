@@ -5,7 +5,8 @@ metadata:
   name: record-new-test.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"name":"infrastructure-new-test-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"new-test","type":"A","originalType":"A","ttl":300,"values":["10.0.0.77"]}'
+    dock.tech/scaffolder-parameters: '{"name":"infrastructure-new-test-prd","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"new-test","type":"CNAME","originalType":"CNAME","ttl":3600,"values":["arthurbryan.com"],"enableWeightedRouting":false}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-new-test.arthurbryan.com
   domain: cross
@@ -15,10 +16,10 @@ spec:
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
   recordName: new-test
-  type: A
+  type: CNAME
   aws:
     account: null
     accountName: null
-  ttl: 300
+  ttl: 3600
   values:
-  - 10.0.0.77
+  - arthurbryan.com
