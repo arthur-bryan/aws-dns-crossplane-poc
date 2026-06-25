@@ -20,42 +20,49 @@ const useStyles = makeStyles(theme => ({
     marginBottom: theme.spacing(0.5),
   },
   value: {
-    fontFamily:
-      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     fontSize: 14,
     color: theme.palette.text.primary,
     wordBreak: 'break-all',
   },
   empty: {
-    fontFamily:
-      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     fontSize: 14,
     color: theme.palette.text.disabled,
   },
 }));
 
-const stripZonePrefix = (name: string) =>
-  name.startsWith('zone-') ? name.slice('zone-'.length) : name;
+function extractSubdomain(composedName: string, systemRef: string, environment: string): string {
+  const ref = systemRef.includes('/') ? systemRef.split('/').pop()! : systemRef;
+  const systemName = ref.includes(':') ? ref.split(':').pop()! : ref;
+  const prefix = systemName ? `${systemName}-` : '';
+  const suffix = environment ? `-${environment}-zone` : '-zone';
+  let subdomain = composedName;
+  if (prefix && subdomain.startsWith(prefix)) {
+    subdomain = subdomain.slice(prefix.length);
+  }
+  if (suffix && subdomain.endsWith(suffix)) {
+    subdomain = subdomain.slice(0, subdomain.length - suffix.length);
+  }
+  return subdomain;
+}
 
-const parseRefName = (ref: string): string => {
-  const last = ref.includes('/') ? ref.split('/').pop()! : ref;
-  return last.includes(':') ? last.split(':').pop()! : last;
-};
-
-export const ZoneFqdnPreview = (
-  props: FieldExtensionComponentProps<string>,
-) => {
+export const ZoneFqdnPreview = (props: FieldExtensionComponentProps<string>) => {
   const classes = useStyles();
   const ctx = (props.formContext ?? {}) as { formData?: Record<string, any> };
   const data = ctx.formData ?? {};
 
-  const prefix = String(data.prefix ?? '').trim().toLowerCase();
-  let parent = '';
-  if (typeof data.delegatedZone === 'string' && data.delegatedZone) {
-    parent = stripZonePrefix(parseRefName(data.delegatedZone));
-  }
+  const parentZone = data.parentZone;
+  const parentZoneName = parentZone && typeof parentZone === 'object'
+    ? String(parentZone.name ?? '').replace(/\.$/, '')
+    : '';
 
-  const fqdn = prefix && parent ? `${prefix}.${parent}` : '';
+  const composedName = String(data.name ?? '').trim();
+  const environment = String(data.environment ?? '').trim();
+  const systemRef = String(data.system ?? 'dns').trim();
+  const subdomain = composedName ? extractSubdomain(composedName, systemRef, environment) : '';
+
+  const fqdn = parentZoneName && subdomain ? `${subdomain}.${parentZoneName}` : '';
 
   return (
     <div className={classes.wrap}>

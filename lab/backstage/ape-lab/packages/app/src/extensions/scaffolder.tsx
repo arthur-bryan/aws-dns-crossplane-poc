@@ -11,6 +11,8 @@ export const scaffolderOverrides = createFrontendModule({
           const { EnvironmentPickerExtensionPlugin } = await import('../modules/scaffolder/EnvironmentPickerExtension');
           const { AwsDnsZonePickerExtensionPlugin } = await import('../modules/scaffolder/AwsDnsZonePicker/AwsDnsZonePickerExtension');
           const { AwsDnsRecordPickerExtensionPlugin } = await import('../modules/scaffolder/AwsDnsRecordPicker/AwsDnsRecordPickerExtension');
+          const { RecordFqdnPreviewExtensionPlugin } = await import('../modules/scaffolder/RecordFqdnPreviewExtension');
+          const { ZoneFqdnPreviewExtensionPlugin } = await import('../modules/scaffolder/ZoneFqdnPreviewExtension');
           return (
             <ScaffolderPage>
               <ScaffolderLayouts />
@@ -18,6 +20,8 @@ export const scaffolderOverrides = createFrontendModule({
                 <EnvironmentPickerExtensionPlugin />
                 <AwsDnsZonePickerExtensionPlugin />
                 <AwsDnsRecordPickerExtensionPlugin />
+                <RecordFqdnPreviewExtensionPlugin />
+                <ZoneFqdnPreviewExtensionPlugin />
               </ScaffolderFieldExtensions>
             </ScaffolderPage>
           );

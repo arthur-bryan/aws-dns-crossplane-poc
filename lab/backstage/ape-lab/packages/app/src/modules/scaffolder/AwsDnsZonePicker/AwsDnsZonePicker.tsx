@@ -13,11 +13,8 @@ type Zone = {
   name: string;
   private: boolean;
   recordCount?: number;
+  accountName?: string;
 };
-
-function isEnvironment(value: unknown): boolean {
-  return typeof value === 'string' && value.trim().length > 0;
-}
 
 export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
   const { onChange, formData, formContext, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } = props;
@@ -26,23 +23,22 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
   const fetchApi = useApi(fetchApiRef);
 
   const uiOptions = uiSchema['ui:options'] ?? {};
-  const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
-  const environmentFromForm = formContext?.formData?.[environmentFieldName];
+  const environmentFieldName = uiOptions.environmentFieldName;
+  const environmentFromForm = environmentFieldName ? formContext?.formData?.[environmentFieldName] : undefined;
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
-  const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
-  const zoneValue = formData && typeof formData === 'object' ? (formData as { id: string; name: string }) : undefined;
+  const environment = typeof rawEnvironment === 'string' && rawEnvironment.trim().length > 0 ? rawEnvironment : undefined;
+  const zoneValue = formData && typeof formData === 'object' ? (formData as Zone) : undefined;
 
   const {
     value: zones = [],
     loading,
     error,
   } = useAsync(async () => {
-    if (!environment || typeof environment !== 'string' || environment.trim().length === 0) {
-      return [] as Zone[];
-    }
-
     const baseUrl = await discoveryApi.getBaseUrl('aws');
-    const response = await fetchApi.fetch(`${baseUrl}/dns-zones?environment=${encodeURIComponent(environment)}`);
+    const url = environment
+      ? `${baseUrl}/dns-zones?environment=${encodeURIComponent(environment)}`
+      : `${baseUrl}/dns-zones`;
+    const response = await fetchApi.fetch(url);
 
     if (!response.ok) {
       throw new Error(`Failed to load DNS zones (${response.status})`);
@@ -58,14 +54,15 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
     }
   }, [zones, zoneValue, onChange]);
 
-  let helperText = 'Select an environment first to load DNS zones.';
-
+  let helperText: string;
   if (loading) {
     helperText = 'Loading DNS zones...';
   } else if (error) {
     helperText = 'Could not load DNS zones.';
-  } else if (isEnvironment(environment)) {
-    helperText = zones.length > 0 ? `${zones.length} zone(s) available for ${environment}.` : `No DNS zones found for ${environment}.`;
+  } else {
+    helperText = zones.length > 0
+      ? `${zones.length} zone(s) available${environment ? ` for ${environment}` : ''}.`
+      : `No DNS zones found${environment ? ` for ${environment}` : ''}.`;
   }
 
   return (
@@ -79,13 +76,13 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
       <>
         <Autocomplete
           id={idSchema?.$id}
-          disabled={disabled || loading || !isEnvironment(environment)}
+          disabled={disabled || loading}
           loading={loading}
           options={zones}
           getOptionLabel={(zone) => zone.name}
           getOptionSelected={(option, val) => option.id === val.id}
           value={zones.find((zone) => zone.id === zoneValue?.id) ?? null}
-          onChange={(_, selected) => onChange(selected ? { id: selected.id, name: selected.name } : undefined)}
+          onChange={(_, selected) => onChange(selected ? { id: selected.id, name: selected.name, accountName: selected.accountName } : undefined)}
           renderOption={(zone) => zone.name}
           renderInput={(params) => (
             <TextField {...params} label={schema.title ?? 'DNS Zone'} margin="dense" variant="outlined" required={required} fullWidth />

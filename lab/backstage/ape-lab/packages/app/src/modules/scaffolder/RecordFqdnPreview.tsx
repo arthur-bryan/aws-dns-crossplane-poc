@@ -62,7 +62,11 @@ export const RecordFqdnPreview = (
   const data = ctx.formData ?? {};
 
   const zone = data.zone;
-  const zoneName = zone && typeof zone === 'object' ? String(zone.name ?? '').replace(/\.$/, '') : '';
+  const zoneName = zone && typeof zone === 'object'
+    ? String(zone.name ?? '').replace(/\.$/, '')
+    : typeof zone === 'string'
+    ? zone.replace(/\.$/, '')
+    : '';
 
   const composedName = String(data.name ?? '').trim();
   const system = String(data.system ?? '').trim();

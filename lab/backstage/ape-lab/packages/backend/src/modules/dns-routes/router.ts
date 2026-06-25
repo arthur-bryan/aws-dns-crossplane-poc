@@ -11,6 +11,7 @@ import type { LoggerService, RootConfigService } from '@backstage/backend-plugin
 
 type DnsAccountConfig = {
   accountId: string;
+  accountName: string;
   roleArn: string;
 };
 
@@ -21,12 +22,15 @@ function getAccountConfig(
   const accountId = config.getString(
     `dns.accounts.${environment}.accountId`,
   );
+  // accountName defaults to the environment key if not explicitly configured
+  const accountName =
+    config.getOptionalString(`dns.accounts.${environment}.accountName`) ?? environment;
   // roleArn is optional: when empty, the backend uses its default credential
   // chain (useful for the env whose account IS the backend's own account, so
   // no cross-account AssumeRole is needed).
   const roleArn =
     config.getOptionalString(`dns.accounts.${environment}.roleArn`) ?? '';
-  return { accountId, roleArn };
+  return { accountId, accountName, roleArn };
 }
 
 function makeRoute53Client(roleArn: string): Route53Client {
@@ -94,27 +98,27 @@ export async function createDnsRouter(opts: {
   const router = Router();
 
   router.get('/dns-zones', async (req, res) => {
-    const environment = req.query.environment as string;
-    if (!environment) {
-      res.status(400).json({ error: 'environment query param required' });
-      return;
-    }
+    const environment = req.query.environment as string | undefined;
+    const environments = environment ? [environment] : ['dev', 'hml', 'prd'];
 
     try {
-      const { roleArn } = getAccountConfig(config, environment);
-      const client = makeRoute53Client(roleArn);
-      const zones = await listAllZones(client);
-
-      res.json({
-        zones: zones.map(z => ({
-          id: z.Id?.replace('/hostedzone/', ''),
-          name: z.Name?.replace(/\.$/, ''),
-          private: z.Config?.PrivateZone ?? false,
-          recordCount: z.ResourceRecordSetCount,
-        })),
-      });
+      const results = await Promise.all(
+        environments.map(async env => {
+          const { roleArn, accountName } = getAccountConfig(config, env);
+          const client = makeRoute53Client(roleArn);
+          const zones = await listAllZones(client);
+          return zones.map(z => ({
+            id: z.Id?.replace('/hostedzone/', ''),
+            name: z.Name?.replace(/\.$/, ''),
+            private: z.Config?.PrivateZone ?? false,
+            recordCount: z.ResourceRecordSetCount,
+            accountName,
+          }));
+        }),
+      );
+      res.json({ zones: results.flat() });
     } catch (err: any) {
-      logger.error(`Failed to list zones for ${environment}: ${err.message}`);
+      logger.error(`Failed to list zones for ${environment ?? 'all'}: ${err.message}`);
       res.status(500).json({ error: err.message });
     }
   });

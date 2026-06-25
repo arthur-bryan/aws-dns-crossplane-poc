@@ -106,7 +106,7 @@ export class DockZoneEnrichmentProcessor implements CatalogProcessor {
       const resp = await this.k8s.listClusterCustomObject({
         group: 'dock.tech',
         version: 'v1',
-        plural: 'zones',
+        plural: 'dnszones',
       });
       const items = this.extractItems(resp);
       const next = new Map<string, ZoneStatus>();
