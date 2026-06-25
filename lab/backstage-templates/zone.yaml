@@ -20,13 +20,14 @@ spec:
       required:
         - environment
         - name
-        - zoneName
+        - parentZone
       properties:
         environment:
           title: Environment
           type: string
           description: Environment where the DNS zone will be created
           ui:field: AwsEnvironmentPicker
+
         kind:
           title: Kind
           type: string
@@ -34,21 +35,25 @@ spec:
           ui:widget: hidden
 
         name:
-          title: Context
+          title: Subdomain
           type: string
-          description: Context to compose the name of the zone
+          description: Subdomain label for the new zone (e.g., 'payments' to create payments.dev.dock.tech)
           ui:autofocus: true
           ui:field: EntityNameComposerPicker
           ui:options:
             systemRef: system:dns-eds437/dns
             suffix: zone
 
-        zoneName:
-          title: Zone Name
+        parentZone:
+          title: Parent Zone
+          type: object
+          description: Existing zone this subdomain will be delegated from
+          ui:field: AwsDnsZonePicker
+
+        fqdnPreview:
+          title: Resulting Zone
           type: string
-          description: DNS zone name (FQDN without trailing dot, e.g., test.dev.dock.tech)
-          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
-          ui:help: "Example: test.dev.dock.tech (no trailing dot)"
+          ui:field: ZoneFqdnPreview
 
         comment:
           title: Comment
@@ -124,12 +129,14 @@ spec:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: Zone
+            type: dns-zone
             cloud: aws
             owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
-            zoneName: ${{ parameters.zoneName }}
+            zoneName: ${{ parameters.parentZone.name }}
+            delegatedFromZoneId: ${{ parameters.parentZone.id }}
+            delegatedFromAccountName: ${{ parameters.parentZone.accountName }}
             aws:
               account: ${{ steps.deriveAccount.output.result.accountId }}
               accountName: ${{ steps.deriveAccount.output.result.accountName }}

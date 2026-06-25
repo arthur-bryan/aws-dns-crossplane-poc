@@ -55,6 +55,10 @@ spec:
           ui:options:
             environmentFieldName: environment
             zoneFieldName: zone
+            excludeTypes:
+              - SOA
+              - NS
+            excludeClaimed: true
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
@@ -97,6 +101,44 @@ spec:
             { "recordName": $recordName, "entityName": $entityName }
           )
 
+    - id: buildEditParams
+      name: Build edit-template formData snapshot
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          name: ${{ steps.computeRecordName.output.result.entityName }}
+          system: ${{ parameters.system }}
+          environment: ${{ parameters.environment }}
+          zone: ${{ parameters.zone.name }}
+          zoneId: ${{ parameters.zone.id }}
+          recordName: ${{ steps.computeRecordName.output.result.recordName }}
+          existingRecord: ${{ parameters.existingRecord }}
+        expression: >-
+          (
+            $base := {
+              "name": name,
+              "system": system,
+              "environment": environment,
+              "zone": zone,
+              "zoneId": zoneId,
+              "recordName": recordName,
+              "type": existingRecord.type,
+              "originalType": existingRecord.type
+            };
+            $alias := existingRecord.aliasTarget;
+            $alias ?
+              $merge([$base, {
+                "serviceType": "Custom",
+                "dnsName": $alias.dnsName,
+                "customZoneId": $alias.hostedZoneId,
+                "evaluateTargetHealth": $alias.evaluateTargetHealth
+              }]) :
+              $merge([$base, {
+                "ttl": existingRecord.ttl,
+                "values": existingRecord.values
+              }])
+          )
+
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
@@ -125,12 +167,12 @@ spec:
             annotations:
               dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
-              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+              dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: Record
+            type: dns-record
             cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
             system: ${{ parameters.system }}
