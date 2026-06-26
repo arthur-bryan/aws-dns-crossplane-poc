@@ -25,6 +25,8 @@ spec:
           type: string
           description: Environment where the DNS zone will be created
           ui:field: EnvironmentPicker
+          ui:options:
+            systemRef: system:dns-eds437/dns
 
         kind:
           title: Kind
