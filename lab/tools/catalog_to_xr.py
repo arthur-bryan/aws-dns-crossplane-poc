@@ -242,7 +242,11 @@ def build_zone_xr(
         return None
     zone_name = str(spec["zoneName"]).rstrip(".")
     xr_name = f"zone-{zone_name}"
-    ns = f"system-{system}-{env}"
+    # Zones live in the System's home namespace regardless of which
+    # AWS account hosts them -- spec.aws.account picks the target
+    # account; the cluster XR/MR sit alongside the System catalog
+    # entity. Records still use per-env (system-<system>-<env>).
+    ns = f"system-{system}-prd"
 
     xr_spec: dict = {
         "name": xr_name,
@@ -275,7 +279,10 @@ def build_zone_xr(
     if annotations:
         xr["metadata"]["annotations"] = annotations
 
-    out_path = f"{ENV_BASE}/{domain}/{subdomain}/{system}/{env}/resources/aws/{zone_name}/zone.yaml"
+    # Zones live under the System's home env path (prd), same as the
+    # namespace decision above. spec.environment + spec.aws.account
+    # inside the XR carry the actual target.
+    out_path = f"{ENV_BASE}/{domain}/{subdomain}/{system}/prd/resources/aws/{zone_name}/zone.yaml"
     return out_path, xr
 
 
