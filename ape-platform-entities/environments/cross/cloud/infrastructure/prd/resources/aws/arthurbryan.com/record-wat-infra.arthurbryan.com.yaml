@@ -5,7 +5,7 @@ metadata:
   name: record-wat-infra.arthurbryan.com
   namespace: system-infrastructure-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"name":"wat-infra","system":"system:default/infrastructure","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"wat-infra","type":"CNAME","originalType":"CNAME","ttl":3000,"values":["test.com.br"],"enableWeightedRouting":false,"evaluateTargetHealth":false}'
+    dock.tech/scaffolder-parameters: '{"name":"wat-infra","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"wat-infra","type":"CNAME","originalType":"CNAME","ttl":3000,"values":["test.com.br"],"enableWeightedRouting":false,"evaluateTargetHealth":false}'
     argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-wat-infra.arthurbryan.com

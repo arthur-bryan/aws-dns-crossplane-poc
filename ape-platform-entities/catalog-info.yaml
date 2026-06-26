@@ -5,6 +5,10 @@ metadata:
   name: dns
   namespace: dns-eds437
   description: DNS Platform — manages hosted zones and records across AWS accounts
+  annotations:
+    dock.tech/domain: cross
+    dock.tech/subdomain: cloud
+    dock.tech/system: dns
   labels:
     aws: "true"
 spec:
@@ -15,6 +19,10 @@ spec:
       aws:
         account: "309670275661"
         accountName: dev-account
+    - name: hml
+      aws:
+        account: "382598791794"
+        accountName: hml-account
     - name: prd
       aws:
         account: "597230762851"
@@ -43,86 +51,58 @@ spec:
   subdomainOf: cross
 ---
 apiVersion: backstage.io/v1alpha1
-kind: System
-metadata:
-  name: infrastructure
-  description: Infrastructure Services — DNS, SFTP, email, Active Directory, and other shared platforms
-  annotations:
-    dock.tech/domain: cross
-    dock.tech/subdomain: cloud
-    dock.tech/system: infrastructure
-  labels:
-    aws: "true"
-spec:
-  owner: group:default/infrastructure
-  domain: cloud
-  environments:
-    - name: dev
-      aws:
-        account: "309670275661"
-        accountName: dev-account
-    - name: hml
-      aws:
-        account: "382598791794"
-        accountName: hml-account
-    - name: prd
-      aws:
-        account: "597230762851"
-        accountName: prd-account
----
-apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: infrastructure-dev
-  namespace: system-infrastructure-dev
-  description: Dev environment for the infrastructure system
+  name: dns-dev
+  namespace: system-dns-dev
+  description: Dev environment for the dns system
   annotations:
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
-    dock.tech/system: infrastructure
+    dock.tech/system: dns
     dock.tech/environment: dev
 spec:
   type: environment
   owner: group:default/infrastructure
-  system: infrastructure
+  system: dns
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: infrastructure-hml
-  namespace: system-infrastructure-hml
-  description: HML (homologation) environment for the infrastructure system
+  name: dns-hml
+  namespace: system-dns-hml
+  description: HML environment for the dns system
   annotations:
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
-    dock.tech/system: infrastructure
+    dock.tech/system: dns
     dock.tech/environment: hml
 spec:
   type: environment
   owner: group:default/infrastructure
-  system: infrastructure
+  system: dns
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: infrastructure-prd
-  namespace: system-infrastructure-prd
-  description: Production environment for the infrastructure system
+  name: dns-prd
+  namespace: system-dns-prd
+  description: Production environment for the dns system
   annotations:
     dock.tech/domain: cross
     dock.tech/subdomain: cloud
-    dock.tech/system: infrastructure
+    dock.tech/system: dns
     dock.tech/environment: prd
 spec:
   type: environment
   owner: group:default/infrastructure
-  system: infrastructure
+  system: dns
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Group
 metadata:
   name: infrastructure
-  description: Infrastructure Services team — owns the shared services the organization runs on (DNS, SFTP, email, Active Directory, and related platforms)
+  description: Infrastructure Services team
 spec:
   type: team
   children: []
