@@ -1,0 +1,20 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-dev.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"kind":"Zone","parentZone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com","accountName":"prd"},"environment":"dev","name":"dns-dev-dev-zone"}'
+spec:
+  name: zone-dev.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: dev
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd
