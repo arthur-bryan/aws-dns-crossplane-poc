@@ -1,5 +1,26 @@
 ---
 apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: dns
+  namespace: dns-eds437
+  description: DNS Platform — manages hosted zones and records across AWS accounts
+  labels:
+    aws: "true"
+spec:
+  owner: group:default/infrastructure
+  domain: cloud
+  environments:
+    - name: dev
+      aws:
+        account: "309670275661"
+        accountName: dev-account
+    - name: prd
+      aws:
+        account: "597230762851"
+        accountName: prd-account
+---
+apiVersion: backstage.io/v1alpha1
 kind: Domain
 metadata:
   name: cross
