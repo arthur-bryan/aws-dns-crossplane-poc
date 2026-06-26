@@ -189,6 +189,7 @@ spec:
               managementPolicies:
                 - Observe
                 - Update
+                - Delete
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}

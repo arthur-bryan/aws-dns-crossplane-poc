@@ -25,3 +25,5 @@ spec:
     hostedZoneId: Z2FDTNDATAQYW2
     dnsName: "d111111abcdef8.cloudfront.net"
     evaluateTargetHealth: false
+  import:
+    existing: true
