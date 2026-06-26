@@ -1,14 +1,14 @@
 name: Catalog Resource -> Crossplane XR
 
 # APE-style conversion: scaffolder templates write Backstage catalog Resource
-# entities under entities/dock-tech/systems/**/resources/**. Crossplane does not
-# reconcile those -- it reconciles XRs under entities/environments/**. This job
+# entities under ape-platform-entities/dock-tech/systems/**/resources/**. Crossplane does not
+# reconcile those -- it reconciles XRs under ape-platform-entities/environments/**. This job
 # is the lab's stand-in for the APE controller that bridges the two: on every
 # push that touches the catalog Resources, it regenerates the XRs and commits
 # them so the ArgoCD `entities` app applies them.
 #
-# The commit only ever touches entities/environments/**, never the source
-# entities/dock-tech/systems/** -- so the path filter below does not re-trigger
+# The commit only ever touches ape-platform-entities/environments/**, never the source
+# ape-platform-entities/dock-tech/systems/** -- so the path filter below does not re-trigger
 # the workflow (no self-loop).
 
 on:
@@ -16,7 +16,7 @@ on:
     branches:
       - feature/ape-platform-alignment
     paths:
-      - 'entities/dock-tech/systems/**/resources/**'
+      - 'ape-platform-entities/dock-tech/systems/**/resources/**'
 
 permissions:
   contents: write
@@ -49,12 +49,12 @@ jobs:
       - name: Commit generated XRs (if any)
         run: |
           set -euo pipefail
-          if [ -z "$(git status --porcelain entities/environments)" ]; then
+          if [ -z "$(git status --porcelain ape-platform-entities/environments)" ]; then
             echo "No XR changes to commit."
             exit 0
           fi
           git config user.name "Arthur Bryan"
           git config user.email "arthurbryan2030@gmail.com"
-          git add entities/environments
+          git add ape-platform-entities/environments
           git commit -m "chore(dns): regenerate XRs from catalog Resources [skip ci]"
           git push origin HEAD:feature/ape-platform-alignment
