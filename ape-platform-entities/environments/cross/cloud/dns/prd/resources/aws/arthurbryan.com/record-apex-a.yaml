@@ -3,14 +3,14 @@ apiVersion: dock.tech/v1
 kind: Record
 metadata:
   name: record-apex-a.arthurbryan.com
-  namespace: system-infrastructure-prd
+  namespace: system-dns-prd
   annotations:
     dock.tech/scaffolder-parameters: '{"zone":"resource:system-infrastructure-prd/zone-arthurbryan.com","recordName":"","type":"A","ttl":600,"values":["192.0.2.201"],"routingPolicy":"simple"}'
 spec:
   name: record-apex-a.arthurbryan.com
   domain: cross
   subdomain: cloud
-  system: infrastructure
+  system: dns
   environment: prd
   aws:
     account: 597230762851

@@ -3,14 +3,14 @@ apiVersion: dock.tech/v1
 kind: Zone
 metadata:
   name: zone-arthurbryan.com
-  namespace: system-infrastructure-prd
+  namespace: system-dns-prd
   annotations:
     dock.tech/scaffolder-parameters: '{"source":"smoke-test","purpose":"import existing zone"}'
 spec:
   name: zone-arthurbryan.com
   domain: cross
   subdomain: cloud
-  system: infrastructure
+  system: dns
   environment: prd
   aws:
     account: 597230762851
