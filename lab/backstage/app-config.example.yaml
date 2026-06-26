@@ -31,7 +31,7 @@ catalog:
         - allow: [Domain, System, Resource, Group]
 
     - type: file
-      target: ../../../../backstage-templates/catalog-info.yaml
+      target: ../../../../../../backstage-templates/templates/resources/aws/catalog-info.yaml
       rules:
         - allow: [Location, Template]
 

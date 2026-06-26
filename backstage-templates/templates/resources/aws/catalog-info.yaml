@@ -1,0 +1,12 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: lab-dns-templates
+  description: DNS scaffolder templates (zone, record, record-edit, record-claim)
+spec:
+  targets:
+    - ./zone.yaml
+    - ./record.yaml
+    - ./record-edit.yaml
+    - ./record-claim.yaml
