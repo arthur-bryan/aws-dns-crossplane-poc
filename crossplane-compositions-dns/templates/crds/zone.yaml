@@ -1,13 +1,13 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: zones.dock.tech
+  name: dnszones.dock.tech
 spec:
   scope: Namespaced
   group: dock.tech
   names:
-    kind: Zone
-    plural: zones
+    kind: DNSZone
+    plural: dnszones
   versions:
     - name: v1
       served: true

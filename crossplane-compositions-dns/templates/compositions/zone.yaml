@@ -1,13 +1,13 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: zone
+  name: dnszone
   labels:
     app.kubernetes.io/name: crossplane-compositions-dns
 spec:
   compositeTypeRef:
     apiVersion: dock.tech/v1
-    kind: Zone
+    kind: DNSZone
 
   mode: Pipeline
 
@@ -228,7 +228,7 @@ spec:
             ---
             [[- if $zone.status.atProvider ]]
             apiVersion: dock.tech/v1
-            kind: Zone
+            kind: DNSZone
             status:
               zoneId: [[ $zone.status.atProvider.zoneId ]]
               nameServers: [[ $zone.status.atProvider.nameServers | toJson ]]

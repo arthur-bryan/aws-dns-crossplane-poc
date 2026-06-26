@@ -24,7 +24,7 @@ spec:
           title: Environment
           type: string
           description: Environment where the DNS zone will be created
-          ui:field: AwsEnvironmentPicker
+          ui:field: EnvironmentPicker
 
         kind:
           title: Kind

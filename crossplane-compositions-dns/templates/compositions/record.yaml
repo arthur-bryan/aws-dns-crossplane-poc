@@ -1,13 +1,13 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: record
+  name: dnsrecord
   labels:
     app.kubernetes.io/name: crossplane-compositions-dns
 spec:
   compositeTypeRef:
     apiVersion: dock.tech/v1
-    kind: Record
+    kind: DNSRecord
 
   mode: Pipeline
 
@@ -262,7 +262,7 @@ spec:
             ---
             [[- if $record.status.atProvider ]]
             apiVersion: dock.tech/v1
-            kind: Record
+            kind: DNSRecord
             status:
               fqdn: [[ $displayFqdn ]]
               recordId: [[ $record.status.atProvider.id ]]

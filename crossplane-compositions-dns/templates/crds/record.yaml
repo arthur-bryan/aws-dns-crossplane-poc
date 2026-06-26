@@ -1,13 +1,13 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: records.dock.tech
+  name: dnsrecords.dock.tech
 spec:
   scope: Namespaced
   group: dock.tech
   names:
-    kind: Record
-    plural: records
+    kind: DNSRecord
+    plural: dnsrecords
   versions:
     - name: v1
       served: true
