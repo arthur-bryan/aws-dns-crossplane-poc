@@ -10,10 +10,7 @@ metadata:
     - resource
     - aws
     - hidden
-    - cloud-infrastructure
-
 spec:
-  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:

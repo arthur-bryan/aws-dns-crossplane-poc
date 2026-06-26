@@ -10,9 +10,7 @@ metadata:
     - resource
     - aws
     - public
-    - cloud-infrastructure
 spec:
-  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
