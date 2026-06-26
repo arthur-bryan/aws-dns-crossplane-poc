@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-dev-dev-zone
+  namespace: dns-eds437
+  description: DNS Zone created by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-zone-edit
+    dock.tech/scaffolder-parameters: '{"kind":"Zone","parentZone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com","accountName":"prd"},"environment":"dev","name":"dns-dev-dev-zone"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: dns-zone
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: dev
+  zoneName: arthurbryan.com
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd
+  aws:
+    account: 
+    accountName: 
