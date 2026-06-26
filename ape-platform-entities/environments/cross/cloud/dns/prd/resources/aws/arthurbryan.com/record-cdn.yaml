@@ -1,6 +1,6 @@
 ---
 apiVersion: dock.tech/v1
-kind: Record
+kind: DNSRecord
 metadata:
   name: record-cdn.arthurbryan.com
   namespace: system-dns-prd

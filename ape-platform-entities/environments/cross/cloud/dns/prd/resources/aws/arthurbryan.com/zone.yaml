@@ -1,6 +1,6 @@
 ---
 apiVersion: dock.tech/v1
-kind: Zone
+kind: DNSZone
 metadata:
   name: zone-arthurbryan.com
   namespace: system-dns-prd

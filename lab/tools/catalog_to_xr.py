@@ -207,7 +207,7 @@ def build_record_xr(
 
     xr = {
         "apiVersion": "dock.tech/v1",
-        "kind": "Record",
+        "kind": "DNSRecord",
         "metadata": {"name": xr_name, "namespace": ns},
         "spec": xr_spec,
     }
@@ -268,7 +268,7 @@ def build_zone_xr(
 
     xr = {
         "apiVersion": "dock.tech/v1",
-        "kind": "Zone",
+        "kind": "DNSZone",
         "metadata": {"name": xr_name, "namespace": ns},
         "spec": xr_spec,
     }
