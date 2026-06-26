@@ -1,7 +1,7 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: dns-record
+  name: aws-dns-record
   title: DNS Record Template
   description: A template for creating a DNS record
   labels:
@@ -10,9 +10,7 @@ metadata:
     - resource
     - aws
     - public
-    - cloud-infrastructure
 spec:
-  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
@@ -57,9 +55,16 @@ spec:
         name:
           title: Record Name
           type: string
-          description: Record name relative to the zone (e.g., 'www', 'api', 'cdn'). The catalog entity will be named ${system}-${this}-${environment}.
+          description: Record name relative to the zone (e.g., 'www', 'api', 'cdn')
           ui:autofocus: true
-          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:field: EntityNameComposerPicker
+          ui:options:
+            rows: 5
+
+        fqdnPreview:
+          title: FQDN Preview
+          type: string
+          ui:field: RecordFqdnPreview
 
         type:
           title: Record Type
@@ -84,13 +89,6 @@ spec:
             - properties:
                 type:
                   const: A
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: IPv4 Addresses
                   type: array
@@ -106,13 +104,6 @@ spec:
             - properties:
                 type:
                   const: AAAA
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: IPv6 Addresses
                   type: array
@@ -127,13 +118,6 @@ spec:
             - properties:
                 type:
                   const: CNAME
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: Target Hostname
                   type: array
@@ -149,13 +133,6 @@ spec:
             - properties:
                 type:
                   const: TXT
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: Text Values
                   type: array
@@ -170,13 +147,6 @@ spec:
             - properties:
                 type:
                   const: MX
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: MX Records
                   type: array
@@ -192,13 +162,6 @@ spec:
             - properties:
                 type:
                   const: SRV
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: SRV Records
                   type: array
@@ -214,13 +177,6 @@ spec:
             - properties:
                 type:
                   const: NS
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 172800
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: Nameservers
                   type: array
@@ -235,13 +191,6 @@ spec:
             - properties:
                 type:
                   const: CAA
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: CAA Records
                   type: array
@@ -257,13 +206,6 @@ spec:
             - properties:
                 type:
                   const: PTR
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: Target Hostname
                   type: array
@@ -382,57 +324,70 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
-    - id: composeEntityName
-      name: Compose catalog entity name as <system>-<context>-<env>
-      # User types only the zone-relative record name (the 'context'); the
-      # catalog entity name is stitched here so every flow (create/claim/
-      # zone) produces the same naming shape. Matches the algorithm in
-      # record-claim.yaml's computeRecordName step.
+    - id: deriveAccount
+      name: Derive DNS account from environment
       action: roadiehq:utils:jsonata
       input:
         data:
-          context: ${{ parameters.name }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            $envName := environment;
+            $accounts := {
+              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
+              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
+              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
+            };
+            $accounts[$envName]
+          )
+
+    - id: extractRecordName
+      name: Extract record name from composed entity name
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          composedName: ${{ parameters.name }}
           systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
         expression: >-
           (
-            systemName & "-" & context & "-" & environment
+            $prefix := systemName & "-";
+            $suffix := "-" & environment;
+            $s := $substringAfter(composedName, $prefix);
+            $substringBefore($s, $suffix)
           )
 
-    - id: deriveAccount
-      name: Derive DNS account from environment
-      # See record-claim.yaml for rationale -- source from System entity.
+    - id: deriveTtl
+      name: Derive TTL from environment and record type
       action: roadiehq:utils:jsonata
       input:
         data:
-          env: ${{ parameters.environment }}
-          environments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+          environment: ${{ parameters.environment }}
+          recordType: ${{ parameters.type }}
+          weighted: ${{ parameters.enableWeightedRouting }}
         expression: >-
           (
-            $envName := env;
-            $envCfg := environments[name = $envName];
-            {
-              "accountId": $envCfg.aws.account,
-              "accountName": $envCfg.aws.accountName
-            }
+            $isWeighted := weighted = true;
+            $isPrd := environment = "prd";
+            $isNs := recordType = "NS";
+            $isWeighted and not $isPrd ? 600 :
+            $isNs ? 172800 :
+            3600
           )
 
     - id: buildEditParams
       name: Build edit-template formData snapshot
       action: roadiehq:utils:jsonata
       input:
-        # See record-claim.yaml for the rationale -- edit reads this
-        # annotation verbatim as ?formData=, so it must match the
-        # dns-record-edit template's parameter schema.
         data:
-          name: ${{ steps.composeEntityName.output.result }}
+          name: ${{ parameters.name }}
           system: ${{ parameters.system }}
           environment: ${{ parameters.environment }}
           zone: ${{ parameters.zone.name }}
           zoneId: ${{ parameters.zone.id }}
-          recordName: ${{ parameters.name }}
+          recordName: ${{ steps.extractRecordName.output.result }}
           recordType: ${{ parameters.type }}
-          ttl: ${{ parameters.ttl }}
+          ttl: ${{ steps.deriveTtl.output.result }}
           values: ${{ parameters.values }}
           serviceType: ${{ parameters.serviceType }}
           dnsName: ${{ parameters.dnsName }}
@@ -478,7 +433,7 @@ spec:
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -491,15 +446,16 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ steps.composeEntityName.output.result }}
+            name: ${{ parameters.name }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record created by template
             annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
             labels:
@@ -513,13 +469,13 @@ spec:
             environment: ${{ parameters.environment }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
-            recordName: ${{ parameters.name }}
+            recordName: ${{ steps.extractRecordName.output.result }}
             recordType: ${{ parameters.type }}
             aws:
               account: ${{ steps.deriveAccount.output.result.accountId }}
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.type != 'ALIAS' %}
-            ttl: ${{ parameters.ttl }}
+            ttl: ${{ steps.deriveTtl.output.result }}
             values:
             {%- for value in parameters.values %}
               - ${{ value }}
@@ -545,7 +501,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ steps.composeEntityName.output.result }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

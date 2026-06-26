@@ -1,7 +1,7 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: dns-zone
+  name: aws-dns-zone
   title: DNS Zone Template
   description: A template for creating a DNS hosted zone
   labels:
@@ -10,9 +10,7 @@ metadata:
     - resource
     - aws
     - public
-    - cloud-infrastructure
 spec:
-  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
@@ -20,14 +18,14 @@ spec:
       required:
         - environment
         - name
-        - zoneName
-        - visibility
+        - parentZone
       properties:
         environment:
           title: Environment
           type: string
           description: Environment where the DNS zone will be created
-          ui:field: AwsEnvironmentPicker
+          ui:field: EnvironmentPicker
+
         kind:
           title: Kind
           type: string
@@ -35,66 +33,31 @@ spec:
           ui:widget: hidden
 
         name:
-          title: Context
+          title: Subdomain
           type: string
-          description: Context for the zone (e.g. 'main', 'internal'). The catalog entity will be named ${system}-${this}-${environment}.
+          description: Subdomain label for the new zone (e.g., 'payments' to create payments.dev.dock.tech)
           ui:autofocus: true
-          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:field: EntityNameComposerPicker
+          ui:options:
+            systemRef: system:dns-eds437/dns
+            suffix: zone
 
-        zoneName:
-          title: Zone Name
-          type: string
-          description: DNS zone name (FQDN without trailing dot, e.g., test.dev.dock.tech)
-          pattern: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'
-          ui:help: "Example: test.dev.dock.tech (no trailing dot)"
+        parentZone:
+          title: Parent Zone
+          type: object
+          description: Existing zone this subdomain will be delegated from
+          ui:field: AwsDnsZonePicker
 
-        visibility:
-          title: Visibility
+        fqdnPreview:
+          title: Resulting Zone
           type: string
-          description: Public zones are resolvable from the internet. Private zones only resolve from associated VPCs.
-          default: public
-          enum:
-            - public
-            - private
+          ui:field: ZoneFqdnPreview
 
         comment:
           title: Comment
           type: string
           description: Optional comment for the zone (max 256 characters)
           maxLength: 256
-
-      dependencies:
-        visibility:
-          oneOf:
-            - properties:
-                visibility:
-                  const: public
-            - properties:
-                visibility:
-                  const: private
-                vpcs:
-                  title: Associated VPCs
-                  type: array
-                  description: VPCs that may resolve this private zone (same AWS account as the zone).
-                  minItems: 1
-                  items:
-                    type: object
-                    required:
-                      - vpcId
-                      - vpcRegion
-                    properties:
-                      vpcId:
-                        title: VPC ID
-                        type: string
-                        pattern: '^vpc-[a-f0-9]+$'
-                        description: e.g. vpc-0a1b2c3d4e5f
-                      vpcRegion:
-                        title: VPC Region
-                        type: string
-                        default: us-east-1
-                        description: AWS region where the VPC lives
-              required:
-                - vpcs
 
     - title: Additional Tags (Optional)
       properties:
@@ -111,47 +74,31 @@ spec:
       name: Fetch DNS System Entity
       action: catalog:fetch
       input:
-        entityRef: system:default/infrastructure
+        entityRef: system:dns-eds437/dns
         defaultKind: System
 
     - id: deriveAccount
       name: Derive DNS account from environment
-      # Source from the System entity's spec.environments[] so account
-      # numbers stay consistent with catalog truth (same pattern as the
-      # record / record-claim / record-edit templates).
       action: roadiehq:utils:jsonata
       input:
         data:
-          env: ${{ parameters.environment }}
-          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
-        expression: >-
-          (
-            $envName := env;
-            $envCfg := environments[name = $envName];
-            {
-              "accountId": $envCfg.aws.account,
-              "accountName": $envCfg.aws.accountName
-            }
-          )
-
-    - id: composeEntityName
-      name: Compose catalog entity name as <system>-<context>-<env>
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          context: ${{ parameters.name }}
-          systemName: ${{ steps.fetchDnsSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
         expression: >-
           (
-            systemName & "-" & context & "-" & environment
+            $envName := environment;
+            $accounts := {
+              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
+              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
+              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
+            };
+            $accounts[$envName]
           )
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -164,17 +111,18 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.composeEntityName.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ steps.composeEntityName.output.result }}
+            name: ${{ parameters.name }}
             namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
             description: DNS Zone created by template
             annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-zone-edit
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
@@ -184,18 +132,12 @@ spec:
             owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
-            zoneName: ${{ parameters.zoneName }}
-            visibility: ${{ parameters.visibility }}
+            zoneName: ${{ parameters.parentZone.name }}
+            delegatedFromZoneId: ${{ parameters.parentZone.id }}
+            delegatedFromAccountName: ${{ parameters.parentZone.accountName }}
             aws:
               account: ${{ steps.deriveAccount.output.result.accountId }}
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
-            {%- if parameters.visibility == 'private' %}
-            vpcs:
-            {%- for v in parameters.vpcs %}
-              - vpcId: ${{ v.vpcId }}
-                vpcRegion: ${{ v.vpcRegion }}
-            {%- endfor %}
-            {%- endif %}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
             {%- endif %}
@@ -213,7 +155,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.composeEntityName.output.result }}
+        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

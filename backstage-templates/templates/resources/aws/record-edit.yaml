@@ -10,10 +10,7 @@ metadata:
     - resource
     - aws
     - hidden
-    - cloud-infrastructure
-
 spec:
-  owner: group:dock-tech/cloud-infrastructure
   type: resource
 
   parameters:
@@ -57,11 +54,6 @@ spec:
           ui:widget: hidden
 
         originalType:
-          # The record type at form-load time. When the user changes `type`,
-          # writeFile detects the diff and stamps the XR with
-          # argocd.argoproj.io/sync-options: Force=true,Replace=true so the
-          # MR gets deleted-and-recreated -- the only way Route53 will let
-          # us swap A <-> CNAME on the same name.
           title: Original Record Type
           type: string
           ui:widget: hidden
@@ -70,6 +62,11 @@ spec:
           title: Record Name
           type: string
           ui:disabled: true
+
+        fqdnPreview:
+          title: FQDN Preview
+          type: string
+          ui:field: RecordFqdnPreview
 
         type:
           title: Record Type
@@ -84,6 +81,11 @@ spec:
             - CNAME
             - TXT
             - ALIAS
+            - MX
+            - SRV
+            - NS
+            - CAA
+            - PTR
 
       dependencies:
         type:
@@ -91,13 +93,6 @@ spec:
             - properties:
                 type:
                   const: A
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: IPv4 Addresses
                   type: array
@@ -112,13 +107,6 @@ spec:
             - properties:
                 type:
                   const: AAAA
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: IPv6 Addresses
                   type: array
@@ -132,13 +120,6 @@ spec:
             - properties:
                 type:
                   const: CNAME
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: Target Hostname
                   type: array
@@ -153,13 +134,6 @@ spec:
             - properties:
                 type:
                   const: TXT
-                ttl:
-                  title: TTL (seconds)
-                  type: integer
-                  description: Time to live in seconds
-                  default: 3600
-                  minimum: 60
-                  maximum: 86400
                 values:
                   title: Text Values
                   type: array
@@ -167,6 +141,75 @@ spec:
                   items:
                     type: string
                   minItems: 1
+              required:
+                - values
+
+            - properties:
+                type:
+                  const: MX
+                values:
+                  title: MX Records
+                  type: array
+                  description: 'Mail exchange records (format: "priority hostname")'
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+\S+\s*$'
+                  minItems: 1
+              required:
+                - values
+
+            - properties:
+                type:
+                  const: SRV
+                values:
+                  title: SRV Records
+                  type: array
+                  description: 'Service records (format: "priority weight port target")'
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$'
+                  minItems: 1
+              required:
+                - values
+
+            - properties:
+                type:
+                  const: NS
+                values:
+                  title: Nameservers
+                  type: array
+                  description: Nameserver hostnames for subdomain delegation
+                  items:
+                    type: string
+                  minItems: 1
+              required:
+                - values
+
+            - properties:
+                type:
+                  const: CAA
+                values:
+                  title: CAA Records
+                  type: array
+                  description: 'Certificate authority authorization (format: "flags tag value")'
+                  items:
+                    type: string
+                    pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$'
+                  minItems: 1
+              required:
+                - values
+
+            - properties:
+                type:
+                  const: PTR
+                values:
+                  title: Target Hostname
+                  type: array
+                  description: Hostname for reverse DNS lookup
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 1
               required:
                 - values
 
@@ -266,43 +309,51 @@ spec:
 
     - id: deriveAccount
       name: Derive DNS account from environment
-      # See record-claim.yaml for rationale -- source from System entity.
       action: roadiehq:utils:jsonata
       input:
         data:
-          env: ${{ parameters.environment }}
-          environments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+          environment: ${{ parameters.environment }}
         expression: >-
           (
-            $envName := env;
-            $envCfg := environments[name = $envName];
-            {
-              "accountId": $envCfg.aws.account,
-              "accountName": $envCfg.aws.accountName
-            }
+            $envName := environment;
+            $accounts := {
+              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
+              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
+              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
+            };
+            $accounts[$envName]
+          )
+
+    - id: deriveTtl
+      name: Derive TTL from environment and record type
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          environment: ${{ parameters.environment }}
+          recordType: ${{ parameters.type }}
+          weighted: ${{ parameters.enableWeightedRouting }}
+        expression: >-
+          (
+            $isWeighted := weighted = true;
+            $isPrd := environment = "prd";
+            $isNs := recordType = "NS";
+            $isWeighted and not $isPrd ? 600 :
+            $isNs ? 172800 :
+            3600
           )
 
     - id: nextParams
       name: Compute next-edit scaffolder-parameters snapshot
-      # After this edit lands, originalType must equal the *new* type so the
-      # next edit sees the post-save state as its baseline. Without this,
-      # every subsequent edit would re-stamp Force=Replace even when the
-      # user didn't change the type.
       action: roadiehq:utils:jsonata
       input:
         data:
           params: ${{ parameters }}
+          ttl: ${{ steps.deriveTtl.output.result }}
         expression: >-
-          $merge([params, {"originalType": params.type}])
+          $merge([params, {"originalType": params.type, "ttl": ttl}])
 
     - id: writeFile
       name: Update Resource File
-      # Full rewrite (not merge): switching record type or toggling weighted
-      # routing must NOT leave stale ttl/values/aliasTarget/setIdentifier/
-      # weight keys behind. The template owns the spec shape; emit it whole
-      # so the file always matches the form's current state. Shape matches
-      # what record.yaml (create) and record-claim.yaml emit so all three
-      # paths produce identical Resource entities.
       action: roadiehq:utils:fs:write
       input:
         path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
@@ -317,12 +368,6 @@ spec:
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: '${{ steps.nextParams.output.result | dump }}'
               {%- if parameters.originalType and parameters.type != parameters.originalType %}
-              # Type change (e.g. A -> CNAME). The converter copies this
-              # argocd.argoproj.io/* annotation onto the XR, which makes
-              # ArgoCD delete-and-recreate the XR (and therefore the MR),
-              # which lets Crossplane drop the old AWS record before
-              # creating the new-type one. Without this, Route53 rejects
-              # the create with InvalidChangeBatch (name+type collision).
               argocd.argoproj.io/sync-options: Force=true,Replace=true
               {%- endif %}
             labels:
@@ -342,7 +387,7 @@ spec:
               account: ${{ steps.deriveAccount.output.result.accountId }}
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.type != 'ALIAS' %}
-            ttl: ${{ parameters.ttl }}
+            ttl: ${{ steps.deriveTtl.output.result }}
             values:
             {%- for value in parameters.values %}
               - ${{ value }}
