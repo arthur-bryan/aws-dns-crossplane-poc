@@ -79,6 +79,25 @@ spec:
         entityRef: system:dns-eds437/dns
         defaultKind: System
 
+    - id: extractSubdomain
+      name: Extract subdomain from composed entity name
+      # EntityNameComposerPicker submits parameters.name as
+      # <system>-<subdomain>-<env>-zone, so the raw subdomain the user
+      # typed isn't directly available. Strip the prefix + suffix to
+      # recover it so we can build the actual FQDN.
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          composedName: ${{ parameters.name }}
+          systemName: ${{ steps.fetchDnsSystem.output.entity.metadata.name }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            $prefix := systemName & "-";
+            $suffix := "-" & environment & "-zone";
+            $substringAfter($substringBefore(composedName, $suffix), $prefix)
+          )
+
     - id: deriveAccount
       name: Derive DNS account from environment
       # Source from the dns System entity's spec.environments[] (same pattern
@@ -138,7 +157,7 @@ spec:
             owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
-            zoneName: ${{ parameters.name }}.${{ parameters.parentZone.name }}
+            zoneName: ${{ steps.extractSubdomain.output.result }}.${{ parameters.parentZone.name }}
             delegatedFromZoneId: ${{ parameters.parentZone.id }}
             delegatedFromAccountName: ${{ parameters.parentZone.accountName }}
             aws:
