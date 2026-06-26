@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ${{ parameters.name }}
+  namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
+  description: DNS Zone created by template
+  annotations:
+    dock.tech/created-at: ${{ "'" + now() + "'" }}
+    dock.tech/scaffolder-editable-template: dns-zone-edit
+    dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+  labels:
+    environment: ${{ parameters.environment }}
+    cloud: aws
+spec:
+  type: dns-zone
+  cloud: aws
+  owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
+  system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
+  environment: ${{ parameters.environment }}
+  zoneName: ${{ parameters.parentZone.name }}
+  delegatedFromZoneId: ${{ parameters.parentZone.id }}
+  delegatedFromAccountName: ${{ parameters.parentZone.accountName }}
+  aws:
+    account: ${{ steps.deriveAccount.output.result.accountId }}
+    accountName: ${{ steps.deriveAccount.output.result.accountName }}
+  {%- if parameters.comment %}
+  comment: ${{ parameters.comment }}
+  {%- endif %}
+  {%- if parameters.tags %}
+  tags:
+  {%- for key, value in parameters.tags %}
+    {{ key }}: {{ value }}
+  {%- endfor %}
+  {%- endif %}
