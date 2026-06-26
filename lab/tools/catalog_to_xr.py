@@ -43,9 +43,9 @@ from pathlib import Path
 
 import yaml
 
-SOURCE_GLOB = "entities/dock-tech/systems/**/resources/**/*.yaml"
-ENV_BASE = "entities/environments"
-SYSTEM_CATALOG_GLOB = "entities/**/catalog-info.yaml"
+SOURCE_GLOB = "ape-platform-entities/dock-tech/systems/**/resources/**/*.yaml"
+ENV_BASE = "ape-platform-entities/environments"
+SYSTEM_CATALOG_GLOB = "ape-platform-entities/**/catalog-info.yaml"
 
 
 def build_system_index(root: Path) -> dict[str, tuple[str, str]]:
