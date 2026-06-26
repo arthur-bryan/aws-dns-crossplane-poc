@@ -5,17 +5,16 @@ metadata:
   name: zone-arthurbryan.com
   namespace: system-dns-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"source":"smoke-test","purpose":"import existing zone"}'
+    dock.tech/scaffolder-parameters: '{"kind":"Zone","parentZone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com","accountName":"prd"},"environment":"dev","name":"dns-dev-dev-zone"}'
 spec:
   name: zone-arthurbryan.com
   domain: cross
   subdomain: cloud
   system: dns
-  environment: prd
-  aws:
-    account: 597230762851
-    accountName: prd-account
+  environment: dev
   zoneName: arthurbryan.com
-  import:
-    existing: true
-    zoneId: Z03010981ALJFZB4QLU8W
+  aws:
+    account: null
+    accountName: null
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd
