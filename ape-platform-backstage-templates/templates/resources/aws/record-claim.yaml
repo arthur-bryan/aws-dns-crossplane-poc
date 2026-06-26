@@ -163,7 +163,6 @@ spec:
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record claimed by template
             annotations:
-              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
             labels:
@@ -195,6 +194,13 @@ spec:
               - ${{ v }}
             {%- endfor %}
             {%- endif %}
+            # Claim semantics: the AWS record already exists; tell the
+            # composition's importing branch to take over -- MR will be
+            # stamped with managementPolicies [Observe, Update, Delete]
+            # (no Create), so Crossplane adopts via external-name and
+            # never tries to (re-)create the record.
+            import:
+              existing: true
 
     - $yaml: ../../../shared/entities/commit.yaml
     - $yaml: ../../../shared/entities/push.yaml
