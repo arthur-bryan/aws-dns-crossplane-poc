@@ -13,6 +13,7 @@ export const scaffolderOverrides = createFrontendModule({
           const { AwsDnsRecordPickerExtensionPlugin } = await import('../modules/scaffolder/AwsDnsRecordPicker/AwsDnsRecordPickerExtension');
           const { RecordFqdnPreviewExtensionPlugin } = await import('../modules/scaffolder/RecordFqdnPreviewExtension');
           const { ZoneFqdnPreviewExtensionPlugin } = await import('../modules/scaffolder/ZoneFqdnPreviewExtension');
+          const { EntityNameComposerPickerExtensionPlugin } = await import('../modules/scaffolder/EntityNameComposerPicker/EntityNameComposerPickerExtension');
           return (
             <ScaffolderPage>
               <ScaffolderLayouts />
@@ -22,6 +23,7 @@ export const scaffolderOverrides = createFrontendModule({
                 <AwsDnsRecordPickerExtensionPlugin />
                 <RecordFqdnPreviewExtensionPlugin />
                 <ZoneFqdnPreviewExtensionPlugin />
+                <EntityNameComposerPickerExtensionPlugin />
               </ScaffolderFieldExtensions>
             </ScaffolderPage>
           );

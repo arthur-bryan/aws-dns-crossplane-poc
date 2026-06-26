@@ -1,4 +1,5 @@
 import { discoveryApiRef, fetchApiRef, useApi } from '@backstage/core-plugin-api';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { ScaffolderField } from '@backstage/plugin-scaffolder-react/alpha';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -28,6 +29,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
 
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
+  const catalogApi = useApi(catalogApiRef);
 
   const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
@@ -38,6 +40,8 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   const rawZoneId = uiOptions.zoneId ?? (zoneFromForm && typeof zoneFromForm === 'object' ? (zoneFromForm as { id: string }).id : zoneFromForm);
   const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
   const zoneId = typeof rawZoneId === 'string' ? rawZoneId : undefined;
+  const excludeTypes = uiOptions.excludeTypes ?? [];
+  const excludeClaimed = uiOptions.excludeClaimed ?? false;
 
   const {
     value: records = [],
@@ -58,8 +62,33 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     }
 
     const data = (await response.json()) as { records?: DnsRecord[] };
-    return data.records ?? [];
-  }, [discoveryApi, fetchApi, environment, zoneId]);
+    let result = data.records ?? [];
+
+    if (excludeTypes.length > 0) {
+      const excluded = excludeTypes.map((t: string) => t.toUpperCase());
+      result = result.filter((r) => !excluded.includes(r.type.toUpperCase()));
+    }
+
+    if (excludeClaimed) {
+      const { items } = await catalogApi.getEntities({
+        filter: { kind: 'Resource', 'spec.type': 'dns-record', 'metadata.labels.environment': environment },
+        fields: ['spec.recordName', 'spec.zoneName'],
+      });
+      const claimedKeys = new Set(
+        items.map((e) => `${(e.spec as any)?.recordName ?? ''}|${(e.spec as any)?.zoneName ?? ''}`),
+      );
+      const zoneFromForm2 = formContext?.formData?.[zoneFieldName];
+      const zoneName = typeof zoneFromForm2 === 'object' ? (zoneFromForm2 as { name: string }).name : zoneFromForm2 ?? '';
+      const normalizedZone = String(zoneName).replace(/\.$/, '');
+      result = result.filter((r) => {
+        const fqdn = r.name.replace(/\.$/, '');
+        const recordName = fqdn === normalizedZone ? '' : fqdn.replace(`.${normalizedZone}`, '');
+        return !claimedKeys.has(`${recordName}|${normalizedZone}`);
+      });
+    }
+
+    return result;
+  }, [discoveryApi, fetchApi, catalogApi, environment, zoneId, excludeTypes, excludeClaimed]);
 
   useEffect(() => {
     if (formData && records.length > 0 && !records.some((r) => r.name === formData.name && r.type === formData.type)) {

@@ -26,6 +26,8 @@ export const AwsDnsRecordPickerFieldSchema = makeFieldSchema({
         environmentFieldName: z.string().optional().describe('Form field name that holds the environment value'),
         zoneId: z.string().optional().describe('Static Route53 hosted zone ID used to fetch records'),
         zoneFieldName: z.string().optional().describe('Form field name that holds the zone ID value'),
+        excludeTypes: z.array(z.string()).optional().describe('Record types to exclude from the list'),
+        excludeClaimed: z.boolean().optional().describe('Exclude records already managed in the catalog'),
       })
       .optional(),
 });
