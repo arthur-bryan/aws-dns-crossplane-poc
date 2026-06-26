@@ -1,0 +1,9 @@
+id: fetchDnsSystem
+name: Fetch DNS System Entity
+# DNS account mapping is owned by the dns system (env -> AWS account).
+# Record templates use this to look up the AWS account per environment,
+# independent of which team-system owns the record.
+action: catalog:fetch
+input:
+  entityRef: system:dns-eds437/dns
+  defaultKind: System

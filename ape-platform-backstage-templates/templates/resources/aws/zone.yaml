@@ -61,14 +61,6 @@ spec:
           description: Optional comment for the zone (max 256 characters)
           maxLength: 256
 
-    - title: Additional Tags (Optional)
-      properties:
-        tags:
-          title: Tags
-          type: object
-          description: Additional AWS tags (hierarchy tags are added automatically)
-          ui:field: KeyValuePairInput
-
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
 
@@ -165,12 +157,6 @@ spec:
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
-            {%- endif %}
-            {%- if parameters.tags %}
-            tags:
-            {%- for key, value in parameters.tags %}
-              {{ key }}: {{ value }}
-            {%- endfor %}
             {%- endif %}
 
     - $yaml: ../../../shared/entities/commit.yaml

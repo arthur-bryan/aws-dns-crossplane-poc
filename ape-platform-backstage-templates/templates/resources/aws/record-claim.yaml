@@ -63,21 +63,25 @@ spec:
     - $yaml: ../../../shared/entities/fetch-system.yaml
     - $yaml: ../../../shared/entities/fetch-system-domain.yaml
 
+    - $yaml: ../../../shared/entities/fetch-dns-system.yaml
+
     - id: deriveAccount
       name: Derive DNS account from environment
+      # See record.yaml -- account always sourced from dns system, never
+      # from the user's selected (owning) system.
       action: roadiehq:utils:jsonata
       input:
         data:
-          environment: ${{ parameters.environment }}
+          env: ${{ parameters.environment }}
+          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
         expression: >-
           (
-            $envName := environment;
-            $accounts := {
-              "dev": { "accountId": "071090846813", "accountName": "dnszone-dev" },
-              "hml": { "accountId": "729620324125", "accountName": "dnszone-hml" },
-              "prd": { "accountId": "694182734656", "accountName": "dnszone-prd" }
-            };
-            $accounts[$envName]
+            $envName := env;
+            $envCfg := environments[name = $envName];
+            {
+              "accountId": $envCfg.aws.account,
+              "accountName": $envCfg.aws.accountName
+            }
           )
 
     - id: computeRecordName
