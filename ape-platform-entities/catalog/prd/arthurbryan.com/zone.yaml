@@ -18,7 +18,7 @@ metadata:
     dock.tech/aws-account-name: prd-account
     dock.tech/managed-by: batch-import
 
-    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/zone.yaml"
+    backstage.io/source-location: "url:https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/ape-platform-entities/environments/cross/cloud/infrastructure/prd/resources/aws/arthurbryan.com/zone.yaml"
   tags:
     - aws
     - dns

@@ -1,7 +1,7 @@
 /**
  * github:extras:* scaffolder actions used by APE's shared template steps.
  *
- * APE's `backstage-templates/shared/entities/{clone,commit,push}.yaml` invoke
+ * APE's `ape-platform-backstage-templates/shared/entities/{clone,commit,push}.yaml` invoke
  * `github:extras:clone`, `github:extras:commit`, `github:extras:push`. Those
  * actions live in an internal APE scaffolder backend module that isn't
  * shipped in this lab. To run the synced templates here, we provide thin

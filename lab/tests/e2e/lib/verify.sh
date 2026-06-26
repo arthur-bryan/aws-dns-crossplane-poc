@@ -16,12 +16,12 @@ git_pull_repo() {
 
 xr_path_for() {
   local zone_name="$1" record_key="$2"
-  echo "$REPO_ROOT/entities/environments/cross/cloud/infrastructure/dev/resources/aws/$zone_name/record-$record_key.yaml"
+  echo "$REPO_ROOT/ape-platform-entities/environments/cross/cloud/infrastructure/dev/resources/aws/$zone_name/record-$record_key.yaml"
 }
 
 catalog_path_for() {
   local zone_name="$1" record_key="$2"
-  echo "$REPO_ROOT/entities/catalog/dev/$zone_name/record-$record_key.yaml"
+  echo "$REPO_ROOT/ape-platform-entities/catalog/dev/$zone_name/record-$record_key.yaml"
 }
 
 xr_name_for() {

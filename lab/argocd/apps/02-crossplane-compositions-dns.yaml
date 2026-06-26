@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc
     targetRevision: feature/ape-platform-alignment
-    path: crossplane-compositions-dns
+    path: ape-platform-charts/crossplane-compositions-dns
     helm:
       releaseName: crossplane-compositions-dns
   destination:

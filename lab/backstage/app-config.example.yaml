@@ -26,17 +26,17 @@ catalog:
     - allow: [Component, System, API, Resource, Location, Template, Domain, Group, User]
   locations:
     - type: file
-      target: ../../../../../entities/catalog-info.yaml
+      target: ../../../../../ape-platform-entities/catalog-info.yaml
       rules:
         - allow: [Domain, System, Resource, Group]
 
     - type: file
-      target: ../../../../../../backstage-templates/templates/resources/aws/catalog-info.yaml
+      target: ../../../../../../ape-platform-backstage-templates/templates/resources/aws/catalog-info.yaml
       rules:
         - allow: [Location, Template]
 
     - type: file
-      target: ../../../../../entities/catalog/**/*.yaml
+      target: ../../../../../ape-platform-entities/catalog/**/*.yaml
       rules:
         - allow: [Resource]
 

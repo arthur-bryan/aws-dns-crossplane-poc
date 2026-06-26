@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc
     targetRevision: feature/ape-platform-alignment
-    path: entities
+    path: ape-platform-entities
     directory:
       recurse: true
       include: 'environments/**/*.yaml'
