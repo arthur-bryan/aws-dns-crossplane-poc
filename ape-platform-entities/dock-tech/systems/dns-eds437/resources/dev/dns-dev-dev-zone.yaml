@@ -18,7 +18,7 @@ spec:
   environment: dev
   zoneName: dev.arthurbryan.com
   delegatedFromZoneId: Z03010981ALJFZB4QLU8W
-  delegatedFromAccountName: prd
+  delegatedFromAccountName: prd-account
   aws:
     account: 309670275661
     accountName: dev-account

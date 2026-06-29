@@ -17,4 +17,4 @@ spec:
     account: 309670275661
     accountName: dev-account
   delegatedFromZoneId: Z03010981ALJFZB4QLU8W
-  delegatedFromAccountName: prd
+  delegatedFromAccountName: prd-account
