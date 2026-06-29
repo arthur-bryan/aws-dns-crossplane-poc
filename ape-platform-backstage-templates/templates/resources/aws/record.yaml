@@ -375,7 +375,7 @@ spec:
             $isWeighted := weighted = true;
             $isPrd := environment = "prd";
             $isNs := recordType = "NS";
-            $isWeighted and not $isPrd ? 600 :
+            $isWeighted and ($isPrd = false) ? 600 :
             $isNs ? 172800 :
             3600
           )
