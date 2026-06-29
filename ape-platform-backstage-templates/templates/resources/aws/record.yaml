@@ -460,7 +460,6 @@ spec:
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record created by template
             annotations:
-              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
             labels:
