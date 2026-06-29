@@ -24,6 +24,6 @@ spec:
     accountName: dev-account
   aliasTarget:
     serviceType: Custom
-    dnsName: arthurbryan.com
-    hostedZoneId: Z03010981ALJFZB4QLU8W
+    dnsName: api.dev.arthurbryan.com
+    hostedZoneId: Z0945364EYNE5KZW0WIF
     evaluateTargetHealth: false
