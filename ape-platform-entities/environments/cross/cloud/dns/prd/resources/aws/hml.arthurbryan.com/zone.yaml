@@ -1,0 +1,20 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-hml.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/scaffolder-parameters: '{"kind":"Zone","parentZone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com","accountName":"prd-account"},"environment":"hml","name":"dns-hml-hml-zone"}'
+spec:
+  name: zone-hml.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: hml
+  zoneName: hml.arthurbryan.com
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd-account
