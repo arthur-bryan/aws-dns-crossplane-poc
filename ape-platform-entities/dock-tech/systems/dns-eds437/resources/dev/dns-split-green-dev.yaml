@@ -1,9 +1,9 @@
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: dns-cdn-dev
+  name: dns-split-green-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record (weighted 70) created by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
   labels:
@@ -17,13 +17,13 @@ spec:
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: cdn
-  recordType: ALIAS
+  recordName: split
+  recordType: A
   aws:
     account: "309670275661"
     accountName: dev-account
-  aliasTarget:
-    serviceType: Custom
-    dnsName: arthurbryan.com
-    hostedZoneId: Z03010981ALJFZB4QLU8W
-    evaluateTargetHealth: false
+  ttl: 600
+  values:
+    - 10.2.0.1
+  setIdentifier: green
+  weight: 70

@@ -1,45 +1,27 @@
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: ${{ parameters.name }}
-  namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
+  name: dns-txt-dev
+  namespace: dns-eds437
   description: DNS Record created by template
   annotations:
-    dock.tech/created-at: ${{ "'" + now() + "'" }}
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
   labels:
-    environment: ${{ parameters.environment }}
+    environment: dev
     cloud: aws
 spec:
   type: dns-record
   cloud: aws
-  owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
-  system: ${{ parameters.system }}
-  environment: ${{ parameters.environment }}
-  zoneId: ${{ parameters.zone.id }}
-  zoneName: ${{ parameters.zone.name }}
-  recordName: ${{ steps.extractRecordName.output.result }}
-  recordType: ${{ parameters.type }}
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: txt
+  recordType: TXT
   aws:
-    account: ${{ steps.deriveAccount.output.result.accountId }}
-    accountName: ${{ steps.deriveAccount.output.result.accountName }}
-  {%- if parameters.type != 'ALIAS' %}
-  ttl: ${{ steps.deriveTtl.output.result }}
+    account: "309670275661"
+    accountName: dev-account
+  ttl: 600
   values:
-  {%- for value in parameters.values %}
-    - ${{ value }}
-  {%- endfor %}
-  {%- else %}
-  aliasTarget:
-    serviceType: ${{ parameters.serviceType }}
-    dnsName: ${{ parameters.dnsName }}
-    {%- if parameters.serviceType == 'Custom' %}
-    hostedZoneId: ${{ parameters.customZoneId }}
-    {%- endif %}
-    evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
-  {%- endif %}
-  {%- if parameters.enableWeightedRouting %}
-  setIdentifier: ${{ parameters.setIdentifier }}
-  weight: ${{ parameters.weight }}
-  {%- endif %}
+    - "v=spf1 -all"

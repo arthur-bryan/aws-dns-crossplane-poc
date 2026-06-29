@@ -1,0 +1,22 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-txt.dev.arthurbryan.com
+  namespace: system-dns-dev
+spec:
+  name: record-txt.dev.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: txt
+  type: TXT
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 600
+  values:
+  - v=spf1 -all
