@@ -434,11 +434,30 @@ spec:
             $merge([$base, $typed, $weighted])
           )
 
+    - id: computeEntityName
+      name: Compute catalog entity name (suffix setIdentifier when weighted)
+      # For weighted records, multiple submissions share the same recordName
+      # (e.g. both 'split') but each must produce its own catalog Resource
+      # file. Append -<setIdentifier> to the entity name so the file path
+      # and metadata.name are unique per variant. Non-weighted: name is
+      # parameters.name unchanged.
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          baseName: ${{ parameters.name }}
+          weighted: ${{ parameters.enableWeightedRouting }}
+          setIdentifier: ${{ parameters.setIdentifier }}
+        expression: >-
+          (
+            $isWeighted := weighted = true;
+            $isWeighted and setIdentifier ? baseName & "-" & setIdentifier : baseName
+          )
+
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -451,12 +470,12 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ parameters.name }}
+            name: ${{ steps.computeEntityName.output.result }}
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record created by template
             annotations:
