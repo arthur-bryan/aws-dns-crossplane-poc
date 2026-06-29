@@ -1,7 +1,7 @@
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: dns-hml-hml-zone
+  name: dns-hml.arthurbryan.com-hml
   namespace: dns-eds437
   description: DNS Zone created by template
   annotations:

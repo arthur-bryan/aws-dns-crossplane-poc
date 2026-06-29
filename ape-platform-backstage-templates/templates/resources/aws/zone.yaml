@@ -112,11 +112,31 @@ spec:
             }
           )
 
+    - id: computeEntityName
+      name: Compose catalog entity name as <system>-<fqdn>-<env>
+      # EntityNameComposerPicker submits parameters.name as
+      # <system>-<subdomain>-<env>-zone, which loses information (the
+      # parent zone) and carries a useless -zone suffix. Rebuild the
+      # entity name as <system>-<fullFqdn>-<env> instead. The fqdn is
+      # <subdomain>.<parentZone.name> (already computed for spec.zoneName).
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          systemName: ${{ steps.fetchDnsSystem.output.entity.metadata.name }}
+          subdomain: ${{ steps.extractSubdomain.output.result }}
+          parentZoneName: ${{ parameters.parentZone.name }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            $fqdn := subdomain & "." & parentZoneName;
+            systemName & "-" & $fqdn & "-" & environment
+          )
+
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -129,12 +149,12 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ parameters.name }}
+            name: ${{ steps.computeEntityName.output.result }}
             namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
             description: DNS Zone created by template
             annotations:
@@ -166,7 +186,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
+        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.computeEntityName.output.result }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml
