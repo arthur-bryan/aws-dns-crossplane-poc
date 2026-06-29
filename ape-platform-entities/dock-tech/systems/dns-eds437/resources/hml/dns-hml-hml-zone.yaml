@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-hml-hml-zone
+  namespace: dns-eds437
+  description: DNS Zone created by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-zone-edit
+    dock.tech/scaffolder-parameters: '{"kind":"Zone","parentZone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com","accountName":"prd-account"},"environment":"hml","name":"dns-hml-hml-zone"}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: dns-zone
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: hml
+  zoneName: hml.arthurbryan.com
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: prd-account
+  aws:
+    account: 382598791794
+    accountName: hml-account
