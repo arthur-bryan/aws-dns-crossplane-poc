@@ -190,9 +190,12 @@ spec:
               # already exists by construction (the user picked it
               # from AwsDnsRecordPicker, which lists live AWS state).
               # Crossplane should only Observe, Update, and Delete
-              # under platform control.
+              # under platform control. LateInitialize is paired so
+              # the spec gets hydrated with the observed atProvider
+              # fields on first reconcile.
               managementPolicies:
                 - Observe
+                - LateInitialize
                 - Update
                 - Delete
               [[- else ]]
