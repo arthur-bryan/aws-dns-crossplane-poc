@@ -117,6 +117,8 @@ spec:
           existingRecord: ${{ parameters.existingRecord }}
         expression: >-
           (
+            $alias := existingRecord.aliasTarget;
+            $recordType := $alias ? "ALIAS" : existingRecord.type;
             $base := {
               "name": name,
               "system": system,
@@ -124,10 +126,9 @@ spec:
               "zone": zone,
               "zoneId": zoneId,
               "recordName": recordName,
-              "type": existingRecord.type,
-              "originalType": existingRecord.type
+              "type": $recordType,
+              "originalType": $recordType
             };
-            $alias := existingRecord.aliasTarget;
             $alias ?
               $merge([$base, {
                 "serviceType": "Custom",
@@ -181,7 +182,7 @@ spec:
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
             recordName: "${{ steps.computeRecordName.output.result.recordName }}"
-            recordType: ${{ parameters.existingRecord.type }}
+            recordType: {% if parameters.existingRecord.aliasTarget %}ALIAS{% else %}${{ parameters.existingRecord.type }}{% endif %}
             aws:
               account: ${{ steps.deriveAccount.output.result.accountId }}
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
