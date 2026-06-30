@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-e2eclaim-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"e2eclaim","type":"A","originalType":"A","ttl":3600,"values":["172.16.0.1"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-e2eclaim-dev","name":"dns-e2eclaim-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"e2eclaim","type":"A","values":["172.16.0.99"],"enableWeightedRouting":false}'
 spec:
   name: record-e2eclaim.dev.arthurbryan.com
   domain: cross
@@ -22,6 +22,4 @@ spec:
     accountName: dev-account
   ttl: 3600
   values:
-  - 172.16.0.1
-  import:
-    existing: true
+  - 172.16.0.99
