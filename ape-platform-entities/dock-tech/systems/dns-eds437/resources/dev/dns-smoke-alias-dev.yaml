@@ -3,10 +3,10 @@ kind: Resource
 metadata:
   name: dns-smoke-alias-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-alias","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"smoke-a-dev.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-alias-dev","name":"dns-smoke-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-alias","type":"ALIAS","serviceType":"Custom","dnsName":"smoke-a.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"enableWeightedRouting":false,"ttl":3600}'
   labels:
     environment: dev
     cloud: aws
@@ -18,13 +18,13 @@ spec:
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: smoke-alias
+  recordName: "smoke-alias"
   recordType: ALIAS
   aws:
     account: 309670275661
     accountName: dev-account
   aliasTarget:
     serviceType: Custom
-    dnsName: smoke-a-dev.dev.arthurbryan.com
+    dnsName: smoke-a.dev.arthurbryan.com
     hostedZoneId: Z0945364EYNE5KZW0WIF
     evaluateTargetHealth: false
