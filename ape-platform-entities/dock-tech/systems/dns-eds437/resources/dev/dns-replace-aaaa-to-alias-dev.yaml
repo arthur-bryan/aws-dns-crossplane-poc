@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-replace-aaaa-to-alias-dev
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-replace-aaaa-to-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-aaaa-to-alias","type":"AAAA","originalType":"AAAA","ttl":3600,"values":["2001:db8::300"],"enableWeightedRouting":false}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: replace-aaaa-to-alias
+  recordType: AAAA
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+    - 2001:db8::300
