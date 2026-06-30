@@ -186,18 +186,20 @@ spec:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig
               [[- if $importing ]]
-              # Claim semantics: never Create. The Route53 record
-              # already exists by construction (the user picked it
-              # from AwsDnsRecordPicker, which lists live AWS state).
-              # Crossplane should only Observe, Update, and Delete
-              # under platform control. LateInitialize is paired so
-              # the spec gets hydrated with the observed atProvider
-              # fields on first reconcile.
+              # Claim semantics. The "no Create" intent is enforced by
+              # upjet's observe-first behavior, not by the policy: a
+              # claim by construction picks an existing Route53 record
+              # (AwsDnsRecordPicker lists live state), so Observe finds
+              # the record and Create never fires. The literal
+              # [Observe, Update, Delete] combo is not in upjet's
+              # supported whitelist (validation error "is set to a
+              # value which is not supported"); ["*"] is the only
+              # valid combo that keeps platform-driven Update + Delete
+              # available. Caveat: if the Route53 record is later
+              # deleted out-of-band, the next reconcile will re-create
+              # it.
               managementPolicies:
-                - Observe
-                - LateInitialize
-                - Update
-                - Delete
+                - "*"
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
