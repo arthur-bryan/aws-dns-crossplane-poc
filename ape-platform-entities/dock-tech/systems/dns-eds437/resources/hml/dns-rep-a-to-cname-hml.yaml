@@ -3,10 +3,11 @@ kind: Resource
 metadata:
   name: dns-rep-a-to-cname-hml
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-rep-a-to-cname-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"rep-a-to-cname","type":"A","originalType":"A","values":["10.99.0.10"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-rep-a-to-cname-hml","name":"dns-rep-a-to-cname-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"rep-a-to-cname","enableWeightedRouting":false,"type":"CNAME","values":["cname-target.example.com"]}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: hml
     cloud: aws
@@ -18,11 +19,11 @@ spec:
   environment: hml
   zoneId: Z091442636MPUK86SZJ1T
   zoneName: hml.arthurbryan.com
-  recordName: rep-a-to-cname
-  recordType: A
+  recordName: "rep-a-to-cname"
+  recordType: CNAME
   aws:
     account: 382598791794
     accountName: hml-account
   ttl: 3600
   values:
-    - 10.99.0.10
+    - cname-target.example.com
