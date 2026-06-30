@@ -5,7 +5,7 @@ metadata:
   name: record-smoke-alias.hml.arthurbryan.com
   namespace: system-dns-hml
   annotations:
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-alias-hml","name":"dns-smoke-alias-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-alias","type":"ALIAS","serviceType":"Custom","dnsName":"smoke-a.hml.arthurbryan.com","customZoneId":"Z091442636MPUK86SZJ1T","evaluateTargetHealth":false,"enableWeightedRouting":false,"ttl":3600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-alias-hml","name":"dns-smoke-alias-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-alias","type":"ALIAS","enableWeightedRouting":false,"serviceType":"Custom","dnsName":"smoke-a.hml.arthurbryan.com","customZoneId":"Z091442636MPUK86SZJ1T","evaluateTargetHealth":true,"ttl":3600}'
 spec:
   name: record-smoke-alias.hml.arthurbryan.com
   domain: cross
@@ -23,4 +23,4 @@ spec:
     serviceType: Custom
     dnsName: smoke-a.hml.arthurbryan.com
     hostedZoneId: Z091442636MPUK86SZJ1T
-    evaluateTargetHealth: false
+    evaluateTargetHealth: true
