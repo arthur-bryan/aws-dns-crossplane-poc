@@ -3,10 +3,11 @@ kind: Resource
 metadata:
   name: dns-replace-setid-change-dev-blue
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-replace-setid-change-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-setid-change","type":"A","originalType":"A","ttl":600,"values":["10.0.0.33"],"enableWeightedRouting":true,"setIdentifier":"blue","weight":50}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-setid-change-dev-blue","name":"dns-replace-setid-change-dev-blue","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-setid-change","type":"A","values":["10.0.0.33"],"enableWeightedRouting":true,"setIdentifier":"green","weight":50,"ttl":600}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: dev
     cloud: aws
@@ -18,7 +19,7 @@ spec:
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: replace-setid-change
+  recordName: "replace-setid-change"
   recordType: A
   aws:
     account: 309670275661
@@ -26,5 +27,5 @@ spec:
   ttl: 600
   values:
     - 10.0.0.33
-  setIdentifier: blue
+  setIdentifier: green
   weight: 50
