@@ -66,10 +66,6 @@ spec:
         type:
           title: Record Type
           type: string
-          description: >-
-            Changing the record type destroys the existing record in Route53 and
-            re-creates it with the new type. Expect brief DNS unavailability
-            during the swap.
           enum:
             - A
             - AAAA
@@ -81,6 +77,11 @@ spec:
             - NS
             - CAA
             - PTR
+
+        changeImpactWarningType:
+          title: " "
+          type: string
+          ui:field: RecordChangeImpactWarning
 
       dependencies:
         type:
@@ -270,6 +271,11 @@ spec:
           type: boolean
           description: Enable traffic distribution based on weight
           default: false
+
+        changeImpactWarningWeighted:
+          title: " "
+          type: string
+          ui:field: RecordChangeImpactWarning
 
       dependencies:
         enableWeightedRouting:

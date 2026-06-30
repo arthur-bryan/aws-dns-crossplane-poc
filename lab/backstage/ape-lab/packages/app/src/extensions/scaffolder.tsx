@@ -14,6 +14,7 @@ export const scaffolderOverrides = createFrontendModule({
           const { RecordFqdnPreviewExtensionPlugin } = await import('../modules/scaffolder/RecordFqdnPreviewExtension');
           const { ZoneFqdnPreviewExtensionPlugin } = await import('../modules/scaffolder/ZoneFqdnPreviewExtension');
           const { EntityNameComposerPickerExtensionPlugin } = await import('../modules/scaffolder/EntityNameComposerPicker/EntityNameComposerPickerExtension');
+          const { RecordChangeImpactWarningExtensionPlugin } = await import('../modules/scaffolder/RecordChangeImpactWarningExtension');
           return (
             <ScaffolderPage>
               <ScaffolderLayouts />
@@ -24,6 +25,7 @@ export const scaffolderOverrides = createFrontendModule({
                 <RecordFqdnPreviewExtensionPlugin />
                 <ZoneFqdnPreviewExtensionPlugin />
                 <EntityNameComposerPickerExtensionPlugin />
+                <RecordChangeImpactWarningExtensionPlugin />
               </ScaffolderFieldExtensions>
             </ScaffolderPage>
           );
