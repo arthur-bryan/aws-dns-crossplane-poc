@@ -3,10 +3,11 @@ kind: Resource
 metadata:
   name: dns-replace-weighted-on-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-replace-weighted-on-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-weighted-on","type":"A","originalType":"A","ttl":3600,"values":["10.0.0.32"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-weighted-on-dev","name":"dns-replace-weighted-on-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-weighted-on","enableWeightedRouting":true,"type":"A","values":["10.0.0.32"],"setIdentifier":"group1","weight":100,"ttl":600}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: dev
     cloud: aws
@@ -18,11 +19,13 @@ spec:
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: replace-weighted-on
+  recordName: "replace-weighted-on"
   recordType: A
   aws:
     account: 309670275661
     accountName: dev-account
-  ttl: 3600
+  ttl: 600
   values:
     - 10.0.0.32
+  setIdentifier: group1
+  weight: 100
