@@ -3,10 +3,10 @@ kind: Resource
 metadata:
   name: dns-smoke-mx-hml
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-mx-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-mx","type":"MX","originalType":"MX","ttl":3600,"values":["10 mail.example.com"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-mx-hml","name":"dns-smoke-mx-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-mx","type":"MX","enableWeightedRouting":false,"values":["20 mail2.example.com"],"ttl":3600}'
   labels:
     environment: hml
     cloud: aws
@@ -18,11 +18,11 @@ spec:
   environment: hml
   zoneId: Z091442636MPUK86SZJ1T
   zoneName: hml.arthurbryan.com
-  recordName: smoke-mx
+  recordName: "smoke-mx"
   recordType: MX
   aws:
     account: 382598791794
     accountName: hml-account
   ttl: 3600
   values:
-    - 10 mail.example.com
+    - 20 mail2.example.com
