@@ -6,7 +6,7 @@ metadata:
   description: DNS Record created by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-tpl2split-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"tpl2split","type":"A","originalType":"A","ttl":600,"values":["10.50.0.1"],"enableWeightedRouting":true,"setIdentifier":"blue","weight":30}'
+    dock.tech/scaffolder-parameters: '{"name":"dns-tpl2split-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"tpl2split","type":"A","originalType":"A","values":["10.50.0.1"],"enableWeightedRouting":true,"setIdentifier":"blue","weight":30}'
   labels:
     environment: dev
     cloud: aws

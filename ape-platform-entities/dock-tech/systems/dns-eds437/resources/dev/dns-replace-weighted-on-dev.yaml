@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-weighted-on-dev","name":"dns-replace-weighted-on-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-weighted-on","enableWeightedRouting":true,"type":"A","values":["10.0.0.32"],"setIdentifier":"group1","weight":100,"ttl":600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-weighted-on-dev","name":"dns-replace-weighted-on-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-weighted-on","enableWeightedRouting":true,"type":"A","values":["10.0.0.32"],"setIdentifier":"group1","weight":100}'
     argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: dev

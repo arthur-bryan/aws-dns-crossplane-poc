@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-cname-prd","name":"dns-smoke-cname-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-cname","type":"CNAME","enableWeightedRouting":false,"values":["target-edited.example.com"],"ttl":3600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-cname-prd","name":"dns-smoke-cname-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-cname","type":"CNAME","enableWeightedRouting":false,"values":["target-edited.example.com"]}'
   labels:
     environment: prd
     cloud: aws

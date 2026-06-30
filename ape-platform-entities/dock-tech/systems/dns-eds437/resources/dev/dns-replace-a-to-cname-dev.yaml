@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-a-to-cname-dev","name":"dns-replace-a-to-cname-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-a-to-cname","enableWeightedRouting":false,"type":"CNAME","values":["cname-target.example.com"],"ttl":3600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-a-to-cname-dev","name":"dns-replace-a-to-cname-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-a-to-cname","enableWeightedRouting":false,"type":"CNAME","values":["cname-target.example.com"]}'
     argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: dev

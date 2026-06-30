@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-test-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"test","type":"CNAME","originalType":"CNAME","ttl":3600,"values":["arthurbryan.com"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"name":"dns-test-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"test","type":"CNAME","originalType":"CNAME","values":["arthurbryan.com"],"enableWeightedRouting":false}'
     argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: hml

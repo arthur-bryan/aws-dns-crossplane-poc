@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-caa-hml","name":"dns-smoke-caa-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-caa","type":"CAA","enableWeightedRouting":false,"values":["0 issue \"amazon.com\""],"ttl":3600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-caa-hml","name":"dns-smoke-caa-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-caa","type":"CAA","enableWeightedRouting":false,"values":["0 issue \"amazon.com\""]}'
   labels:
     environment: hml
     cloud: aws

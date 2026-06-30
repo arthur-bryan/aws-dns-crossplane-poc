@@ -206,13 +206,51 @@ export const githubExtrasActionsModule = createBackendModule({
               };
               const dir = resolveDir(ctx.workspacePath, folder);
               const target = branch ?? 'HEAD';
-              ctx.logger.info(`Pushing ${dir} -> origin ${target}`);
-              const { stdout, stderr } = await exec(
-                `git push origin ${JSON.stringify(target)}`,
-                { cwd: dir },
-              );
-              if (stdout) ctx.logger.info(stdout.trim());
-              if (stderr) ctx.logger.info(stderr.trim());
+              const ref = JSON.stringify(target);
+              // Push with retry-on-non-fast-forward. The catalog-to-xr
+              // GitHub Action commits regen XRs back to the same branch
+              // shortly after each scaffolder push, so two back-to-back
+              // user submissions race -- the second sees `cannot lock
+              // ref` (remote moved). Pull --rebase the new commits in
+              // and try again. Three attempts has covered every case
+              // we've observed in lab testing.
+              const maxAttempts = 3;
+              for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                ctx.logger.info(
+                  `Pushing ${dir} -> origin ${target} (attempt ${attempt}/${maxAttempts})`,
+                );
+                try {
+                  const { stdout, stderr } = await exec(
+                    `git push origin ${ref}`,
+                    { cwd: dir },
+                  );
+                  if (stdout) ctx.logger.info(stdout.trim());
+                  if (stderr) ctx.logger.info(stderr.trim());
+                  return;
+                } catch (err: any) {
+                  const msg = String(err?.stderr ?? err?.message ?? err);
+                  const racy =
+                    msg.includes('cannot lock ref') ||
+                    msg.includes('non-fast-forward') ||
+                    msg.includes('fetch first') ||
+                    msg.includes('Updates were rejected') ||
+                    msg.includes('rejected');
+                  if (!racy || attempt === maxAttempts) {
+                    throw err;
+                  }
+                  ctx.logger.warn(
+                    `push rejected (likely regen-action race), rebasing and retrying: ${msg
+                      .split('\n')[0]
+                      .slice(0, 200)}`,
+                  );
+                  const { stdout: pullOut, stderr: pullErr } = await exec(
+                    `git pull --rebase --autostash origin ${ref}`,
+                    { cwd: dir },
+                  );
+                  if (pullOut) ctx.logger.info(pullOut.trim());
+                  if (pullErr) ctx.logger.info(pullErr.trim());
+                }
+              }
             },
           }),
 

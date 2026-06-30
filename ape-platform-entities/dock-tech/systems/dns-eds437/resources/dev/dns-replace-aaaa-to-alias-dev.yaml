@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-aaaa-to-alias-dev","name":"dns-replace-aaaa-to-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-aaaa-to-alias","enableWeightedRouting":false,"type":"ALIAS","serviceType":"Custom","dnsName":"smoke-a.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"ttl":3600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-aaaa-to-alias-dev","name":"dns-replace-aaaa-to-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-aaaa-to-alias","enableWeightedRouting":false,"type":"ALIAS","serviceType":"Custom","dnsName":"smoke-a.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false}'
     argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: dev
