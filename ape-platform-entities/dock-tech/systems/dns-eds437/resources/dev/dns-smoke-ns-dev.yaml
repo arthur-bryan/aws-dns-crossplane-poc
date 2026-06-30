@@ -3,10 +3,10 @@ kind: Resource
 metadata:
   name: dns-smoke-ns-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-ns-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-ns","type":"NS","originalType":"NS","ttl":172800,"values":["ns1.example.com","ns2.example.com"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-ns-dev","name":"dns-smoke-ns-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-ns","type":"NS","enableWeightedRouting":false,"values":["ns3.example.com","ns4.example.com"],"ttl":172800}'
   labels:
     environment: dev
     cloud: aws
@@ -18,12 +18,12 @@ spec:
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: smoke-ns
+  recordName: "smoke-ns"
   recordType: NS
   aws:
     account: 309670275661
     accountName: dev-account
   ttl: 172800
   values:
-    - ns1.example.com
-    - ns2.example.com
+    - ns3.example.com
+    - ns4.example.com
