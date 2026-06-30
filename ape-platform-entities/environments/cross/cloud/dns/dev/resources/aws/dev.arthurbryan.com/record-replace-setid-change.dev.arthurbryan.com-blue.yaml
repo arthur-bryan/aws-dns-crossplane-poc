@@ -5,6 +5,7 @@ metadata:
   name: record-replace-setid-change.dev.arthurbryan.com-blue
   namespace: system-dns-dev
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"name":"dns-replace-setid-change-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-setid-change","type":"A","originalType":"A","ttl":600,"values":["10.0.0.33"],"enableWeightedRouting":true,"setIdentifier":"blue","weight":50}'
 spec:
   name: record-replace-setid-change.dev.arthurbryan.com-blue

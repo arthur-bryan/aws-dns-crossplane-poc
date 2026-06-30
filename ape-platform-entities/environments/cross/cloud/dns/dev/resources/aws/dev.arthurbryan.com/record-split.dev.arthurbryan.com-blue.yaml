@@ -4,6 +4,8 @@ kind: DNSRecord
 metadata:
   name: record-split.dev.arthurbryan.com-blue
   namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
 spec:
   name: record-split.dev.arthurbryan.com-blue
   domain: cross

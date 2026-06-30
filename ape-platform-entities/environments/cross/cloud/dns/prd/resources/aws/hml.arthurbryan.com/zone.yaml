@@ -5,6 +5,7 @@ metadata:
   name: zone-hml.arthurbryan.com
   namespace: system-dns-prd
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"kind":"Zone","parentZone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com","accountName":"prd-account"},"environment":"hml","name":"dns-hml-hml-zone"}'
 spec:
   name: zone-hml.arthurbryan.com

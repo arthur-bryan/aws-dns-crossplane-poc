@@ -5,6 +5,7 @@ metadata:
   name: record-smoke-srv.hml.arthurbryan.com
   namespace: system-dns-hml
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-srv-hml","name":"dns-smoke-srv-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-srv","type":"SRV","enableWeightedRouting":false,"values":["20
       50 5061 sip2.example.com"],"ttl":3600}'
 spec:

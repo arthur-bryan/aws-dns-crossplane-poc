@@ -47,6 +47,12 @@ SOURCE_GLOB = "ape-platform-entities/dock-tech/systems/**/resources/**/*.yaml"
 ENV_BASE = "ape-platform-entities/environments"
 SYSTEM_CATALOG_GLOB = "ape-platform-entities/**/catalog-info.yaml"
 
+# Annotation we stamp on every XR we generate so a future run can
+# distinguish converter-produced XRs (safe to prune when orphaned) from
+# manually-imported or hand-edited XRs (must be left alone).
+GENERATED_MARKER_ANNOTATION = "dock.tech/generated-by"
+GENERATED_MARKER_VALUE = "catalog-to-xr"
+
 
 def build_system_index(root: Path) -> dict[str, tuple[str, str]]:
     """Map bare system name -> (domain, subdomain). APE-aligned Resources
@@ -194,7 +200,7 @@ def build_record_xr(
     if spec.get("healthCheckId"):
         xr_spec["healthCheckId"] = spec["healthCheckId"]
 
-    annotations = {}
+    annotations = {GENERATED_MARKER_ANNOTATION: GENERATED_MARKER_VALUE}
     if ann.get("dock.tech/scaffolder-parameters"):
         annotations["dock.tech/scaffolder-parameters"] = ann["dock.tech/scaffolder-parameters"]
     # Pass through any argocd.argoproj.io/* annotations the template set
@@ -208,11 +214,9 @@ def build_record_xr(
     xr = {
         "apiVersion": "dock.tech/v1",
         "kind": "DNSRecord",
-        "metadata": {"name": xr_name, "namespace": ns},
+        "metadata": {"name": xr_name, "namespace": ns, "annotations": annotations},
         "spec": xr_spec,
     }
-    if annotations:
-        xr["metadata"]["annotations"] = annotations
 
     out_path = (
         f"{ENV_BASE}/{domain}/{subdomain}/{system}/{env}/resources/aws/"
@@ -266,18 +270,16 @@ def build_zone_xr(
     if spec.get("import"):
         xr_spec["import"] = spec["import"]
 
-    annotations = {}
+    annotations = {GENERATED_MARKER_ANNOTATION: GENERATED_MARKER_VALUE}
     if ann.get("dock.tech/scaffolder-parameters"):
         annotations["dock.tech/scaffolder-parameters"] = ann["dock.tech/scaffolder-parameters"]
 
     xr = {
         "apiVersion": "dock.tech/v1",
         "kind": "DNSZone",
-        "metadata": {"name": xr_name, "namespace": ns},
+        "metadata": {"name": xr_name, "namespace": ns, "annotations": annotations},
         "spec": xr_spec,
     }
-    if annotations:
-        xr["metadata"]["annotations"] = annotations
 
     # Zones live under the System's home env path (prd), same as the
     # namespace decision above. spec.environment + spec.aws.account
@@ -320,6 +322,17 @@ def main() -> int:
 
     changed = 0
     written = 0
+    # Absolute paths the converter produced this run; everything in the
+    # canonical XR tree that isn't here is an orphan and gets pruned.
+    # This is what catches the "Resource still exists but its XR file
+    # name changed" case -- e.g. enabling weighted routing renames the
+    # XR from record-<fqdn>.yaml to record-<fqdn>-<setIdentifier>.yaml,
+    # and without pruning the old XR survives as a stale MR.
+    produced: set[Path] = set()
+    # Per-(domain, subdomain, system) the converter actually visited.
+    # We only prune in subtrees we touched, so a converter that fails
+    # to process some system can't accidentally wipe its existing XRs.
+    touched_systems: set[tuple[str, str, str]] = set()
     for src in sources:
         try:
             docs = list(yaml.safe_load_all(src.read_text()))
@@ -334,6 +347,9 @@ def main() -> int:
                 continue
             rel_path, xr = result
             out = root / rel_path
+            produced.add(out.resolve())
+            xs = xr.get("spec", {})
+            touched_systems.add((xs.get("domain"), xs.get("subdomain"), xs.get("system")))
             new_text = yaml.safe_dump(xr, sort_keys=False, default_flow_style=False)
             new_text = "---\n" + new_text
             old_text = out.read_text() if out.exists() else None
@@ -348,10 +364,52 @@ def main() -> int:
             written += 1
             print(f"catalog_to_xr: wrote {rel_path}")
 
+    # Prune orphan XR files. Strict criteria so we never touch a
+    # manually-imported or hand-edited XR:
+    #   (1) the file lives inside a system subtree we visited this run
+    #   (2) the file isn't one we produced this run
+    #   (3) the file carries our GENERATED_MARKER_ANNOTATION (proving a
+    #       previous catalog_to_xr run wrote it)
+    # Without (3) we'd risk removing legacy imports, which would cascade
+    # into Crossplane deleting real Route53 records.
+    pruned = 0
+    for d, s, sysn in touched_systems:
+        if not (d and s and sysn):
+            continue
+        system_root = root / ENV_BASE / d / s / sysn
+        if not system_root.exists():
+            continue
+        for existing in system_root.glob("**/resources/aws/**/*.yaml"):
+            n = existing.name
+            if not (n.startswith("record-") or n == "zone.yaml"):
+                continue
+            if existing.resolve() in produced:
+                continue
+            try:
+                docs = list(yaml.safe_load_all(existing.read_text()))
+            except yaml.YAMLError:
+                continue
+            is_ours = any(
+                isinstance(doc, dict)
+                and ((doc.get("metadata") or {}).get("annotations") or {}).get(
+                    GENERATED_MARKER_ANNOTATION) == GENERATED_MARKER_VALUE
+                for doc in docs
+            )
+            if not is_ours:
+                continue
+            rel = existing.relative_to(root)
+            if args.check:
+                print(f"catalog_to_xr: PRUNE {rel}")
+                changed += 1
+            else:
+                existing.unlink()
+                pruned += 1
+                print(f"catalog_to_xr: pruned {rel}")
+
     if args.check and changed:
         print(f"catalog_to_xr: {changed} XR(s) out of date", file=sys.stderr)
         return 1
-    print(f"catalog_to_xr: done ({written} written, {changed} changed)")
+    print(f"catalog_to_xr: done ({written} written, {changed} changed, {pruned} pruned)")
     return 0
 
 

@@ -5,6 +5,7 @@ metadata:
   name: record-smoke-a.hml.arthurbryan.com
   namespace: system-dns-hml
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-a-hml","name":"dns-smoke-a-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-a","type":"A","enableWeightedRouting":false,"values":["10.0.0.20"],"ttl":3600}'
 spec:
   name: record-smoke-a.hml.arthurbryan.com

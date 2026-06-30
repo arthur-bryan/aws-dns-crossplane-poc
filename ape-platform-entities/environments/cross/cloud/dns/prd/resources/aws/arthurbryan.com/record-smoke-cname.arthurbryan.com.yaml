@@ -5,6 +5,7 @@ metadata:
   name: record-smoke-cname.arthurbryan.com
   namespace: system-dns-prd
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-cname-prd","name":"dns-smoke-cname-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-cname","type":"CNAME","enableWeightedRouting":false,"values":["target-edited.example.com"],"ttl":3600}'
 spec:
   name: record-smoke-cname.arthurbryan.com

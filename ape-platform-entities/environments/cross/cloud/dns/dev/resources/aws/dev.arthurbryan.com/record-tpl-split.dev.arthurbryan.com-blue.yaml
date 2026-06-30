@@ -5,6 +5,7 @@ metadata:
   name: record-tpl-split.dev.arthurbryan.com-blue
   namespace: system-dns-dev
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"name":"dns-tpl-split-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"tpl-split","type":"A","originalType":"A","ttl":600,"values":["10.50.0.1"],"enableWeightedRouting":true,"setIdentifier":"blue","weight":30}'
 spec:
   name: record-tpl-split.dev.arthurbryan.com-blue

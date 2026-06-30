@@ -5,6 +5,7 @@ metadata:
   name: record-smoke-mx.arthurbryan.com
   namespace: system-dns-prd
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-mx-prd","name":"dns-smoke-mx-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-mx","type":"MX","enableWeightedRouting":false,"values":["20
       mail2.example.com"],"ttl":3600}'
 spec:

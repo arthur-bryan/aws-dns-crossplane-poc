@@ -5,6 +5,7 @@ metadata:
   name: record-test.hml.arthurbryan.com
   namespace: system-dns-hml
   annotations:
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"name":"dns-test-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"test","type":"CNAME","originalType":"CNAME","ttl":3600,"values":["arthurbryan.com"],"enableWeightedRouting":false}'
     argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
