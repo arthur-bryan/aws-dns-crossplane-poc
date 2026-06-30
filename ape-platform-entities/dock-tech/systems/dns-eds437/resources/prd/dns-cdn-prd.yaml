@@ -1,0 +1,37 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-cdn-prd
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-cdn-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"cdn","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"d111111abcdef8.cloudfront.net","customZoneId":"Z2FDTNDATAQYW2","evaluateTargetHealth":false}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: "cdn"
+  recordType: ALIAS
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  aliasTarget:
+    serviceType: Custom
+    dnsName: d111111abcdef8.cloudfront.net
+    hostedZoneId: Z2FDTNDATAQYW2
+    evaluateTargetHealth: false
+  # Claim semantics: the AWS record already exists; tell the
+  # composition's importing branch to take over -- MR will be
+  # stamped with managementPolicies [Observe, Update, Delete]
+  # (no Create), so Crossplane adopts via external-name and
+  # never tries to (re-)create the record.
+  import:
+    existing: true
