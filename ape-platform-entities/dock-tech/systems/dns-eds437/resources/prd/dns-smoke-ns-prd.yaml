@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-smoke-ns-prd
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-ns-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-ns","type":"NS","originalType":"NS","ttl":172800,"values":["ns1.example.com","ns2.example.com"],"enableWeightedRouting":false}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: smoke-ns
+  recordType: NS
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  ttl: 172800
+  values:
+    - ns1.example.com
+    - ns2.example.com
