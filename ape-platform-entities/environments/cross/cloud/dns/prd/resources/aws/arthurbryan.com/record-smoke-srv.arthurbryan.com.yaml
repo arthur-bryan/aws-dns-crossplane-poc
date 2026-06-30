@@ -5,8 +5,8 @@ metadata:
   name: record-smoke-srv.arthurbryan.com
   namespace: system-dns-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-srv-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-srv","type":"SRV","originalType":"SRV","ttl":3600,"values":["10
-      60 5060 sip.example.com"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-srv-prd","name":"dns-smoke-srv-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-srv","type":"SRV","enableWeightedRouting":false,"values":["20
+      50 5061 sip2.example.com"],"ttl":3600}'
 spec:
   name: record-smoke-srv.arthurbryan.com
   domain: cross
@@ -22,4 +22,4 @@ spec:
     accountName: prd-account
   ttl: 3600
   values:
-  - 10 60 5060 sip.example.com
+  - 20 50 5061 sip2.example.com
