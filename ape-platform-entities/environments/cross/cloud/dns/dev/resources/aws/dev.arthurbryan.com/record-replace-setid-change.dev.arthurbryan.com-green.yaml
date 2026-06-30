@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-setid-change-dev-blue","name":"dns-replace-setid-change-dev-blue","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-setid-change","type":"A","values":["10.0.0.33"],"enableWeightedRouting":true,"setIdentifier":"green","weight":50,"ttl":600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-replace-setid-change-dev-blue","name":"dns-replace-setid-change-dev-blue","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-setid-change","type":"A","values":["10.0.0.33"],"enableWeightedRouting":true,"setIdentifier":"green","weight":50}'
     argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-replace-setid-change.dev.arthurbryan.com-green

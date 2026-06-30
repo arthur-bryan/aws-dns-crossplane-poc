@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-hml
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-txt-hml","name":"dns-smoke-txt-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-txt","type":"TXT","enableWeightedRouting":false,"values":["platform=edited"],"ttl":3600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-txt-hml","name":"dns-smoke-txt-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-txt","type":"TXT","enableWeightedRouting":false,"values":["platform=edited"]}'
 spec:
   name: record-smoke-txt.hml.arthurbryan.com
   domain: cross

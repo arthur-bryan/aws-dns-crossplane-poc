@@ -7,7 +7,7 @@ metadata:
   annotations:
     dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-caa-hml","name":"dns-smoke-caa-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-caa","type":"CAA","enableWeightedRouting":false,"values":["0
-      issue \"amazon.com\""],"ttl":3600}'
+      issue \"amazon.com\""]}'
 spec:
   name: record-smoke-caa.hml.arthurbryan.com
   domain: cross

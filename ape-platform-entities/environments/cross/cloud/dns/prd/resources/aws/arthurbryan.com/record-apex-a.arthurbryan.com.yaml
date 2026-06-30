@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-prd
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-arthurbryan.com-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"","type":"A","originalType":"A","ttl":600,"values":["192.0.2.201"]}'
+    dock.tech/scaffolder-parameters: '{"name":"dns-arthurbryan.com-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"","type":"A","originalType":"A","values":["192.0.2.201"]}'
 spec:
   name: record-apex-a.arthurbryan.com
   domain: cross

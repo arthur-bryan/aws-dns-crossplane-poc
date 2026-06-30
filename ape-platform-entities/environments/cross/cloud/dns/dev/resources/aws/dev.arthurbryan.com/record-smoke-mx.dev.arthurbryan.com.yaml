@@ -7,7 +7,7 @@ metadata:
   annotations:
     dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-mx-dev","name":"dns-smoke-mx-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-mx","type":"MX","enableWeightedRouting":false,"values":["20
-      mail2.example.com"],"ttl":3600}'
+      mail2.example.com"]}'
 spec:
   name: record-smoke-mx.dev.arthurbryan.com
   domain: cross
