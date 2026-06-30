@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-smoke-alias.hml.arthurbryan.com
+  namespace: system-dns-hml
+  annotations:
+    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-alias-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-alias","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"smoke-a-hml.hml.arthurbryan.com","customZoneId":"Z091442636MPUK86SZJ1T","evaluateTargetHealth":false,"enableWeightedRouting":false}'
+spec:
+  name: record-smoke-alias.hml.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: hml
+  zoneId: Z091442636MPUK86SZJ1T
+  zoneName: hml.arthurbryan.com
+  recordName: smoke-alias
+  type: ALIAS
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  aliasTarget:
+    serviceType: Custom
+    dnsName: smoke-a-hml.hml.arthurbryan.com
+    hostedZoneId: Z091442636MPUK86SZJ1T
+    evaluateTargetHealth: false
