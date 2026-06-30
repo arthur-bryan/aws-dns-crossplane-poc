@@ -1,0 +1,30 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-smoke-alias-hml
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-alias-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-alias","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"smoke-a-hml.hml.arthurbryan.com","customZoneId":"Z091442636MPUK86SZJ1T","evaluateTargetHealth":false,"enableWeightedRouting":false}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: hml
+  zoneId: Z091442636MPUK86SZJ1T
+  zoneName: hml.arthurbryan.com
+  recordName: smoke-alias
+  recordType: ALIAS
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  aliasTarget:
+    serviceType: Custom
+    dnsName: smoke-a-hml.hml.arthurbryan.com
+    hostedZoneId: Z091442636MPUK86SZJ1T
+    evaluateTargetHealth: false
