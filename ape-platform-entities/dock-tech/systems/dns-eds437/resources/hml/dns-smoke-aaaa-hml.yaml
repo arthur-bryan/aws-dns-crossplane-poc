@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-smoke-aaaa-hml
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-aaaa-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-aaaa","type":"AAAA","originalType":"AAAA","ttl":3600,"values":["2001:db8::100"],"enableWeightedRouting":false}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: hml
+  zoneId: Z091442636MPUK86SZJ1T
+  zoneName: hml.arthurbryan.com
+  recordName: smoke-aaaa
+  recordType: AAAA
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  ttl: 3600
+  values:
+    - 2001:db8::100
