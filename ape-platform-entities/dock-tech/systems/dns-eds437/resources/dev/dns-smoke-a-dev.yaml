@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-a-dev","name":"dns-smoke-a-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-a","type":"A","enableWeightedRouting":false,"values":["10.0.0.20"],"ttl":3600}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-a-dev","name":"dns-smoke-a-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-a","type":"A","values":["10.0.0.99"],"enableWeightedRouting":false,"ttl":3600}'
   labels:
     environment: dev
     cloud: aws
@@ -25,4 +25,4 @@ spec:
     accountName: dev-account
   ttl: 3600
   values:
-    - 10.0.0.20
+    - 10.0.0.99
