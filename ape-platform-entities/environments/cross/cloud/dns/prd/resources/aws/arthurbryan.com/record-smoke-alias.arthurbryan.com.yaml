@@ -5,7 +5,7 @@ metadata:
   name: record-smoke-alias.arthurbryan.com
   namespace: system-dns-prd
   annotations:
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-alias-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-alias","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"smoke-a-prd.arthurbryan.com","customZoneId":"Z03010981ALJFZB4QLU8W","evaluateTargetHealth":false,"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-alias-prd","name":"dns-smoke-alias-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"smoke-alias","type":"ALIAS","serviceType":"Custom","dnsName":"smoke-a.arthurbryan.com","customZoneId":"Z03010981ALJFZB4QLU8W","evaluateTargetHealth":false,"enableWeightedRouting":false,"ttl":3600}'
 spec:
   name: record-smoke-alias.arthurbryan.com
   domain: cross
@@ -21,6 +21,6 @@ spec:
     accountName: prd-account
   aliasTarget:
     serviceType: Custom
-    dnsName: smoke-a-prd.arthurbryan.com
+    dnsName: smoke-a.arthurbryan.com
     hostedZoneId: Z03010981ALJFZB4QLU8W
     evaluateTargetHealth: false
