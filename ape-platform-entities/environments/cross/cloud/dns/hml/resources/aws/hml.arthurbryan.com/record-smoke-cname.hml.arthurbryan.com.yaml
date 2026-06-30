@@ -5,7 +5,7 @@ metadata:
   name: record-smoke-cname.hml.arthurbryan.com
   namespace: system-dns-hml
   annotations:
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-cname-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-cname","type":"CNAME","originalType":"CNAME","ttl":3600,"values":["origin.example.com"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-cname-hml","name":"dns-smoke-cname-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-cname","type":"CNAME","enableWeightedRouting":false,"values":["target-edited.example.com"],"ttl":3600}'
 spec:
   name: record-smoke-cname.hml.arthurbryan.com
   domain: cross
@@ -21,4 +21,4 @@ spec:
     accountName: hml-account
   ttl: 3600
   values:
-  - origin.example.com
+  - target-edited.example.com
