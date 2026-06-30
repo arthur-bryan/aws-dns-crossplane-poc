@@ -1,0 +1,25 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-smoke-srv.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-srv-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-srv","type":"SRV","originalType":"SRV","ttl":3600,"values":["10
+      60 5060 sip.example.com"],"enableWeightedRouting":false}'
+spec:
+  name: record-smoke-srv.dev.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: smoke-srv
+  type: SRV
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+  - 10 60 5060 sip.example.com
