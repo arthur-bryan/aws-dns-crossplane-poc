@@ -1,0 +1,35 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-e2eclaim-dev
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-e2eclaim-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"e2eclaim","type":"A","originalType":"A","ttl":3600,"values":["172.16.0.1"]}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: "e2eclaim"
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+    - 172.16.0.1
+  # Claim semantics: the AWS record already exists; tell the
+  # composition's importing branch to take over -- MR will be
+  # stamped with managementPolicies [Observe, Update, Delete]
+  # (no Create), so Crossplane adopts via external-name and
+  # never tries to (re-)create the record.
+  import:
+    existing: true
