@@ -186,19 +186,15 @@ spec:
                 name: [[ $accountName ]]
                 kind: ClusterProviderConfig
               [[- if $importing ]]
-              # Claim semantics. upjet provider-aws only accepts a narrow
-              # whitelist of managementPolicies combinations -- the
-              # natural [Observe, Update, Delete] (no Create) is NOT in
-              # that list and gets rejected with
-              # "spec.managementPolicies is set to a value which is not
-              # supported". So we use ["*"] (all actions). Crossplane
-              # observes by the derived external-name first
-              # (zoneId_name_type[_setIdentifier]); when the record
-              # already exists in Route53 -- which is always the case
-              # for a claim by construction -- the Create step is
-              # skipped and the existing record is adopted in place.
+              # Claim semantics: never Create. The Route53 record
+              # already exists by construction (the user picked it
+              # from AwsDnsRecordPicker, which lists live AWS state).
+              # Crossplane should only Observe, Update, and Delete
+              # under platform control.
               managementPolicies:
-                - "*"
+                - Observe
+                - Update
+                - Delete
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
