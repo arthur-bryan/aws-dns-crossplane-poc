@@ -3,10 +3,10 @@ kind: Resource
 metadata:
   name: dns-smoke-a-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-a-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-a","type":"A","originalType":"A","ttl":3600,"values":["10.0.0.10"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-a-dev","name":"dns-smoke-a-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-a","type":"A","enableWeightedRouting":false,"values":["10.0.0.20"],"ttl":3600}'
   labels:
     environment: dev
     cloud: aws
@@ -18,11 +18,11 @@ spec:
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: smoke-a
+  recordName: "smoke-a"
   recordType: A
   aws:
     account: 309670275661
     accountName: dev-account
   ttl: 3600
   values:
-    - 10.0.0.10
+    - 10.0.0.20
