@@ -392,7 +392,6 @@ spec:
           zoneId: ${{ parameters.zone.id }}
           recordName: ${{ steps.extractRecordName.output.result }}
           recordType: ${{ parameters.type }}
-          ttl: ${{ steps.deriveTtl.output.result }}
           values: ${{ parameters.values }}
           serviceType: ${{ parameters.serviceType }}
           dnsName: ${{ parameters.dnsName }}
@@ -421,7 +420,6 @@ spec:
                 "evaluateTargetHealth": evaluateTargetHealth
               } :
               {
-                "ttl": ttl,
                 "values": values
               };
             $weighted := enableWeightedRouting = true ?

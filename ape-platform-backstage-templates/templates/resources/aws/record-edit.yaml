@@ -388,13 +388,18 @@ spec:
 
     - id: nextParams
       name: Compute next-edit scaffolder-parameters snapshot
+      # Deliberately strips any 'ttl' key from the parameters that get
+      # persisted into the scaffolder-parameters annotation. TTL is
+      # derived from (environment, recordType, weighted) by deriveTtl
+      # every time, never a user input -- saving it would make the
+      # field look like a user-set parameter and would silently
+      # pre-fill any future schema field added with the same name.
       action: roadiehq:utils:jsonata
       input:
         data:
           params: ${{ parameters }}
-          ttl: ${{ steps.deriveTtl.output.result }}
         expression: >-
-          $merge([params, {"ttl": ttl}])
+          params ~> |$|{},["ttl"]|
 
     - id: writeFile
       name: Update Resource File
