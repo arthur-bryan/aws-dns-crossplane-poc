@@ -5,7 +5,7 @@ metadata:
   name: record-smoke-alias.dev.arthurbryan.com
   namespace: system-dns-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-alias","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"smoke-a-dev.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-alias-dev","name":"dns-smoke-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-alias","type":"ALIAS","serviceType":"Custom","dnsName":"smoke-a.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"enableWeightedRouting":false,"ttl":3600}'
 spec:
   name: record-smoke-alias.dev.arthurbryan.com
   domain: cross
@@ -21,6 +21,6 @@ spec:
     accountName: dev-account
   aliasTarget:
     serviceType: Custom
-    dnsName: smoke-a-dev.dev.arthurbryan.com
+    dnsName: smoke-a.dev.arthurbryan.com
     hostedZoneId: Z0945364EYNE5KZW0WIF
     evaluateTargetHealth: false
