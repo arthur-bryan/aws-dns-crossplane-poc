@@ -53,11 +53,6 @@ spec:
           type: string
           ui:widget: hidden
 
-        originalType:
-          title: Original Record Type
-          type: string
-          ui:widget: hidden
-
         recordName:
           title: Record Name
           type: string
@@ -309,6 +304,46 @@ spec:
 
     - $yaml: ../../../shared/entities/fetch-dns-system.yaml
 
+    - id: fetchExisting
+      name: Fetch existing record entity for change detection
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.entityRef }}
+
+    - id: detectImmutableChanges
+      name: Detect changes to Route53-immutable fields
+      # Route53 (and the upjet aws_route53_record resource that backs our
+      # composition) forces destroy+recreate only when these fields change:
+      #   - the underlying MR record type (composition maps ALIAS -> A,
+      #     so A<->ALIAS stays type=A and is in-place; ALIAS<->AAAA still
+      #     flips the underlying type and needs Replace)
+      #   - set_identifier (when weighted)
+      #   - the weighted_routing_policy{} block (toggling on/off)
+      # Everything else -- values, TTL, alias target, weight within a
+      # weighted record -- is an in-place UPDATE in Route53, matching the
+      # AWS console's "edit record" behaviour. Stamp Force=Replace only
+      # for the genuinely-immutable transitions.
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          newType: ${{ parameters.type }}
+          newEnableWeighted: ${{ parameters.enableWeightedRouting }}
+          newSetId: ${{ parameters.setIdentifier }}
+          existingType: ${{ steps.fetchExisting.output.entity.spec.recordType }}
+          existingSetId: ${{ steps.fetchExisting.output.entity.spec.setIdentifier }}
+        expression: >-
+          (
+            $isSet := function($v) { $exists($v) and $v != null and $v != "" };
+            $newWeighted := newEnableWeighted = true;
+            $existingWeighted := $isSet(existingSetId);
+            $newMrType := newType = "ALIAS" ? "A" : newType;
+            $existingMrType := existingType = "ALIAS" ? "A" : existingType;
+            $typeChanged := $newMrType != $existingMrType;
+            $weightedToggled := $newWeighted != $existingWeighted;
+            $setIdChanged := $newWeighted and $existingWeighted and newSetId != existingSetId;
+            $typeChanged or $weightedToggled or $setIdChanged
+          )
+
     - id: deriveAccount
       name: Derive DNS account from environment
       # See record.yaml -- account always sourced from dns system.
@@ -353,7 +388,7 @@ spec:
           params: ${{ parameters }}
           ttl: ${{ steps.deriveTtl.output.result }}
         expression: >-
-          $merge([params, {"originalType": params.type, "ttl": ttl}])
+          $merge([params, {"ttl": ttl}])
 
     - id: writeFile
       name: Update Resource File
@@ -370,7 +405,7 @@ spec:
             annotations:
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: '${{ steps.nextParams.output.result | dump }}'
-              {%- if parameters.originalType and parameters.type != parameters.originalType %}
+              {%- if steps.detectImmutableChanges.output.result %}
               argocd.argoproj.io/sync-options: Force=true,Replace=true
               {%- endif %}
             labels:
