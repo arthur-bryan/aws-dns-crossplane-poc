@@ -3,10 +3,10 @@ kind: Resource
 metadata:
   name: dns-smoke-alias-hml
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-alias-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-alias","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"smoke-a-hml.hml.arthurbryan.com","customZoneId":"Z091442636MPUK86SZJ1T","evaluateTargetHealth":false,"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-alias-hml","name":"dns-smoke-alias-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-alias","type":"ALIAS","serviceType":"Custom","dnsName":"smoke-a.hml.arthurbryan.com","customZoneId":"Z091442636MPUK86SZJ1T","evaluateTargetHealth":false,"enableWeightedRouting":false,"ttl":3600}'
   labels:
     environment: hml
     cloud: aws
@@ -18,13 +18,13 @@ spec:
   environment: hml
   zoneId: Z091442636MPUK86SZJ1T
   zoneName: hml.arthurbryan.com
-  recordName: smoke-alias
+  recordName: "smoke-alias"
   recordType: ALIAS
   aws:
     account: 382598791794
     accountName: hml-account
   aliasTarget:
     serviceType: Custom
-    dnsName: smoke-a-hml.hml.arthurbryan.com
+    dnsName: smoke-a.hml.arthurbryan.com
     hostedZoneId: Z091442636MPUK86SZJ1T
     evaluateTargetHealth: false
