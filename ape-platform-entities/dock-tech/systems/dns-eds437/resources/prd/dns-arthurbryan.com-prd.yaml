@@ -1,0 +1,35 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-arthurbryan.com-prd
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-arthurbryan.com-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"","type":"A","originalType":"A","ttl":600,"values":["192.0.2.201"]}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: dns-record
+  cloud: aws
+  owner: group:default/infrastructure
+  system: system:dns-eds437/dns
+  environment: prd
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  recordName: ""
+  recordType: A
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  ttl: 600
+  values:
+    - 192.0.2.201
+  # Claim semantics: the AWS record already exists; tell the
+  # composition's importing branch to take over -- MR will be
+  # stamped with managementPolicies [Observe, Update, Delete]
+  # (no Create), so Crossplane adopts via external-name and
+  # never tries to (re-)create the record.
+  import:
+    existing: true
