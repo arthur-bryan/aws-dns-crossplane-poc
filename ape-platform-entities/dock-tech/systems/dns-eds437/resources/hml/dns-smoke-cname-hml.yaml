@@ -3,10 +3,10 @@ kind: Resource
 metadata:
   name: dns-smoke-cname-hml
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-cname-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-cname","type":"CNAME","originalType":"CNAME","ttl":3600,"values":["origin.example.com"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-cname-hml","name":"dns-smoke-cname-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"smoke-cname","type":"CNAME","enableWeightedRouting":false,"values":["target-edited.example.com"],"ttl":3600}'
   labels:
     environment: hml
     cloud: aws
@@ -18,11 +18,11 @@ spec:
   environment: hml
   zoneId: Z091442636MPUK86SZJ1T
   zoneName: hml.arthurbryan.com
-  recordName: smoke-cname
+  recordName: "smoke-cname"
   recordType: CNAME
   aws:
     account: 382598791794
     accountName: hml-account
   ttl: 3600
   values:
-    - origin.example.com
+    - target-edited.example.com
