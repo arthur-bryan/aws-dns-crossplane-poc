@@ -7,6 +7,15 @@ providerRuntime:
   maxReconcileRate: 10
 
 providers:
+  # provider-family-aws is a shared library every upbound-provider-aws-*
+  # depends on. Its version is constrained to match the family providers
+  # exactly -- a mismatch breaks dependency resolution and revisions
+  # come up Healthy=False with UnhealthyPackageRevision. Pinning it
+  # here keeps the bump in lockstep when the family providers are
+  # upgraded.
+  - name: upbound-provider-family-aws
+    package: xpkg.upbound.io/upbound/provider-family-aws:v2.6.0
+
   - name: upbound-provider-aws-route53
     package: xpkg.upbound.io/upbound/provider-aws-route53:v2.6.0
     runtimeConfig:
