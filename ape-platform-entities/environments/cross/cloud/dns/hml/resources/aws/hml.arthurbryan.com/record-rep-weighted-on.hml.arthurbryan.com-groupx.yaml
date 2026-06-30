@@ -1,0 +1,28 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-rep-weighted-on.hml.arthurbryan.com-groupx
+  namespace: system-dns-hml
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-rep-weighted-on-hml","name":"dns-rep-weighted-on-hml","system":"system:dns-eds437/dns","environment":"hml","zone":"hml.arthurbryan.com","zoneId":"Z091442636MPUK86SZJ1T","recordName":"rep-weighted-on","enableWeightedRouting":true,"type":"A","values":["10.99.0.11"],"setIdentifier":"groupX","weight":100}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
+spec:
+  name: record-rep-weighted-on.hml.arthurbryan.com-groupx
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: hml
+  zoneId: Z091442636MPUK86SZJ1T
+  zoneName: hml.arthurbryan.com
+  recordName: rep-weighted-on
+  type: A
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  ttl: 600
+  values:
+  - 10.99.0.11
+  setIdentifier: groupX
+  weight: 100
