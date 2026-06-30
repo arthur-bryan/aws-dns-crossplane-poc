@@ -199,6 +199,13 @@ def build_record_xr(
         xr_spec["latencyRoutingPolicy"] = {"region": spec["latencyRegion"]}
     if spec.get("healthCheckId"):
         xr_spec["healthCheckId"] = spec["healthCheckId"]
+    # Claim semantics: the composition's importing branch keys off
+    # spec.import.existing to stamp the MR with managementPolicies
+    # [Observe, Update, Delete] (no Create). Without this passthrough
+    # a claim ends up with full management and could re-create or
+    # overwrite the existing Route53 record.
+    if spec.get("import"):
+        xr_spec["import"] = spec["import"]
 
     annotations = {GENERATED_MARKER_ANNOTATION: GENERATED_MARKER_VALUE}
     if ann.get("dock.tech/scaffolder-parameters"):
