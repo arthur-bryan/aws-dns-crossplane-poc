@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-replace-a-to-alias.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"name":"dns-replace-a-to-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"replace-a-to-alias","type":"A","originalType":"A","ttl":3600,"values":["10.0.0.31"],"enableWeightedRouting":false}'
+spec:
+  name: record-replace-a-to-alias.dev.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: replace-a-to-alias
+  type: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+  - 10.0.0.31
