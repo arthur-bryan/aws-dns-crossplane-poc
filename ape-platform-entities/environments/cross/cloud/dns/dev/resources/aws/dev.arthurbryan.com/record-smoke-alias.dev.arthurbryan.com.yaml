@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-smoke-alias.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-alias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-alias","type":"ALIAS","originalType":"ALIAS","serviceType":"Custom","dnsName":"smoke-a-dev.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"enableWeightedRouting":false}'
+spec:
+  name: record-smoke-alias.dev.arthurbryan.com
+  domain: cross
+  subdomain: cloud
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: smoke-alias
+  type: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: Custom
+    dnsName: smoke-a-dev.dev.arthurbryan.com
+    hostedZoneId: Z0945364EYNE5KZW0WIF
+    evaluateTargetHealth: false
