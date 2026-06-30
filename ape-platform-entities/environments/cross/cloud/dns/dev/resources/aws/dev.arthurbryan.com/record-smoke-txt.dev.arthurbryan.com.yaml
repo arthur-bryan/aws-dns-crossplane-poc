@@ -5,7 +5,7 @@ metadata:
   name: record-smoke-txt.dev.arthurbryan.com
   namespace: system-dns-dev
   annotations:
-    dock.tech/scaffolder-parameters: '{"name":"dns-smoke-txt-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-txt","type":"TXT","originalType":"TXT","ttl":3600,"values":["platform=smoke-test"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-smoke-txt-dev","name":"dns-smoke-txt-dev","system":"system:dns-eds437/dns","environment":"dev","zone":"dev.arthurbryan.com","zoneId":"Z0945364EYNE5KZW0WIF","recordName":"smoke-txt","type":"TXT","enableWeightedRouting":false,"values":["platform=edited"],"ttl":3600}'
 spec:
   name: record-smoke-txt.dev.arthurbryan.com
   domain: cross
@@ -21,4 +21,4 @@ spec:
     accountName: dev-account
   ttl: 3600
   values:
-  - platform=smoke-test
+  - platform=edited
