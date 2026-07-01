@@ -3,10 +3,11 @@ kind: Resource
 metadata:
   name: dns-rep-weighted-on-prd
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-rep-weighted-on-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"rep-weighted-on","type":"A","originalType":"A","values":["10.99.0.11"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-rep-weighted-on-prd","name":"dns-rep-weighted-on-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"rep-weighted-on","enableWeightedRouting":true,"type":"A","values":["10.99.0.11"],"setIdentifier":"groupX","weight":100}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     environment: prd
     cloud: aws
@@ -18,7 +19,7 @@ spec:
   environment: prd
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
-  recordName: rep-weighted-on
+  recordName: "rep-weighted-on"
   recordType: A
   aws:
     account: 597230762851
@@ -26,3 +27,5 @@ spec:
   ttl: 3600
   values:
     - 10.99.0.11
+  setIdentifier: groupX
+  weight: 100
