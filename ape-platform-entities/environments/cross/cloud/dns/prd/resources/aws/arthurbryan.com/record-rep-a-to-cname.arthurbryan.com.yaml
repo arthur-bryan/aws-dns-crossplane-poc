@@ -6,7 +6,8 @@ metadata:
   namespace: system-dns-prd
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-rep-a-to-cname-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"rep-a-to-cname","type":"A","originalType":"A","values":["10.99.0.10"],"enableWeightedRouting":false}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-rep-a-to-cname-prd","name":"dns-rep-a-to-cname-prd","system":"system:dns-eds437/dns","environment":"prd","zone":"arthurbryan.com","zoneId":"Z03010981ALJFZB4QLU8W","recordName":"rep-a-to-cname","enableWeightedRouting":false,"type":"CNAME","values":["cname-target.example.com"]}'
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   name: record-rep-a-to-cname.arthurbryan.com
   domain: cross
@@ -16,10 +17,10 @@ spec:
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
   recordName: rep-a-to-cname
-  type: A
+  type: CNAME
   aws:
     account: 597230762851
     accountName: prd-account
   ttl: 3600
   values:
-  - 10.99.0.10
+  - cname-target.example.com
