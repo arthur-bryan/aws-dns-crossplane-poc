@@ -214,6 +214,23 @@ Removed at end of session (40 catalog Resources across dev/hml/prd):
 
 ---
 
+## 12b. Post-hoc fix: universal Edit pencil + universal Replace warning
+
+Shipped after the housekeeping in commit `4928b2b`. Two related gaps in the pre-existing catalog:
+
+1. **Pencil disabled on legacy records.** `DockZoneEnrichmentProcessor` (backend) stamps `backstage.io/edit-url` only when the entity already carries a `dock.tech/scaffolder-parameters` annotation. Records created before that annotation was standardised (e.g. `dns-api-dev`, `dns-cdn-dev`, `dns-www-dev`, `dns-split-*`) had no snapshot, so no edit-url got stamped, so Backstage disabled the pencil. Fix: the processor now falls back to synthesising a minimal snapshot from `spec` (name, system, environment, zone/zoneId, recordName, type, values or aliasTarget, setIdentifier, weight) whenever the annotation is missing, and persists the derived snapshot back to the entity so downstream consumers see a consistent shape.
+2. **Replace warning silent on some records.** `RecordChangeImpactWarning` (frontend widget) reads `formData.entityRef` and calls the catalog API to fetch the live entity for comparison. If the persisted `dock.tech/scaffolder-parameters` didn't include an `entityRef` key, the widget's `useEntityByRef` returned undefined and the widget silently rendered `null`. `dns-templatetest-dev` is the canonical example — its scaffolder-parameters JSON pre-dates the entityRef convention. Fix: the processor now **always** injects `entityRef = resource:<namespace>/<name>` into the params JSON before encoding it into the edit-url, regardless of whether the snapshot was synthesised or pre-existing.
+3. **Templates persist entityRef going forward.** `record.yaml`'s `buildEditParams` was reordered to run **after** `computeEntityName` (so the weighted-suffix-aware final entity name is available) and now emits `entityRef` in `$base`. `record-claim.yaml`'s `buildEditParams` does the same. Newly-created and newly-claimed records carry `entityRef` from day one; the processor's synthesis path is only load-bearing for records created before this session.
+
+Files touched by `4928b2b`:
+- `lab/backstage/ape-lab/packages/backend/src/modules/zone-enrichment/DockZoneEnrichmentProcessor.ts`
+- `ape-platform-backstage-templates/templates/resources/aws/record.yaml`
+- `ape-platform-backstage-templates/templates/resources/aws/record-claim.yaml`
+
+Ship-to-APE mapping is unchanged from §13 — both templates go upstream as-is; the processor fix ships as logic (APE's real processor probably lives in a different file but implements the same annotation contract).
+
+---
+
 ## 13. Instructions for the comparison agent
 
 When comparing to `dock-tech/ape-platform-*`:
