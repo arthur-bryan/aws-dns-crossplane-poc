@@ -76,15 +76,33 @@ export class DockZoneEnrichmentProcessor implements CatalogProcessor {
     }
 
     if (specType === RECORD_TYPE) {
-      const params = annotations[SCAFFOLDER_PARAMS_ANNOTATION];
+      // Derive the formData snapshot the edit template will pre-fill
+      // from. Prefer the persisted scaffolder-parameters annotation
+      // (written by record.yaml / record-edit.yaml / record-claim.yaml),
+      // but fall back to synthesising a minimal snapshot from spec so
+      // legacy records that never carried the annotation still get an
+      // active Edit pencil in the UI. Also inject entityRef so the
+      // RecordChangeImpactWarning widget can compare against the live
+      // catalog entity.
+      const entityRef = `resource:${entity.metadata.namespace ?? 'default'}/${entity.metadata.name}`;
+      const params = synthesizeScaffolderParameters(entity, annotations, entityRef);
       if (!params) return entity;
       const fullEditUrl = `${RECORD_EDIT_TEMPLATE}?formData=${encodeURIComponent(params)}`;
-      if (annotations[EDIT_URL_ANNOTATION] === fullEditUrl) return entity;
+      if (
+        annotations[EDIT_URL_ANNOTATION] === fullEditUrl &&
+        annotations[SCAFFOLDER_PARAMS_ANNOTATION] === params
+      ) {
+        return entity;
+      }
       return {
         ...entity,
         metadata: {
           ...entity.metadata,
-          annotations: { ...annotations, [EDIT_URL_ANNOTATION]: fullEditUrl },
+          annotations: {
+            ...annotations,
+            [SCAFFOLDER_PARAMS_ANNOTATION]: params,
+            [EDIT_URL_ANNOTATION]: fullEditUrl,
+          },
         },
       };
     }
@@ -141,4 +159,73 @@ export class DockZoneEnrichmentProcessor implements CatalogProcessor {
     if (Array.isArray(r.body?.items)) return r.body!.items as any[];
     return [];
   }
+}
+
+/**
+ * Produce the scaffolder-parameters JSON string that will pre-fill the
+ * edit form. Returns undefined if we can't produce anything useful.
+ *
+ * Precedence:
+ *   1. Existing dock.tech/scaffolder-parameters annotation (parsed).
+ *   2. Synthesised from spec fields as a fallback for legacy records
+ *      that were imported/created before the create template started
+ *      persisting the snapshot.
+ *
+ * Always ensures entityRef is present so the frontend
+ * RecordChangeImpactWarning widget can look up the live entity.
+ */
+function synthesizeScaffolderParameters(
+  entity: Entity,
+  annotations: Record<string, string>,
+  entityRef: string,
+): string | undefined {
+  const persisted = annotations['dock.tech/scaffolder-parameters'];
+  let params: Record<string, unknown> | undefined;
+  if (persisted) {
+    try {
+      const parsed = JSON.parse(persisted);
+      if (parsed && typeof parsed === 'object') {
+        params = parsed as Record<string, unknown>;
+      }
+    } catch {
+      // fall through to synthesis
+    }
+  }
+
+  if (!params) {
+    const spec = (entity.spec ?? {}) as Record<string, unknown>;
+    const type = (spec.recordType ?? spec.type) as string | undefined;
+    if (!type) return undefined;
+    const alias = spec.aliasTarget as Record<string, unknown> | undefined;
+    params = {
+      name: entity.metadata.name,
+      system:
+        typeof spec.system === 'string'
+          ? spec.system
+          : `system:${entity.metadata.namespace ?? 'default'}/dns`,
+      environment: spec.environment,
+      zone: spec.zoneName,
+      zoneId: spec.zoneId,
+      recordName: spec.recordName ?? '',
+      type,
+      originalType: type,
+      enableWeightedRouting: spec.setIdentifier ? true : false,
+    };
+    if (alias) {
+      params.serviceType = alias.serviceType ?? 'Custom';
+      params.dnsName = alias.dnsName;
+      params.customZoneId = alias.hostedZoneId;
+      params.evaluateTargetHealth = alias.evaluateTargetHealth ?? false;
+    } else if (Array.isArray(spec.values)) {
+      params.values = spec.values;
+    }
+    if (spec.setIdentifier) params.setIdentifier = spec.setIdentifier;
+    if (spec.weight !== undefined) params.weight = spec.weight;
+  }
+
+  // entityRef is derived, not user-supplied -- overwrite whatever is
+  // there (including undefined) so the widget can always find it.
+  params.entityRef = entityRef;
+
+  return JSON.stringify(params);
 }

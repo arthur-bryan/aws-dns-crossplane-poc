@@ -380,12 +380,34 @@ spec:
             3600
           )
 
-    - id: buildEditParams
-      name: Build edit-template formData snapshot
+    - id: computeEntityName
+      name: Compute catalog entity name (suffix setIdentifier when weighted)
+      # For weighted records, multiple submissions share the same recordName
+      # (e.g. both 'split') but each must produce its own catalog Resource
+      # file. Append -<setIdentifier> to the entity name so the file path
+      # and metadata.name are unique per variant. Non-weighted: name is
+      # parameters.name unchanged.
       action: roadiehq:utils:jsonata
       input:
         data:
-          name: ${{ parameters.name }}
+          baseName: ${{ parameters.name }}
+          weighted: ${{ parameters.enableWeightedRouting }}
+          setIdentifier: ${{ parameters.setIdentifier }}
+        expression: >-
+          (
+            $isWeighted := weighted = true;
+            $isWeighted and setIdentifier ? baseName & "-" & setIdentifier : baseName
+          )
+
+    - id: buildEditParams
+      name: Build edit-template formData snapshot
+      # Depends on computeEntityName so entityRef reflects the final
+      # weighted-suffix-aware entity name (dns-<ctx>-<env>-<setId>).
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          entityName: ${{ steps.computeEntityName.output.result }}
+          namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
           system: ${{ parameters.system }}
           environment: ${{ parameters.environment }}
           zone: ${{ parameters.zone.name }}
@@ -403,7 +425,8 @@ spec:
         expression: >-
           (
             $base := {
-              "name": name,
+              "entityRef": "resource:" & namespace & "/" & entityName,
+              "name": entityName,
               "system": system,
               "environment": environment,
               "zone": zone,
@@ -432,24 +455,6 @@ spec:
             $merge([$base, $typed, $weighted])
           )
 
-    - id: computeEntityName
-      name: Compute catalog entity name (suffix setIdentifier when weighted)
-      # For weighted records, multiple submissions share the same recordName
-      # (e.g. both 'split') but each must produce its own catalog Resource
-      # file. Append -<setIdentifier> to the entity name so the file path
-      # and metadata.name are unique per variant. Non-weighted: name is
-      # parameters.name unchanged.
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          baseName: ${{ parameters.name }}
-          weighted: ${{ parameters.enableWeightedRouting }}
-          setIdentifier: ${{ parameters.setIdentifier }}
-        expression: >-
-          (
-            $isWeighted := weighted = true;
-            $isWeighted and setIdentifier ? baseName & "-" & setIdentifier : baseName
-          )
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists

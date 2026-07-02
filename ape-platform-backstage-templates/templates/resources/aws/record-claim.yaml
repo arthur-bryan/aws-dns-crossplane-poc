@@ -108,7 +108,8 @@ spec:
       action: roadiehq:utils:jsonata
       input:
         data:
-          name: ${{ steps.computeRecordName.output.result.entityName }}
+          entityName: ${{ steps.computeRecordName.output.result.entityName }}
+          namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
           system: ${{ parameters.system }}
           environment: ${{ parameters.environment }}
           zone: ${{ parameters.zone.name }}
@@ -120,7 +121,8 @@ spec:
             $alias := existingRecord.aliasTarget;
             $recordType := $alias ? "ALIAS" : existingRecord.type;
             $base := {
-              "name": name,
+              "entityRef": "resource:" & namespace & "/" & entityName,
+              "name": entityName,
               "system": system,
               "environment": environment,
               "zone": zone,
