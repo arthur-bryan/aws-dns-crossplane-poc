@@ -49,16 +49,11 @@ catalog:
     # Disable dock-tech Okta/org providers — not available locally
     dock: null
   locations:
-    # PoC repo: root Location that crawls all DNS entities
+    # PoC repo: single root Location — crawls DNS system, resources, and templates
     - type: url
       target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-entities/poc-location.yaml
       rules:
-        - allow: [Location, Component, System, API, Resource, Domain, Group, Namespace]
-    # PoC repo: DNS scaffolder templates
-    - type: url
-      target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-backstage-templates/templates/resources/aws/catalog-info.yaml
-      rules:
-        - allow: [Location, Template]
+        - allow: [Location, Component, System, API, Resource, Domain, Group, Namespace, Template]
 
 # DNS account IDs — all pointing to arthur-bryan personal AWS account (dns-poc IAM user)
 dns:

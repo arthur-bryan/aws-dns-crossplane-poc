@@ -7,6 +7,11 @@ spec:
   targets:
     # DNS system, domains, groups (System entity "dns" is defined here already)
     - ./catalog-info.yaml
+    # DNS scaffolder templates (direct refs avoid second-hop relative-URL resolution issues)
+    - ../ape-platform-backstage-templates/templates/resources/aws/zone.yaml
+    - ../ape-platform-backstage-templates/templates/resources/aws/record.yaml
+    - ../ape-platform-backstage-templates/templates/resources/aws/record-edit.yaml
+    - ../ape-platform-backstage-templates/templates/resources/aws/record-claim.yaml
     # DNS zone/record resources per environment
     # NOTE: trailing /*.yaml is required -- Backstage's GithubUrlReader only
     # treats a target as a directory crawl (git tree search) if the path is a
