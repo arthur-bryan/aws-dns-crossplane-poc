@@ -6,7 +6,7 @@
 #   AWS_ACCESS_KEY_ID=<dns-poc-key-id> \
 #   AWS_SECRET_ACCESS_KEY=<dns-poc-secret> \
 #   AWS_REGION=us-east-1 \
-#   yarn start --config ../../app-config.yaml --config ../../app-config.poc.yaml
+#   yarn start --config ./app-config.yaml --config ./app-config.poc.yaml
 #
 # The file lives in the PoC repo root so it stays out of the APE backstage repo.
 # Symlink it before running:
