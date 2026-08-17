@@ -19,18 +19,16 @@ spec:
         apiVersion: gotemplating.fn.crossplane.io/v1beta1
         kind: GoTemplate
         delims:
-          left: '[['
-          right: ']]'
+          left: "[["
+          right: "]]"
         source: Inline
         inline:
           template: |
             [[- $params        := .observed.composite.resource.spec ]]
             [[- $name          := $params.name ]]
             [[- $namespace     := .observed.composite.resource.metadata.namespace ]]
-            [[- $accountName   := $params.aws.accountName ]]
             [[- $zoneName      := $params.zoneName ]]
             [[- $domain        := $params.domain ]]
-            [[- $subdomain     := $params.subdomain ]]
             [[- $system        := $params.system ]]
             [[- $environment   := $params.environment ]]
             [[- $tags          := $params.tags ]]
@@ -40,7 +38,13 @@ spec:
             [[- $import        := $params.import ]]
             [[- $importing     := and $import $import.existing ]]
             [[- $delegatedFromZoneId := $params.delegatedFromZoneId ]]
-            [[- $delegatedFromAccountName := default $accountName $params.delegatedFromAccountName ]]
+            [[- $envDnsAccounts := dict "dev" "dnszone-dev" "hml" "dnszone-hml" "poc" "dnszone-hml" "prd" "dnszone-prd" ]]
+            [[- $accountName   := index $envDnsAccounts $environment ]]
+            [[- if not $accountName ]]
+            [[- fail (printf "environment %q has no DNS account mapping" $environment) ]]
+            [[- end ]]
+            [[- $squadAccountName := $params.aws.accountName ]]
+            [[- $delegatedFromAccountName := $params.delegatedFromAccountName ]]
 
             [[- $zone := getComposedResource . $name ]]
             [[- $delegationName := printf "%s-delegation" $name ]]
@@ -49,10 +53,10 @@ spec:
             [[- $firstSameAccountVpc := dict ]]
             [[- $normalizedVpcs := list ]]
             [[- range $vpc := $vpcs ]]
-            [[-   $vpcAccount := default $accountName $vpc.accountName ]]
+            [[-   $vpcAccount := default $squadAccountName $vpc.accountName ]]
             [[-   $entry := dict "vpcId" $vpc.vpcId "vpcRegion" $vpc.vpcRegion "accountName" $vpcAccount ]]
             [[-   $normalizedVpcs = append $normalizedVpcs $entry ]]
-            [[-   if and (eq $vpcAccount $accountName) (not $firstSameAccountVpc.vpcId) ]]
+            [[-   if and (eq $vpcAccount $squadAccountName) (not $firstSameAccountVpc.vpcId) ]]
             [[-     $firstSameAccountVpc = $entry ]]
             [[-   end ]]
             [[- end ]]
@@ -106,7 +110,6 @@ spec:
               managementPolicies:
                 - Observe
                 - Update
-                - Delete
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
@@ -119,10 +122,17 @@ spec:
                 tags:
                   createdBy: ape-platform
                   domain: [[ $domain ]]
-                  subdomain: [[ $subdomain ]]
                   system: [[ $system ]]
                   environment: [[ $environment ]]
                   visibility: [[ $visibility ]]
+                  owner: cloud
+                  squad: infrastructure
+                  application: dns
+                  env: [[ $environment ]]
+                  pci_scope: "false"
+                  cloud_provider: aws
+                  business_unit: shared
+                  business_model: shared
                   [[- if $importing ]]
                   imported: "true"
                   [[- end ]]
@@ -153,7 +163,6 @@ spec:
               managementPolicies:
                 - Observe
                 - Update
-                - Delete
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
@@ -190,7 +199,6 @@ spec:
               managementPolicies:
                 - Observe
                 - Update
-                - Delete
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
@@ -217,7 +225,6 @@ spec:
               managementPolicies:
                 - Observe
                 - Update
-                - Delete
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}

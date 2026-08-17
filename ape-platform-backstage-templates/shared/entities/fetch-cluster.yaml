@@ -1,0 +1,6 @@
+id: fetchCluster
+name: Fetch Cluster Entity
+action: catalog:fetch
+input:
+  entityRef: ${{ parameters.cluster }}
+  defaultKind: Resource

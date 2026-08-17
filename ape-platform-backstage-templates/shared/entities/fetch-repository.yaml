@@ -1,0 +1,6 @@
+id: fetchRepository
+name: Fetch Repository Entity
+action: catalog:fetch
+input:
+  entityRef: ${{ parameters.repository }}
+  defaultKind: Component

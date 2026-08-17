@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: dns-record-edit
-  title: Edit DNS Record
-  description: Edit an existing DNS record
+  title: DNS Record Edit
+  description: Edit an existing AWS Route53 DNS record
   labels:
     category: resources
   tags:
@@ -45,13 +45,8 @@ spec:
 
         zone:
           title: DNS Zone
-          type: string
+          type: object
           ui:disabled: true
-
-        zoneId:
-          title: Zone ID
-          type: string
-          ui:widget: hidden
 
         recordName:
           title: Record Name
@@ -63,9 +58,18 @@ spec:
           type: string
           ui:field: RecordFqdnPreview
 
+        changeImpactWarningType:
+          title: ' '
+          type: string
+          ui:field: RecordChangeImpactWarning
+
         type:
           title: Record Type
           type: string
+          description: >-
+            Changing the record type destroys the existing record in Route53 and
+            re-creates it with the new type. Expect brief DNS unavailability
+            during the swap.
           enum:
             - A
             - AAAA
@@ -77,11 +81,6 @@ spec:
             - NS
             - CAA
             - PTR
-
-        changeImpactWarningType:
-          title: " "
-          type: string
-          ui:field: RecordChangeImpactWarning
 
       dependencies:
         type:
@@ -266,16 +265,16 @@ spec:
     - title: Weighted Routing (Optional)
       description: Enable weighted routing to distribute traffic across multiple records
       properties:
+        changeImpactWarningWeighted:
+          title: ' '
+          type: string
+          ui:field: RecordChangeImpactWarning
+
         enableWeightedRouting:
           title: Enable Weighted Routing
           type: boolean
           description: Enable traffic distribution based on weight
           default: false
-
-        changeImpactWarningWeighted:
-          title: " "
-          type: string
-          ui:field: RecordChangeImpactWarning
 
       dependencies:
         enableWeightedRouting:
@@ -305,67 +304,41 @@ spec:
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
-    - $yaml: ../../../shared/entities/fetch-system.yaml
-    - $yaml: ../../../shared/entities/fetch-system-domain.yaml
+    - id: verifySystemOwnership
+      name: Verify System Ownership
+      action: catalog:system:ownership:verify
+      input:
+        systemRef: ${{ parameters.system }}
 
-    - $yaml: ../../../shared/entities/fetch-dns-system.yaml
+    - $yaml: ../../../shared/entities/fetch-system.yaml
 
     - id: fetchExisting
-      name: Fetch existing record entity for change detection
+      name: Fetch existing catalog entity
       action: catalog:fetch
       input:
         entityRef: ${{ parameters.entityRef }}
 
     - id: detectImmutableChanges
-      name: Detect changes to Route53-immutable fields
-      # Route53 (and the upjet aws_route53_record resource that backs our
-      # composition) forces destroy+recreate only when these fields change:
-      #   - the underlying MR record type (composition maps ALIAS -> A,
-      #     so A<->ALIAS stays type=A and is in-place; ALIAS<->AAAA still
-      #     flips the underlying type and needs Replace)
-      #   - set_identifier (when weighted)
-      #   - the weighted_routing_policy{} block (toggling on/off)
-      # Everything else -- values, TTL, alias target, weight within a
-      # weighted record -- is an in-place UPDATE in Route53, matching the
-      # AWS console's "edit record" behaviour. Stamp Force=Replace only
-      # for the genuinely-immutable transitions.
+      name: Detect whether this edit requires Route53 Replace
       action: roadiehq:utils:jsonata
       input:
         data:
-          newType: ${{ parameters.type }}
-          newEnableWeighted: ${{ parameters.enableWeightedRouting }}
-          newSetId: ${{ parameters.setIdentifier }}
           existingType: ${{ steps.fetchExisting.output.entity.spec.recordType }}
           existingSetId: ${{ steps.fetchExisting.output.entity.spec.setIdentifier }}
+          newType: ${{ parameters.type }}
+          newSetId: ${{ parameters.setIdentifier }}
+          newWeighted: ${{ parameters.enableWeightedRouting }}
         expression: >-
           (
-            $isSet := function($v) { $exists($v) and $v != null and $v != "" };
-            $newWeighted := newEnableWeighted = true;
-            $existingWeighted := $isSet(existingSetId);
-            $newMrType := newType = "ALIAS" ? "A" : newType;
-            $existingMrType := existingType = "ALIAS" ? "A" : existingType;
-            $typeChanged := $newMrType != $existingMrType;
-            $weightedToggled := $newWeighted != $existingWeighted;
-            $setIdChanged := $newWeighted and $existingWeighted and newSetId != existingSetId;
-            $typeChanged or $weightedToggled or $setIdChanged
-          )
-
-    - id: deriveAccount
-      name: Derive DNS account from environment
-      # See record.yaml -- account always sourced from dns system.
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          env: ${{ parameters.environment }}
-          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
-        expression: >-
-          (
-            $envName := env;
-            $envCfg := environments[name = $envName];
-            {
-              "accountId": $envCfg.aws.account,
-              "accountName": $envCfg.aws.accountName
-            }
+            $normalize := function($t) { $t = "ALIAS" ? "A" : $t };
+            $existingMrType := $normalize(existingType);
+            $newMrType := $normalize(newType);
+            $typeFlips := $existingMrType != $newMrType;
+            $setIdChanges := ($string(existingSetId) != "" or $string(newSetId) != "")
+              and $string(existingSetId) != $string(newSetId);
+            $weightedToggle := ($string(existingSetId) != "" and newWeighted != true)
+              or ($string(existingSetId) = "" and newWeighted = true);
+            $typeFlips or $setIdChanges or $weightedToggle
           )
 
     - id: deriveTtl
@@ -388,24 +361,18 @@ spec:
 
     - id: nextParams
       name: Compute next-edit scaffolder-parameters snapshot
-      # Deliberately strips any 'ttl' key from the parameters that get
-      # persisted into the scaffolder-parameters annotation. TTL is
-      # derived from (environment, recordType, weighted) by deriveTtl
-      # every time, never a user input -- saving it would make the
-      # field look like a user-set parameter and would silently
-      # pre-fill any future schema field added with the same name.
       action: roadiehq:utils:jsonata
       input:
         data:
           params: ${{ parameters }}
         expression: >-
-          params ~> |$|{},["ttl"]|
+          $merge([params, {"originalType": params.type}])
 
     - id: writeFile
       name: Update Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
@@ -414,8 +381,14 @@ spec:
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record managed by template
             annotations:
+              {%- if steps.fetchExisting.output.entity.metadata.annotations['dock.tech/created-at'] %}
+              dock.tech/created-at: '${{ steps.fetchExisting.output.entity.metadata.annotations['dock.tech/created-at'] }}'
+              {%- endif %}
+              {%- if steps.fetchExisting.output.entity.metadata.annotations['dock.tech/created-by'] %}
+              dock.tech/created-by: ${{ steps.fetchExisting.output.entity.metadata.annotations['dock.tech/created-by'] }}
+              {%- endif %}
               dock.tech/scaffolder-editable-template: dns-record-edit
-              dock.tech/scaffolder-parameters: '${{ steps.nextParams.output.result | dump }}'
+              dock.tech/scaffolder-parameters: ${{ "'" + steps.nextParams.output.result | dump + "'" }}
               {%- if steps.detectImmutableChanges.output.result %}
               argocd.argoproj.io/sync-options: Force=true,Replace=true
               {%- endif %}
@@ -423,18 +396,17 @@ spec:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: dns-record
+            type: DNSRecord
             cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            tribe: ${{ steps.fetchSystem.output.entity.spec.tribe }}
             system: ${{ parameters.system }}
             environment: ${{ parameters.environment }}
-            zoneId: ${{ parameters.zoneId }}
-            zoneName: ${{ parameters.zone }}
+            name: ${{ parameters.name }}
+            zoneId: ${{ parameters.zone.id }}
+            zoneName: ${{ parameters.zone.name }}
             recordName: "${{ parameters.recordName }}"
             recordType: ${{ parameters.type }}
-            aws:
-              account: ${{ steps.deriveAccount.output.result.accountId }}
-              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ steps.deriveTtl.output.result }}
             values:

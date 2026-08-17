@@ -1,0 +1,5 @@
+id: refresh
+name: Refresh Catalog
+action: catalog:refresh:entity
+input:
+  entityRef: ${{ parameters.entityRef }}

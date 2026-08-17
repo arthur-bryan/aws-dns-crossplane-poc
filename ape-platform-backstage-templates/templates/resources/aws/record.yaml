@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: aws-dns-record
-  title: DNS Record Template
-  description: A template for creating a DNS record
+  title: DNS Record
+  description: A template for creating an AWS Route53 DNS record
   labels:
     category: resources
   tags:
@@ -26,7 +26,7 @@ spec:
           title: System
           type: string
           description: System of Resource
-          ui:field: EntityPicker
+          ui:field: OwnedEntityPicker
           ui:options:
             catalogFilter:
               - kind: System
@@ -37,6 +37,8 @@ spec:
           type: string
           description: Environment where the DNS record will be created
           ui:field: EnvironmentPicker
+          ui:options:
+            systemFieldName: system
 
         zone:
           title: Parent Zone
@@ -55,11 +57,12 @@ spec:
         name:
           title: Record Name
           type: string
-          description: Record name relative to the zone (e.g., 'www', 'api', 'cdn')
+          description: Context to compose the record name (e.g., 'www', 'api', 'cdn')
           ui:autofocus: true
           ui:field: EntityNameComposerPicker
           ui:options:
-            rows: 5
+            systemFieldName: system
+            environmentFieldName: environment
 
         fqdnPreview:
           title: FQDN Preview
@@ -321,30 +324,13 @@ spec:
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
-    - $yaml: ../../../shared/entities/fetch-system.yaml
-    - $yaml: ../../../shared/entities/fetch-system-domain.yaml
-
-    - $yaml: ../../../shared/entities/fetch-dns-system.yaml
-
-    - id: deriveAccount
-      name: Derive DNS account from environment
-      # Account always comes from the dns system's spec.environments,
-      # NOT from the user's selected system. A record owned by team-X
-      # in env=dev lives in DNS's dev account, not team-X's dev account.
-      action: roadiehq:utils:jsonata
+    - id: verifySystemOwnership
+      name: Verify System Ownership
+      action: catalog:system:ownership:verify
       input:
-        data:
-          env: ${{ parameters.environment }}
-          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
-        expression: >-
-          (
-            $envName := env;
-            $envCfg := environments[name = $envName];
-            {
-              "accountId": $envCfg.aws.account,
-              "accountName": $envCfg.aws.accountName
-            }
-          )
+        systemRef: ${{ parameters.system }}
+
+    - $yaml: ../../../shared/entities/fetch-system.yaml
 
     - id: extractRecordName
       name: Extract record name from composed entity name
@@ -354,12 +340,32 @@ spec:
           composedName: ${{ parameters.name }}
           systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
+          weighted: ${{ parameters.enableWeightedRouting }}
+          setIdentifier: ${{ parameters.setIdentifier }}
         expression: >-
           (
             $prefix := systemName & "-";
             $suffix := "-" & environment;
+            $wSuffix := $suffix & "-" & setIdentifier;
             $s := $substringAfter(composedName, $prefix);
-            $substringBefore($s, $suffix)
+            $weighted = true and $string(setIdentifier) != ""
+              ? $substringBefore($s, $wSuffix)
+              : $substringBefore($s, $suffix)
+          )
+
+    - id: computeEntityName
+      name: Compute entity name (append set identifier for weighted records)
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          baseName: ${{ parameters.name }}
+          weighted: ${{ parameters.enableWeightedRouting }}
+          setIdentifier: ${{ parameters.setIdentifier }}
+        expression: >-
+          (
+            weighted = true and $string(setIdentifier) != ""
+              ? baseName & "-" & setIdentifier
+              : baseName
           )
 
     - id: deriveTtl
@@ -380,87 +386,23 @@ spec:
             3600
           )
 
-    - id: computeEntityName
-      name: Compute catalog entity name (suffix setIdentifier when weighted)
-      # For weighted records, multiple submissions share the same recordName
-      # (e.g. both 'split') but each must produce its own catalog Resource
-      # file. Append -<setIdentifier> to the entity name so the file path
-      # and metadata.name are unique per variant. Non-weighted: name is
-      # parameters.name unchanged.
+    - id: buildScaffolderParameters
+      name: Build scaffolder parameters for edit template
       action: roadiehq:utils:jsonata
       input:
         data:
-          baseName: ${{ parameters.name }}
-          weighted: ${{ parameters.enableWeightedRouting }}
-          setIdentifier: ${{ parameters.setIdentifier }}
-        expression: >-
-          (
-            $isWeighted := weighted = true;
-            $isWeighted and setIdentifier ? baseName & "-" & setIdentifier : baseName
-          )
-
-    - id: buildEditParams
-      name: Build edit-template formData snapshot
-      # Depends on computeEntityName so entityRef reflects the final
-      # weighted-suffix-aware entity name (dns-<ctx>-<env>-<setId>).
-      action: roadiehq:utils:jsonata
-      input:
-        data:
+          params: ${{ parameters }}
           entityName: ${{ steps.computeEntityName.output.result }}
-          namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
-          system: ${{ parameters.system }}
-          environment: ${{ parameters.environment }}
-          zone: ${{ parameters.zone.name }}
-          zoneId: ${{ parameters.zone.id }}
           recordName: ${{ steps.extractRecordName.output.result }}
-          recordType: ${{ parameters.type }}
-          values: ${{ parameters.values }}
-          serviceType: ${{ parameters.serviceType }}
-          dnsName: ${{ parameters.dnsName }}
-          customZoneId: ${{ parameters.customZoneId }}
-          evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
-          enableWeightedRouting: ${{ parameters.enableWeightedRouting }}
-          setIdentifier: ${{ parameters.setIdentifier }}
-          weight: ${{ parameters.weight }}
+          namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
         expression: >-
-          (
-            $base := {
-              "entityRef": "resource:" & namespace & "/" & entityName,
-              "name": entityName,
-              "system": system,
-              "environment": environment,
-              "zone": zone,
-              "zoneId": zoneId,
-              "recordName": recordName,
-              "type": recordType,
-              "originalType": recordType
-            };
-            $typed := recordType = "ALIAS" ?
-              {
-                "serviceType": serviceType,
-                "dnsName": dnsName,
-                "customZoneId": customZoneId,
-                "evaluateTargetHealth": evaluateTargetHealth
-              } :
-              {
-                "values": values
-              };
-            $weighted := enableWeightedRouting = true ?
-              {
-                "enableWeightedRouting": true,
-                "setIdentifier": setIdentifier,
-                "weight": weight
-              } :
-              { "enableWeightedRouting": false };
-            $merge([$base, $typed, $weighted])
-          )
-
+          $merge([params, {"name": entityName, "recordName": recordName, "entityRef": "resource:" & namespace & "/" & entityName}])
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -473,7 +415,7 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
@@ -482,24 +424,25 @@ spec:
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record created by template
             annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
+              dock.tech/created-by: ${{ user.ref }}
               dock.tech/scaffolder-editable-template: dns-record-edit
-              dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
+              dock.tech/scaffolder-parameters: ${{ "'" + steps.buildScaffolderParameters.output.result | dump + "'" }}
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: dns-record
+            type: DNSRecord
             cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            tribe: ${{ steps.fetchSystem.output.entity.spec.tribe }}
             system: ${{ parameters.system }}
             environment: ${{ parameters.environment }}
+            name: ${{ steps.computeEntityName.output.result }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
             recordName: ${{ steps.extractRecordName.output.result }}
             recordType: ${{ parameters.type }}
-            aws:
-              account: ${{ steps.deriveAccount.output.result.accountId }}
-              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.type != 'ALIAS' %}
             ttl: ${{ steps.deriveTtl.output.result }}
             values:
@@ -527,7 +470,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
+        entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ steps.computeEntityName.output.result }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

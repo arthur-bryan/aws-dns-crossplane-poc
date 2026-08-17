@@ -2,5 +2,5 @@ id: fetchDomain
 name: Fetch Domain Entity
 action: catalog:fetch
 input:
-  entityRef: ${{ steps['fetchSystem'].output.entity.spec.domain }}
+  entityRef: ${{ parameters.domain }}
   defaultKind: Domain

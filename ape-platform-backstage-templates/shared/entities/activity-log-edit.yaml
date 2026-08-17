@@ -1,0 +1,6 @@
+id: publish-activity-log
+action: activity-log:publish
+input:
+  action: updated
+  entityRef: ${{ parameters.entityRef }}
+  payload: ${{ parameters }}

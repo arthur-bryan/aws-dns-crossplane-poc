@@ -1,0 +1,6 @@
+id: fetchOwner
+name: Fetch Owner Entity
+action: catalog:fetch
+input:
+  entityRef: ${{ steps['fetchSystem'].output.entity.spec.owner }}
+  defaultKind: Group

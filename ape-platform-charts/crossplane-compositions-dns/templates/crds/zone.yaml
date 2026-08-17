@@ -27,10 +27,6 @@ spec:
                   description: The zone domain.
                   type: string
                   minLength: 1
-                subdomain:
-                  description: The zone subdomain.
-                  type: string
-                  minLength: 1
                 system:
                   description: The zone system.
                   type: string
@@ -96,7 +92,7 @@ spec:
                     properties:
                       vpcId:
                         type: string
-                        pattern: '^vpc-[a-f0-9]+$'
+                        pattern: "^vpc-[a-f0-9]+$"
                         description: VPC ID.
                       vpcRegion:
                         type: string
@@ -118,7 +114,7 @@ spec:
                     zoneId:
                       type: string
                       description: Zone ID.
-                      pattern: '^Z[A-Z0-9]+$'
+                      pattern: "^Z[A-Z0-9]+$"
                   x-kubernetes-validations:
                     - rule: "!self.existing || has(self.zoneId)"
                       message: "spec.import.zoneId is required when spec.import.existing is true"
@@ -128,7 +124,7 @@ spec:
                 delegatedFromZoneId:
                   type: string
                   description: Parent zone ID for sub-zone delegation. When set, an NS record for this zone is auto-created in the parent zone.
-                  pattern: '^Z[A-Z0-9]+$'
+                  pattern: "^Z[A-Z0-9]+$"
                   x-kubernetes-validations:
                     - rule: "self == oldSelf"
                       message: "delegatedFromZoneId is immutable"
@@ -144,7 +140,6 @@ spec:
               required:
                 - name
                 - domain
-                - subdomain
                 - system
                 - environment
                 - aws
@@ -159,6 +154,8 @@ spec:
                   message: "zoneName must not contain consecutive dots"
                 - rule: "!has(self.visibility) || self.visibility != 'private' || (has(self.vpcs) && size(self.vpcs) >= 1)"
                   message: "visibility=private requires at least one vpcs entry (AWS Route 53 rejects DisassociateVPCFromHostedZone on the last association)"
+                - rule: "!has(self.delegatedFromZoneId) || has(self.delegatedFromAccountName)"
+                  message: "delegatedFromAccountName is required when delegatedFromZoneId is set (parent zone may live in a different DNS account)"
 
             status:
               type: object

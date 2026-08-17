@@ -2,5 +2,5 @@ id: push
 name: Push changes
 action: github:extras:push
 input:
-  folder: "."
-  branch: feature/ape-platform-alignment
+  folder: entities
+  branch: ${{ environment.parameters.entitiesBranch }}

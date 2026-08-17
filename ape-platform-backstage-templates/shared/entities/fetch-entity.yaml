@@ -1,0 +1,5 @@
+id: fetchEntity
+name: Fetch Entity
+action: catalog:fetch
+input:
+  entityRef: ${{ parameters.entityRef }}

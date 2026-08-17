@@ -1,0 +1,6 @@
+id: publish-activity-log
+action: activity-log:publish
+input:
+  action: created
+  entityRef: resource:${{ steps.fetchSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
+  payload: ${{ parameters }}

@@ -2,7 +2,7 @@ id: commit
 name: Commit changes
 action: github:extras:commit
 input:
-  folder: "."
-  message: "add ${{ parameters.kind }} with name ${{ parameters.name }}"
-  gitAuthorName: ${{ user.entity.spec.profile.displayName }}
+  folder: entities
+  message: "add or edit entity ${{ parameters.name }}"
+  gitAuthorName: ${{ user.entity.spec.profile.displayName | default(user.entity.metadata.name) }}
   gitAuthorEmail: ${{ user.entity.spec.profile.email }}

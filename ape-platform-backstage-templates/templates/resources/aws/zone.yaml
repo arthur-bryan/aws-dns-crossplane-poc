@@ -61,6 +61,14 @@ spec:
           description: Optional comment for the zone (max 256 characters)
           maxLength: 256
 
+    - title: Additional Tags (Optional)
+      properties:
+        tags:
+          title: Tags
+          type: object
+          description: Additional AWS tags (hierarchy tags are added automatically)
+          ui:field: KeyValuePairInput
+
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
 
@@ -71,72 +79,36 @@ spec:
         entityRef: system:dns-eds437/dns
         defaultKind: System
 
-    - id: extractSubdomain
-      name: Extract subdomain from composed entity name
-      # EntityNameComposerPicker submits parameters.name as
-      # <system>-<subdomain>-<env>-zone, so the raw subdomain the user
-      # typed isn't directly available. Strip the prefix + suffix to
-      # recover it so we can build the actual FQDN.
+    - id: fetchDomain
+      name: Fetch Domain Entity
+      action: catalog:fetch
+      input:
+        entityRef: ${{ steps.fetchDnsSystem.output.entity.spec.domain }}
+        defaultKind: Domain
+
+    - id: computeZoneName
+      name: Compute child zone FQDN
       action: roadiehq:utils:jsonata
       input:
         data:
           composedName: ${{ parameters.name }}
           systemName: ${{ steps.fetchDnsSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
-        expression: >-
-          (
-            $prefix := systemName & "-";
-            $suffix := "-" & environment & "-zone";
-            $substringAfter($substringBefore(composedName, $suffix), $prefix)
-          )
-
-    - id: deriveAccount
-      name: Derive DNS account from environment
-      # Source from the dns System entity's spec.environments[] (same pattern
-      # as the record templates) so account numbers stay consistent with
-      # catalog truth. The bare-word `env` inside the jsonata filter would
-      # bind to each environment item's field rather than the top-level
-      # variable, so alias it to $envName first.
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          env: ${{ parameters.environment }}
-          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
-        expression: >-
-          (
-            $envName := env;
-            $envCfg := environments[name = $envName];
-            {
-              "accountId": $envCfg.aws.account,
-              "accountName": $envCfg.aws.accountName
-            }
-          )
-
-    - id: computeEntityName
-      name: Compose catalog entity name as <system>-<fqdn>-<env>
-      # EntityNameComposerPicker submits parameters.name as
-      # <system>-<subdomain>-<env>-zone, which loses information (the
-      # parent zone) and carries a useless -zone suffix. Rebuild the
-      # entity name as <system>-<fullFqdn>-<env> instead. The fqdn is
-      # <subdomain>.<parentZone.name> (already computed for spec.zoneName).
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          systemName: ${{ steps.fetchDnsSystem.output.entity.metadata.name }}
-          subdomain: ${{ steps.extractSubdomain.output.result }}
           parentZoneName: ${{ parameters.parentZone.name }}
-          environment: ${{ parameters.environment }}
         expression: >-
           (
-            $fqdn := subdomain & "." & parentZoneName;
-            systemName & "-" & $fqdn & "-" & environment
+            $suffix := "-" & environment & "-zone";
+            $withoutSuffix := $substringBefore(composedName, $suffix);
+            $prefix := systemName & "-";
+            $context := $substringAfter($withoutSuffix, $prefix);
+            $context & "." & parentZoneName
           )
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -149,34 +121,42 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ steps.computeEntityName.output.result }}
+            name: ${{ parameters.name }}
             namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
             description: DNS Zone created by template
             annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
+              dock.tech/created-by: ${{ user.ref }}
               dock.tech/scaffolder-editable-template: dns-zone-edit
-              dock.tech/scaffolder-parameters: '${{ parameters | dump }}'
+              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: dns-zone
+            type: DNSZone
             cloud: aws
             owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
+            tribe: ${{ steps.fetchDnsSystem.output.entity.spec.tribe }}
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
-            zoneName: ${{ steps.extractSubdomain.output.result }}.${{ parameters.parentZone.name }}
+            name: ${{ parameters.name }}
+            domain: ${{ steps.fetchDomain.output.entity.metadata.name }}
+            zoneName: ${{ steps.computeZoneName.output.result }}
             delegatedFromZoneId: ${{ parameters.parentZone.id }}
             delegatedFromAccountName: ${{ parameters.parentZone.accountName }}
-            aws:
-              account: ${{ steps.deriveAccount.output.result.accountId }}
-              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             {%- if parameters.comment %}
             comment: ${{ parameters.comment }}
+            {%- endif %}
+            {%- if parameters.tags %}
+            tags:
+            {%- for key, value in parameters.tags %}
+              {{ key }}: {{ value }}
+            {%- endfor %}
             {%- endif %}
 
     - $yaml: ../../../shared/entities/commit.yaml
@@ -186,7 +166,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.computeEntityName.output.result }}
+        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

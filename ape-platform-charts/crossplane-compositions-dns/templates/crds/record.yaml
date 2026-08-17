@@ -27,10 +27,6 @@ spec:
                   description: The record domain.
                   type: string
                   minLength: 1
-                subdomain:
-                  description: The record subdomain.
-                  type: string
-                  minLength: 1
                 system:
                   description: The record system.
                   type: string
@@ -64,7 +60,7 @@ spec:
                 zoneId:
                   type: string
                   description: Zone ID.
-                  pattern: '^Z[A-Z0-9]+$'
+                  pattern: "^Z[A-Z0-9]+$"
                   x-kubernetes-validations:
                     - rule: "self == oldSelf"
                       message: "zoneId is immutable"
@@ -87,9 +83,9 @@ spec:
                     - rule: "self == oldSelf"
                       message: "recordName is immutable"
 
-                type:
+                recordType:
                   type: string
-                  description: Record type.
+                  description: DNS record type.
                   enum: [A, AAAA, CNAME, TXT, ALIAS, MX, SRV, NS, CAA, PTR]
 
                 ttl:
@@ -116,7 +112,17 @@ spec:
                     serviceType:
                       type: string
                       description: Service type.
-                      enum: [CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, ElasticBeanstalk, Custom]
+                      enum:
+                        [
+                          CloudFront,
+                          ALB,
+                          NLB,
+                          S3Website,
+                          APIGateway,
+                          GlobalAccelerator,
+                          ElasticBeanstalk,
+                          Custom,
+                        ]
                       x-kubernetes-validations:
                         - rule: "self == oldSelf"
                           message: "serviceType is immutable"
@@ -211,7 +217,7 @@ spec:
                 healthCheckId:
                   type: string
                   description: Health check ID.
-                  pattern: '^[a-f0-9-]+$'
+                  pattern: "^[a-f0-9-]+$"
 
                 import:
                   type: object
@@ -224,20 +230,18 @@ spec:
 
               required:
                 - name
-                - domain
-                - subdomain
                 - system
                 - environment
                 - aws
                 - zoneId
                 - zoneName
                 - recordName
-                - type
+                - recordType
 
               x-kubernetes-validations:
-                - rule: "self.type != 'ALIAS' || has(self.aliasTarget)"
+                - rule: "self.recordType != 'ALIAS' || has(self.aliasTarget)"
                   message: "aliasTarget is required for ALIAS records"
-                - rule: "self.type == 'ALIAS' || has(self.values)"
+                - rule: "self.recordType == 'ALIAS' || has(self.values)"
                   message: "values is required for non-ALIAS records"
                 - rule: "!has(self.aliasTarget) || self.aliasTarget.serviceType != 'Custom' || has(self.aliasTarget.hostedZoneId)"
                   message: "hostedZoneId is required when serviceType is Custom"

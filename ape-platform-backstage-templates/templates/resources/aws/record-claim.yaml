@@ -25,7 +25,7 @@ spec:
           title: System
           type: string
           description: System that will own this record
-          ui:field: EntityPicker
+          ui:field: OwnedEntityPicker
           ui:options:
             catalogFilter:
               - kind: System
@@ -36,6 +36,8 @@ spec:
           type: string
           description: Environment where the record exists
           ui:field: EnvironmentPicker
+          ui:options:
+            systemFieldName: system
 
         zone:
           title: DNS Zone
@@ -60,29 +62,13 @@ spec:
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
-    - $yaml: ../../../shared/entities/fetch-system.yaml
-    - $yaml: ../../../shared/entities/fetch-system-domain.yaml
-
-    - $yaml: ../../../shared/entities/fetch-dns-system.yaml
-
-    - id: deriveAccount
-      name: Derive DNS account from environment
-      # See record.yaml -- account always sourced from dns system, never
-      # from the user's selected (owning) system.
-      action: roadiehq:utils:jsonata
+    - id: verifySystemOwnership
+      name: Verify System Ownership
+      action: catalog:system:ownership:verify
       input:
-        data:
-          env: ${{ parameters.environment }}
-          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
-        expression: >-
-          (
-            $envName := env;
-            $envCfg := environments[name = $envName];
-            {
-              "accountId": $envCfg.aws.account,
-              "accountName": $envCfg.aws.accountName
-            }
-          )
+        systemRef: ${{ parameters.system }}
+
+    - $yaml: ../../../shared/entities/fetch-system.yaml
 
     - id: computeRecordName
       name: Compute zone-relative record name and entity name
@@ -108,37 +94,230 @@ spec:
       action: roadiehq:utils:jsonata
       input:
         data:
-          entityName: ${{ steps.computeRecordName.output.result.entityName }}
-          namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
+          name: ${{ steps.computeRecordName.output.result.entityName }}
           system: ${{ parameters.system }}
           environment: ${{ parameters.environment }}
-          zone: ${{ parameters.zone.name }}
-          zoneId: ${{ parameters.zone.id }}
+          zone: ${{ parameters.zone }}
           recordName: ${{ steps.computeRecordName.output.result.recordName }}
           existingRecord: ${{ parameters.existingRecord }}
+          namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
         expression: >-
           (
             $alias := existingRecord.aliasTarget;
-            $recordType := $alias ? "ALIAS" : existingRecord.type;
+            $resolvedType := $alias ? "ALIAS" : existingRecord.type;
+            $isWeighted := $exists(existingRecord.setIdentifier);
             $base := {
-              "entityRef": "resource:" & namespace & "/" & entityName,
-              "name": entityName,
+              "name": name,
               "system": system,
               "environment": environment,
               "zone": zone,
-              "zoneId": zoneId,
               "recordName": recordName,
-              "type": $recordType,
-              "originalType": $recordType
+              "type": $resolvedType,
+              "originalType": $resolvedType,
+              "entityRef": "resource:" & namespace & "/" & name
             };
+            $withRouting := $isWeighted ?
+              $merge([$base, {
+                "enableWeightedRouting": true,
+                "setIdentifier": existingRecord.setIdentifier,
+                "weight": existingRecord.weight
+              }]) : $base;
+            $zoneMap := {
+              "Z2FDTNDATAQYW2": {"serviceType": "CloudFront"},
+              "Z2BJ6XQ5FK7U4H": {"serviceType": "GlobalAccelerator"},
+              "Z35SXDOTRQ7X7K": {"serviceType": "ALB", "region": "us-east-1"},
+              "Z3AADJGX6KTTL2": {"serviceType": "ALB", "region": "us-east-2"},
+              "Z368ELLRRE2KJ0": {"serviceType": "ALB", "region": "us-west-1"},
+              "Z1H1FL5HABSF5":  {"serviceType": "ALB", "region": "us-west-2"},
+              "ZQSVJUPU6J1EY":  {"serviceType": "ALB", "region": "ca-central-1"},
+              "Z06473681N0SF6OS049SD": {"serviceType": "ALB", "region": "ca-west-1"},
+              "Z268VQBMOI5EKX": {"serviceType": "ALB", "region": "af-south-1"},
+              "Z3DQVH9N71FHZ0": {"serviceType": "ALB", "region": "ap-east-1"},
+              "Z02789141MW7T1WBU19PO": {"serviceType": "ALB", "region": "ap-east-2"},
+              "ZP97RAFLXTNZK":  {"serviceType": "ALB", "region": "ap-south-1"},
+              "Z0173938T07WNTVAEPZN": {"serviceType": "ALB", "region": "ap-south-2"},
+              "Z1LMS91P8CMLE5": {"serviceType": "ALB", "region": "ap-southeast-1"},
+              "Z1GM3OXH4ZPM65": {"serviceType": "ALB", "region": "ap-southeast-2"},
+              "Z08888821HLRG5A9ZRTER": {"serviceType": "ALB", "region": "ap-southeast-3"},
+              "Z09517862IB2WZLPXG76F": {"serviceType": "ALB", "region": "ap-southeast-4"},
+              "Z06010284QMVVW7WO5J": {"serviceType": "ALB", "region": "ap-southeast-5"},
+              "Z023301818UFJ50CIO0MV": {"serviceType": "ALB", "region": "ap-southeast-6"},
+              "Z0390008CMBRTHFGWBCB": {"serviceType": "ALB", "region": "ap-southeast-7"},
+              "Z14GRHDCWA56QT": {"serviceType": "ALB", "region": "ap-northeast-1"},
+              "ZWKZPGTI48KDX":  {"serviceType": "ALB", "region": "ap-northeast-2"},
+              "Z5LXEXXYW11ES":  {"serviceType": "ALB", "region": "ap-northeast-3"},
+              "Z32O12XQLNTSW2": {"serviceType": "ALB", "region": "eu-west-1"},
+              "ZHURV8PSTC4K8":  {"serviceType": "ALB", "region": "eu-west-2"},
+              "Z3Q77PNBQS71R4": {"serviceType": "ALB", "region": "eu-west-3"},
+              "Z215JYRZR1TBD5": {"serviceType": "ALB", "region": "eu-central-1"},
+              "Z06391101F2ZOEP8P5EB3": {"serviceType": "ALB", "region": "eu-central-2"},
+              "Z23TAZ6LKFMNIO": {"serviceType": "ALB", "region": "eu-north-1"},
+              "Z3ULH7SSC9OV64": {"serviceType": "ALB", "region": "eu-south-1"},
+              "Z0956581394HF5D5LXGAP": {"serviceType": "ALB", "region": "eu-south-2"},
+              "Z09170902867EHPV2DABU": {"serviceType": "ALB", "region": "il-central-1"},
+              "Z023552324OKD1BB28BH5": {"serviceType": "ALB", "region": "mx-central-1"},
+              "Z08230872XQRWHG2XF6I": {"serviceType": "ALB", "region": "me-central-1"},
+              "ZS929ML54UICD":  {"serviceType": "ALB", "region": "me-south-1"},
+              "Z2P70J7HTTTPLU": {"serviceType": "ALB", "region": "sa-east-1"},
+              "Z1GDH35T77C1KE": {"serviceType": "ALB", "region": "cn-north-1"},
+              "ZM7IZAIOVVDZF":  {"serviceType": "ALB", "region": "cn-northwest-1"},
+              "Z166TLBEWOO7G0": {"serviceType": "ALB", "region": "us-gov-east-1"},
+              "Z33AYJ8TM3BH4J": {"serviceType": "ALB", "region": "us-gov-west-1"},
+              "Z26RNL4JYFTOTI": {"serviceType": "NLB", "region": "us-east-1"},
+              "ZLMOA37VPKANP":  {"serviceType": "NLB", "region": "us-east-2"},
+              "Z24FKFUX50B4VW": {"serviceType": "NLB", "region": "us-west-1"},
+              "Z18D5FSROUN65G": {"serviceType": "NLB", "region": "us-west-2"},
+              "Z2EPGBW3API2WT": {"serviceType": "NLB", "region": "ca-central-1"},
+              "Z02754302KBB00W2LKWZ9": {"serviceType": "NLB", "region": "ca-west-1"},
+              "Z203XCE67M25HM": {"serviceType": "NLB", "region": "af-south-1"},
+              "Z12Y7K3UBGUAD1": {"serviceType": "NLB", "region": "ap-east-1"},
+              "Z09176273OC2HWIAUNYW": {"serviceType": "NLB", "region": "ap-east-2"},
+              "ZVDDRBQ08TROA":  {"serviceType": "NLB", "region": "ap-south-1"},
+              "Z0711778386UTO08407HT": {"serviceType": "NLB", "region": "ap-south-2"},
+              "ZKVM4W9LS7TM":   {"serviceType": "NLB", "region": "ap-southeast-1"},
+              "ZCT6FZBF4DROD":  {"serviceType": "NLB", "region": "ap-southeast-2"},
+              "Z01971771FYVNCOVWJU1G": {"serviceType": "NLB", "region": "ap-southeast-3"},
+              "Z01156963G8MIIL7X90IV": {"serviceType": "NLB", "region": "ap-southeast-4"},
+              "Z026317210H9ACVTRO6FB": {"serviceType": "NLB", "region": "ap-southeast-5"},
+              "Z01392953RKV2Q3RBP0KU": {"serviceType": "NLB", "region": "ap-southeast-6"},
+              "Z054363131YWATEMWRG5L": {"serviceType": "NLB", "region": "ap-southeast-7"},
+              "Z31USIVHYNEOWT": {"serviceType": "NLB", "region": "ap-northeast-1"},
+              "ZIBE1TIR4HY56":  {"serviceType": "NLB", "region": "ap-northeast-2"},
+              "Z1GWIQ4HH19I5X": {"serviceType": "NLB", "region": "ap-northeast-3"},
+              "Z2IFOLAFXWLO4F": {"serviceType": "NLB", "region": "eu-west-1"},
+              "ZD4D7Y8KGAS4G":  {"serviceType": "NLB", "region": "eu-west-2"},
+              "Z1CMS0P5QUZ6D5": {"serviceType": "NLB", "region": "eu-west-3"},
+              "Z3F0SRJ5LGBH90": {"serviceType": "NLB", "region": "eu-central-1"},
+              "Z02239872DOALSIDCX66S": {"serviceType": "NLB", "region": "eu-central-2"},
+              "Z1UDT6IFJ4EJM":  {"serviceType": "NLB", "region": "eu-north-1"},
+              "Z23146JA1KNAFP": {"serviceType": "NLB", "region": "eu-south-1"},
+              "Z1011216NVTVYADP1SSV": {"serviceType": "NLB", "region": "eu-south-2"},
+              "Z0313266YDI6ZRHTGQY4": {"serviceType": "NLB", "region": "il-central-1"},
+              "Z02031231H3ID6HYJ9A7U": {"serviceType": "NLB", "region": "mx-central-1"},
+              "Z00282643NTTLPANJJG2P": {"serviceType": "NLB", "region": "me-central-1"},
+              "Z3QSRYVP46NYYV": {"serviceType": "NLB", "region": "me-south-1"},
+              "ZTK26PT1VY4CU":  {"serviceType": "NLB", "region": "sa-east-1"},
+              "Z3QFB96KMJ7ED6": {"serviceType": "NLB", "region": "cn-north-1"},
+              "ZQEIKTCZ8352D":  {"serviceType": "NLB", "region": "cn-northwest-1"},
+              "Z1ZSMQQ6Q24QQ8": {"serviceType": "NLB", "region": "us-gov-east-1"},
+              "ZMG1MZ2THAWF1":  {"serviceType": "NLB", "region": "us-gov-west-1"},
+              "Z3AQBSTGFYJSTF": {"serviceType": "S3Website", "region": "us-east-1"},
+              "Z2O1EMRO9K5GLX": {"serviceType": "S3Website", "region": "us-east-2"},
+              "Z2F56UZL2M1ACD": {"serviceType": "S3Website", "region": "us-west-1"},
+              "Z3BJ6K6RIION7M": {"serviceType": "S3Website", "region": "us-west-2"},
+              "Z1QDHH18159H29": {"serviceType": "S3Website", "region": "ca-central-1"},
+              "Z03565811Z33SLEZTHOUL": {"serviceType": "S3Website", "region": "ca-west-1"},
+              "Z2OSFR5PIJ8TYW": {"serviceType": "S3Website", "region": "af-south-1"},
+              "ZNB98KWMFR0R6":  {"serviceType": "S3Website", "region": "ap-east-1"},
+              "Z064739330DAH7WJVOO93": {"serviceType": "S3Website", "region": "ap-east-2"},
+              "Z11RGJOFQNVJUP": {"serviceType": "S3Website", "region": "ap-south-1"},
+              "Z02976202B4EZMXIPMXF7": {"serviceType": "S3Website", "region": "ap-south-2"},
+              "Z3O0J2DXBE1FTB": {"serviceType": "S3Website", "region": "ap-southeast-1"},
+              "Z1WCIGYICN2BYD": {"serviceType": "S3Website", "region": "ap-southeast-2"},
+              "Z01846753K324LI26A3VV": {"serviceType": "S3Website", "region": "ap-southeast-3"},
+              "Z0312387243XT5FE14WFO": {"serviceType": "S3Website", "region": "ap-southeast-4"},
+              "Z08660063OXLMA7F1FJHU": {"serviceType": "S3Website", "region": "ap-southeast-5"},
+              "Z05686083R66JX5C163TC": {"serviceType": "S3Website", "region": "ap-southeast-6"},
+              "Z0031014GXUMRZG6I14G": {"serviceType": "S3Website", "region": "ap-southeast-7"},
+              "Z2M4EHUR26P7ZW": {"serviceType": "S3Website", "region": "ap-northeast-1"},
+              "Z3W03O7B5YMIYP": {"serviceType": "S3Website", "region": "ap-northeast-2"},
+              "Z2YQB5RD63NC85": {"serviceType": "S3Website", "region": "ap-northeast-3"},
+              "Z1BKCTXD74EZPE": {"serviceType": "S3Website", "region": "eu-west-1"},
+              "Z3GKZC51ZF0DB4": {"serviceType": "S3Website", "region": "eu-west-2"},
+              "Z3R1K369G5AVDG": {"serviceType": "S3Website", "region": "eu-west-3"},
+              "Z21DNDUVLTQW6Q": {"serviceType": "S3Website", "region": "eu-central-1"},
+              "Z030506016YDQGETNASS": {"serviceType": "S3Website", "region": "eu-central-2"},
+              "Z3BAZG2TWCNX0D": {"serviceType": "S3Website", "region": "eu-north-1"},
+              "Z2OPA49AB41N7K": {"serviceType": "S3Website", "region": "eu-south-1"},
+              "Z0081959F7139GRJC19J": {"serviceType": "S3Website", "region": "eu-south-2"},
+              "Z09640613K4A3MN55U7GU": {"serviceType": "S3Website", "region": "il-central-1"},
+              "Z057606446ZNVQJJ8WOP": {"serviceType": "S3Website", "region": "mx-central-1"},
+              "Z06143092I8HRXZRUZROF": {"serviceType": "S3Website", "region": "me-central-1"},
+              "Z1MPMWCPA7YB62": {"serviceType": "S3Website", "region": "me-south-1"},
+              "Z7KQH4QJS55SO":  {"serviceType": "S3Website", "region": "sa-east-1"},
+              "Z2NIFVYYW2VKV1": {"serviceType": "S3Website", "region": "us-gov-east-1"},
+              "Z31GFT0UA1I2HV": {"serviceType": "S3Website", "region": "us-gov-west-1"},
+              "Z1UJRXOUMOOFQ8": {"serviceType": "APIGateway", "region": "us-east-1"},
+              "ZOJJZC49E0EPZ":  {"serviceType": "APIGateway", "region": "us-east-2"},
+              "Z2MUQ32089INYE": {"serviceType": "APIGateway", "region": "us-west-1"},
+              "Z2OJLYMUO9EFXC": {"serviceType": "APIGateway", "region": "us-west-2"},
+              "Z19DQILCV0OWEC": {"serviceType": "APIGateway", "region": "ca-central-1"},
+              "Z04745493436AWVTG1OQY": {"serviceType": "APIGateway", "region": "ca-west-1"},
+              "Z2DHW2332DAMTN": {"serviceType": "APIGateway", "region": "af-south-1"},
+              "Z3FD1VL90ND7K5": {"serviceType": "APIGateway", "region": "ap-east-1"},
+              "Z02909591O7FG9Q56HWB1": {"serviceType": "APIGateway", "region": "ap-east-2"},
+              "Z3VO1THU9YC4UR": {"serviceType": "APIGateway", "region": "ap-south-1"},
+              "Z0853509Q1135NJ66RUH": {"serviceType": "APIGateway", "region": "ap-south-2"},
+              "ZL327KTPIQFUL":  {"serviceType": "APIGateway", "region": "ap-southeast-1"},
+              "Z2RPCDW04V8134": {"serviceType": "APIGateway", "region": "ap-southeast-2"},
+              "Z10132843TYUYSLUG4HA3": {"serviceType": "APIGateway", "region": "ap-southeast-3"},
+              "Z092189423Y7RJK61311D": {"serviceType": "APIGateway", "region": "ap-southeast-4"},
+              "Z0314042F0KBUTZ3X5HF": {"serviceType": "APIGateway", "region": "ap-southeast-5"},
+              "Z01392953RKV2Q3RBP0KU": {"serviceType": "APIGateway", "region": "ap-southeast-6"},
+              "Z048508712PZLK5NKG8R0": {"serviceType": "APIGateway", "region": "ap-southeast-7"},
+              "Z1YSHQZHG15GKL": {"serviceType": "APIGateway", "region": "ap-northeast-1"},
+              "Z20JF4UZKIW1U8": {"serviceType": "APIGateway", "region": "ap-northeast-2"},
+              "Z22ILHG95FLSZ2": {"serviceType": "APIGateway", "region": "ap-northeast-3"},
+              "ZLY8HYME6SFDD":  {"serviceType": "APIGateway", "region": "eu-west-1"},
+              "ZJ5UAJN8Y3Z2Q":  {"serviceType": "APIGateway", "region": "eu-west-2"},
+              "Z3KY65QIEKYHQQ": {"serviceType": "APIGateway", "region": "eu-west-3"},
+              "Z1U9ULNL0V5AJ3": {"serviceType": "APIGateway", "region": "eu-central-1"},
+              "Z09222482MK253X48U76H": {"serviceType": "APIGateway", "region": "eu-central-2"},
+              "Z3UWIKFBOOGXPP": {"serviceType": "APIGateway", "region": "eu-north-1"},
+              "Z3BT4WSQ9TDYZV": {"serviceType": "APIGateway", "region": "eu-south-1"},
+              "Z02499852UI5HEQ5JVWX3": {"serviceType": "APIGateway", "region": "eu-south-2"},
+              "Z07264553HBI44N5X2CKP": {"serviceType": "APIGateway", "region": "il-central-1"},
+              "Z00020171WIGL5M88SHRM": {"serviceType": "APIGateway", "region": "mx-central-1"},
+              "Z08780021BKYYY8U0YHTV": {"serviceType": "APIGateway", "region": "me-central-1"},
+              "Z20ZBPC0SS8806": {"serviceType": "APIGateway", "region": "me-south-1"},
+              "ZCMLWB8V5SYIT":  {"serviceType": "APIGateway", "region": "sa-east-1"},
+              "Z3SE9ATJYCRCZJ": {"serviceType": "APIGateway", "region": "us-gov-east-1"},
+              "Z1K6XKP9SAGWDV": {"serviceType": "APIGateway", "region": "us-gov-west-1"},
+              "Z117KPS5GTRQ2G": {"serviceType": "ElasticBeanstalk", "region": "us-east-1"},
+              "Z14LCN19Q5QHIC": {"serviceType": "ElasticBeanstalk", "region": "us-east-2"},
+              "Z1LQECGX5PH1X":  {"serviceType": "ElasticBeanstalk", "region": "us-west-1"},
+              "Z38NKT9BP95V3O": {"serviceType": "ElasticBeanstalk", "region": "us-west-2"},
+              "ZJFCZL7SSZB5I":  {"serviceType": "ElasticBeanstalk", "region": "ca-central-1"},
+              "Z1021028356Y0CYS11DQI": {"serviceType": "ElasticBeanstalk", "region": "ca-west-1"},
+              "Z1EI3BVKMKK4AM": {"serviceType": "ElasticBeanstalk", "region": "af-south-1"},
+              "ZPWYUBWRU171A":  {"serviceType": "ElasticBeanstalk", "region": "ap-east-1"},
+              "Z18NTBI3Y7N9TZ": {"serviceType": "ElasticBeanstalk", "region": "ap-south-1"},
+              "Z10223522IBWPBF2C2FJS": {"serviceType": "ElasticBeanstalk", "region": "ap-south-2"},
+              "Z16FZ9L249IFLT": {"serviceType": "ElasticBeanstalk", "region": "ap-southeast-1"},
+              "Z2PCDNR3VC2G1N": {"serviceType": "ElasticBeanstalk", "region": "ap-southeast-2"},
+              "Z05913172VM7EAZB40TA8": {"serviceType": "ElasticBeanstalk", "region": "ap-southeast-3"},
+              "Z0666869LC74UHAO5YE4": {"serviceType": "ElasticBeanstalk", "region": "ap-southeast-4"},
+              "Z01812971H0QCYWSL7WOH": {"serviceType": "ElasticBeanstalk", "region": "ap-southeast-5"},
+              "Z01144401H1NECCLJDD4D": {"serviceType": "ElasticBeanstalk", "region": "ap-southeast-6"},
+              "Z08384933QM5LSQCVMNZM": {"serviceType": "ElasticBeanstalk", "region": "ap-southeast-7"},
+              "Z1R25G3KIG2GBW": {"serviceType": "ElasticBeanstalk", "region": "ap-northeast-1"},
+              "Z3JE5OI70TWKCP": {"serviceType": "ElasticBeanstalk", "region": "ap-northeast-2"},
+              "ZNE5GEY1TIAGY":  {"serviceType": "ElasticBeanstalk", "region": "ap-northeast-3"},
+              "Z2NYPWQ7DFZAZH": {"serviceType": "ElasticBeanstalk", "region": "eu-west-1"},
+              "Z1GKAAAUGATPF1": {"serviceType": "ElasticBeanstalk", "region": "eu-west-2"},
+              "Z5WN6GAYWG5OB":  {"serviceType": "ElasticBeanstalk", "region": "eu-west-3"},
+              "Z1FRNW7UH4DEZJ": {"serviceType": "ElasticBeanstalk", "region": "eu-central-1"},
+              "Z00227012FSHBMZNNSJJI": {"serviceType": "ElasticBeanstalk", "region": "eu-central-2"},
+              "Z23GO28BZ5AETM": {"serviceType": "ElasticBeanstalk", "region": "eu-north-1"},
+              "Z10VDYYOA2JFKM": {"serviceType": "ElasticBeanstalk", "region": "eu-south-1"},
+              "Z0243492AO4B9S3KI68O": {"serviceType": "ElasticBeanstalk", "region": "eu-south-2"},
+              "Z02941091PERNCB1MI5H7": {"serviceType": "ElasticBeanstalk", "region": "il-central-1"},
+              "Z0650511N84AAKGW7QUK": {"serviceType": "ElasticBeanstalk", "region": "me-central-1"},
+              "Z2BBTEKR2I36N2": {"serviceType": "ElasticBeanstalk", "region": "me-south-1"},
+              "Z10X7K2B4QSOFV": {"serviceType": "ElasticBeanstalk", "region": "sa-east-1"},
+              "Z35TSARG0EJ4VU": {"serviceType": "ElasticBeanstalk", "region": "us-gov-east-1"},
+              "Z4KAURWC4UUUG":  {"serviceType": "ElasticBeanstalk", "region": "us-gov-west-1"}
+            };
+            $resolved := $alias ? $lookup($zoneMap, $alias.hostedZoneId) : undefined;
             $alias ?
-              $merge([$base, {
-                "serviceType": "Custom",
+              $merge([$withRouting, {
+                "serviceType": $resolved ? $resolved.serviceType : "Custom",
                 "dnsName": $alias.dnsName,
-                "customZoneId": $alias.hostedZoneId,
-                "evaluateTargetHealth": $alias.evaluateTargetHealth
+                "evaluateTargetHealth": $alias.evaluateTargetHealth,
+                "region": $resolved.region,
+                "customZoneId": $resolved ? undefined : $alias.hostedZoneId
               }]) :
-              $merge([$base, {
+              $merge([$withRouting, {
                 "ttl": existingRecord.ttl,
                 "values": existingRecord.values
               }])
@@ -148,7 +327,7 @@ spec:
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordName.output.result.entityName }}.yaml
+        filepath: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordName.output.result.entityName }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -161,7 +340,7 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordName.output.result.entityName }}.yaml
+        path: ./entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordName.output.result.entityName }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
@@ -170,24 +349,31 @@ spec:
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record claimed by template
             annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
+              dock.tech/created-by: ${{ user.ref }}
               dock.tech/scaffolder-editable-template: dns-record-edit
-              dock.tech/scaffolder-parameters: '${{ steps.buildEditParams.output.result | dump }}'
+              dock.tech/scaffolder-parameters: ${{ "'" + steps.buildEditParams.output.result | dump + "'" }}
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
           spec:
-            type: dns-record
+            type: DNSRecord
             cloud: aws
             owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            tribe: ${{ steps.fetchSystem.output.entity.spec.tribe }}
             system: ${{ parameters.system }}
             environment: ${{ parameters.environment }}
+            name: ${{ steps.computeRecordName.output.result.entityName }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
             recordName: "${{ steps.computeRecordName.output.result.recordName }}"
-            recordType: {% if parameters.existingRecord.aliasTarget %}ALIAS{% else %}${{ parameters.existingRecord.type }}{% endif %}
-            aws:
-              account: ${{ steps.deriveAccount.output.result.accountId }}
-              accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            recordType: ${{ steps.buildEditParams.output.result.type }}
+            import:
+              existing: true
+            {%- if steps.buildEditParams.output.result.setIdentifier %}
+            setIdentifier: ${{ steps.buildEditParams.output.result.setIdentifier }}
+            weight: ${{ steps.buildEditParams.output.result.weight }}
+            {%- endif %}
             {%- if parameters.existingRecord.aliasTarget %}
             aliasTarget:
               serviceType: Custom
@@ -201,13 +387,6 @@ spec:
               - ${{ v }}
             {%- endfor %}
             {%- endif %}
-            # Claim semantics: the AWS record already exists; tell the
-            # composition's importing branch to take over -- MR will be
-            # stamped with managementPolicies [Observe, Update, Delete]
-            # (no Create), so Crossplane adopts via external-name and
-            # never tries to (re-)create the record.
-            import:
-              existing: true
 
     - $yaml: ../../../shared/entities/commit.yaml
     - $yaml: ../../../shared/entities/push.yaml
