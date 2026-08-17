@@ -23,8 +23,6 @@ spec:
     # catalog entities -- Backstage has no kind validator for dock.tech/v1 and
     # correctly rejects them ("No processor recognized ... foreign kind or
     # apiVersion") if pointed at them.
-    # Namespace definitions
-    - ./namespaces/dns-eds437.yaml
-    - ./namespaces/system-infrastructure-dev.yaml
-    - ./namespaces/system-infrastructure-hml.yaml
-    - ./namespaces/system-infrastructure-prd.yaml
+    # NOTE: namespaces/*.yaml are also intentionally NOT crawled here -- they're
+    # plain Kubernetes Namespace manifests (apiVersion: v1, kind: Namespace),
+    # not Backstage catalog entities. Same "foreign kind" rejection applies.
