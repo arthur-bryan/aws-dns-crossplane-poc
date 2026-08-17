@@ -48,12 +48,21 @@ catalog:
   providers:
     # Disable dock-tech Okta/org providers — not available locally
     dock: null
+  # Mirrors the real ape-platform-backstage app-config.local.yaml pattern:
+  # direct recursive globs at the source repos, no intermediate Location
+  # wrapper file. (That file uses github.com/dock-tech/ape-platform-backstage-templates
+  # blob/develop/templates/**/*.yaml -- same shape, different repo/branch/allow-list.)
   locations:
-    # PoC repo: single root Location — crawls DNS system, resources, and templates
+    # DNS System entity (System/Domain/Group) -- just the one file, no crawl needed
     - type: url
-      target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-entities/poc-location.yaml
+      target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-entities/catalog-info.yaml
       rules:
-        - allow: [Location, Component, System, API, Resource, Domain, Group, Namespace, Template]
+        - allow: [System, Domain, Group, Resource]
+    # DNS scaffolder templates -- recursive glob, same pattern as production
+    - type: url
+      target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-backstage-templates/templates/**/*.yaml
+      rules:
+        - allow: [Location, Template]
 
 # DNS account IDs — all pointing to arthur-bryan personal AWS account (dns-poc IAM user)
 dns:
