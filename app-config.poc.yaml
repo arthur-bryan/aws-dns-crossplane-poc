@@ -1,0 +1,87 @@
+# PoC Backstage config override — runs on top of ape-platform-backstage's app-config.yaml
+# Only contains what differs from the base configs for the local DNS PoC.
+#
+# Usage (from ape-platform-backstage/ directory):
+#   GITHUB_TOKEN=<pat> yarn start --config ../../app-config.yaml --config ../../app-config.poc.yaml
+#
+# The file lives in the PoC repo root so it stays out of the APE backstage repo.
+# Symlink or copy it to ape-platform-backstage/ before running:
+#   ln -s ~/github/aws-dns-crossplane-poc/app-config.poc.yaml ~/github/ape-platform-backstage/app-config.poc.yaml
+
+app:
+  title: DockStage (PoC)
+  baseUrl: http://localhost:3000
+
+backend:
+  baseUrl: http://localhost:7007
+  cors:
+    origin: http://localhost:3000
+
+# Disable Okta — use guest auth in PoC
+auth:
+  environment: development
+  session:
+    secret: poc-local-secret
+  providers:
+    guest:
+      dangerouslyAllowOutsideDevelopment: true
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+catalog:
+  readonly: false
+  processingInterval: { minutes: 1 }
+  providers:
+    # Disable dock-tech Okta/org providers — not available locally
+    dock: null
+  locations:
+    # PoC repo: root Location that crawls all DNS entities
+    - type: url
+      target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/ape-platform-entities/poc-location.yaml
+      rules:
+        - allow: [Location, Component, System, API, Resource, Domain, Group, Namespace]
+    # PoC repo: DNS scaffolder templates
+    - type: url
+      target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/feature/ape-platform-alignment/ape-platform-backstage-templates/templates/resources/aws/catalog-info.yaml
+      rules:
+        - allow: [Location, Template]
+
+# DNS account IDs — all pointing to arthur-bryan personal AWS account (dns-poc IAM user)
+dns:
+  accounts:
+    dev:
+      accountId: '597230762851'
+    hml:
+      accountId: '597230762851'
+    poc:
+      accountId: '597230762851'
+    prd:
+      accountId: '597230762851'
+
+# Scaffolder: point to PoC repo for entity commits/PRs
+scaffolder:
+  defaultEnvironment:
+    parameters:
+      entitiesRepository: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
+      entitiesBranch: feature/ape-platform-alignment
+      githubTeamSuffix: ''
+
+# Disable features that need dock-tech infra
+aws:
+  useMock: true
+
+# Open permissions for PoC — guest user gets full access
+permission:
+  enabled: true
+  dock:
+    - name: poc-admin
+      description: Full access for PoC guest user
+      members:
+        - 'user:default/guest'
+      permissions:
+        - match:
+            type: full
+          decision: allow
