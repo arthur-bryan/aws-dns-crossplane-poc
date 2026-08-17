@@ -20,6 +20,9 @@ backend:
   baseUrl: http://localhost:7007
   cors:
     origin: http://localhost:3000
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
 
 # Disable Okta — use guest auth in PoC
 auth:
@@ -80,12 +83,6 @@ aws:
 # Suppress okta/dora/jira — no credentials on Bryan's PC
 okta: null
 doraMetrics: null
-
-# SQLite in-memory DB — no postgres needed
-backend:
-  database:
-    client: better-sqlite3
-    connection: ':memory:'
 
 # Open permissions for PoC — guest user gets full access
 permission:
