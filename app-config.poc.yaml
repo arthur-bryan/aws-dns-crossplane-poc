@@ -84,7 +84,7 @@ scaffolder:
     parameters:
       entitiesRepository: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
       entitiesBranch: ape-platform-alignment
-      githubTeamSuffix: ''
+      githubTeamSuffix: '_local'
 
 # Disable features that need dock-tech infra
 aws:
