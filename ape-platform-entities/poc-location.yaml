@@ -5,10 +5,8 @@ metadata:
   description: Root location for all PoC DNS entities and templates
 spec:
   targets:
-    # DNS system, domains, groups
+    # DNS system, domains, groups (System entity "dns" is defined here already)
     - ./catalog-info.yaml
-    # DNS system entity
-    - ./dock-tech/systems/dns-eds437/system.yaml
     # DNS zone/record resources per environment
     - ./dock-tech/systems/dns-eds437/resources/dev
     - ./dock-tech/systems/dns-eds437/resources/hml
