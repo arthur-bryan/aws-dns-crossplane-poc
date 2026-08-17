@@ -22,6 +22,8 @@ backend:
   baseUrl: http://localhost:7007
   cors:
     origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
   database:
     client: better-sqlite3
     connection: ':memory:'
@@ -57,7 +59,7 @@ catalog:
     - type: url
       target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-entities/catalog-info.yaml
       rules:
-        - allow: [System, Domain, Group, Resource]
+        - allow: [System, Domain, Group, Resource, User]
     # DNS scaffolder templates -- recursive glob, same pattern as production
     - type: url
       target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-backstage-templates/templates/**/*.yaml
