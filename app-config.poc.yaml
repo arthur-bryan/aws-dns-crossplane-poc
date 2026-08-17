@@ -99,7 +99,7 @@ permission:
     - name: poc-admin
       description: Full access for PoC guest user
       members:
-        - 'user:default/guest'
+        - 'user:development/guest'
       permissions:
         - match:
             type: full
