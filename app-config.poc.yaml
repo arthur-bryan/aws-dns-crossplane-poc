@@ -1,12 +1,16 @@
-# PoC Backstage config override — runs on top of ape-platform-backstage's app-config.yaml
-# Only contains what differs from the base configs for the local DNS PoC.
+# PoC Backstage config override — runs on top of ape-platform-backstage's app-config.yaml ONLY.
+# Do NOT layer app-config.local.yaml — it has $include credential files that don't exist on Bryan's PC.
 #
 # Usage (from ape-platform-backstage/ directory):
-#   GITHUB_TOKEN=<pat> yarn start --config ../../app-config.yaml --config ../../app-config.poc.yaml
+#   GITHUB_TOKEN=<pat> \
+#   AWS_ACCESS_KEY_ID=<dns-poc-key-id> \
+#   AWS_SECRET_ACCESS_KEY=<dns-poc-secret> \
+#   AWS_REGION=us-east-1 \
+#   yarn start --config ../../app-config.yaml --config ../../app-config.poc.yaml
 #
 # The file lives in the PoC repo root so it stays out of the APE backstage repo.
-# Symlink or copy it to ape-platform-backstage/ before running:
-#   ln -s ~/github/aws-dns-crossplane-poc/app-config.poc.yaml ~/github/ape-platform-backstage/app-config.poc.yaml
+# Symlink it before running:
+#   ln -sf ~/github/aws-dns-crossplane-poc/app-config.poc.yaml ~/github/ape-platform-backstage/app-config.poc.yaml
 
 app:
   title: DockStage (PoC)
@@ -72,6 +76,16 @@ scaffolder:
 # Disable features that need dock-tech infra
 aws:
   useMock: true
+
+# Suppress okta/dora/jira — no credentials on Bryan's PC
+okta: null
+doraMetrics: null
+
+# SQLite in-memory DB — no postgres needed
+backend:
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
 
 # Open permissions for PoC — guest user gets full access
 permission:
