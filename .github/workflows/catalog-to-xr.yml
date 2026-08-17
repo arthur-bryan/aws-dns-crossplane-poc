@@ -14,7 +14,7 @@ name: Catalog Resource -> Crossplane XR
 on:
   push:
     branches:
-      - feature/ape-platform-alignment
+      - ape-platform-alignment
     paths:
       - 'ape-platform-entities/dock-tech/systems/**/resources/**'
 
@@ -32,7 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: feature/ape-platform-alignment
+          ref: ape-platform-alignment
           fetch-depth: 0
 
       - name: Set up Python
@@ -57,4 +57,4 @@ jobs:
           git config user.email "arthurbryan2030@gmail.com"
           git add ape-platform-entities/environments
           git commit -m "chore(dns): regenerate XRs from catalog Resources [skip ci]"
-          git push origin HEAD:feature/ape-platform-alignment
+          git push origin HEAD:ape-platform-alignment
