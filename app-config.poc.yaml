@@ -53,7 +53,7 @@ catalog:
     - type: url
       target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-entities/poc-location.yaml
       rules:
-        - allow: [Location, Component, System, API, Resource, Domain, Group, Namespace]
+        - allow: [Location, Component, System, API, Resource, Domain, Group, Namespace, DNSRecord, DNSZone]
     # PoC repo: DNS scaffolder templates
     - type: url
       target: https://github.com/arthur-bryan/aws-dns-crossplane-poc/blob/ape-platform-alignment/ape-platform-backstage-templates/templates/resources/aws/catalog-info.yaml
