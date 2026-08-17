@@ -8,15 +8,20 @@ spec:
     # DNS system, domains, groups (System entity "dns" is defined here already)
     - ./catalog-info.yaml
     # DNS zone/record resources per environment
-    - ./dock-tech/systems/dns-eds437/resources/dev
-    - ./dock-tech/systems/dns-eds437/resources/hml
-    - ./dock-tech/systems/dns-eds437/resources/prd
+    # NOTE: trailing /*.yaml is required -- Backstage's GithubUrlReader only
+    # treats a target as a directory crawl (git tree search) if the path is a
+    # glob; a bare directory path is misread as a single file, which for a
+    # GitHub directory returns a JSON listing array ("Expected object at
+    # root, got object").
+    - ./dock-tech/systems/dns-eds437/resources/dev/*.yaml
+    - ./dock-tech/systems/dns-eds437/resources/hml/*.yaml
+    - ./dock-tech/systems/dns-eds437/resources/prd/*.yaml
     # Crossplane claim files (environments/)
-    - ./environments/cross/cloud/dns/dev/resources/aws/dev.arthurbryan.com
-    - ./environments/cross/cloud/dns/hml/resources/aws/hml.arthurbryan.com
-    - ./environments/cross/cloud/dns/prd/resources/aws/arthurbryan.com
-    - ./environments/cross/cloud/dns/prd/resources/aws/dev.arthurbryan.com
-    - ./environments/cross/cloud/dns/prd/resources/aws/hml.arthurbryan.com
+    - ./environments/cross/cloud/dns/dev/resources/aws/dev.arthurbryan.com/*.yaml
+    - ./environments/cross/cloud/dns/hml/resources/aws/hml.arthurbryan.com/*.yaml
+    - ./environments/cross/cloud/dns/prd/resources/aws/arthurbryan.com/*.yaml
+    - ./environments/cross/cloud/dns/prd/resources/aws/dev.arthurbryan.com/*.yaml
+    - ./environments/cross/cloud/dns/prd/resources/aws/hml.arthurbryan.com/*.yaml
     # Namespace definitions
     - ./namespaces/dns-eds437.yaml
     - ./namespaces/system-infrastructure-dev.yaml
