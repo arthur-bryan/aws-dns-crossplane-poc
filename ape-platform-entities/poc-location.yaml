@@ -1,0 +1,26 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: poc-dns-entities
+  description: Root location for all PoC DNS entities and templates
+spec:
+  targets:
+    # DNS system, domains, groups
+    - ./catalog-info.yaml
+    # DNS system entity
+    - ./dock-tech/systems/dns-eds437/system.yaml
+    # DNS zone/record resources per environment
+    - ./dock-tech/systems/dns-eds437/resources/dev
+    - ./dock-tech/systems/dns-eds437/resources/hml
+    - ./dock-tech/systems/dns-eds437/resources/prd
+    # Crossplane claim files (environments/)
+    - ./environments/cross/cloud/dns/dev/resources/aws/dev.arthurbryan.com
+    - ./environments/cross/cloud/dns/hml/resources/aws/hml.arthurbryan.com
+    - ./environments/cross/cloud/dns/prd/resources/aws/arthurbryan.com
+    - ./environments/cross/cloud/dns/prd/resources/aws/dev.arthurbryan.com
+    - ./environments/cross/cloud/dns/prd/resources/aws/hml.arthurbryan.com
+    # Namespace definitions
+    - ./namespaces/dns-eds437.yaml
+    - ./namespaces/system-infrastructure-dev.yaml
+    - ./namespaces/system-infrastructure-hml.yaml
+    - ./namespaces/system-infrastructure-prd.yaml
