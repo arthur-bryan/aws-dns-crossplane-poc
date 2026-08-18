@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787030503077'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaima-dev","name":"dns-editclaima-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaima","type":"A","values":["10.0.6.1","10.0.6.99"],"enableWeightedRouting":false,"originalType":"A"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaima-dev","name":"dns-editclaima-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaima","type":"A","values":["10.0.6.1","10.0.6.55"],"enableWeightedRouting":false,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -30,4 +30,4 @@ spec:
   ttl: 3600
   values:
     - 10.0.6.1
-    - 10.0.6.99
+    - 10.0.6.55
