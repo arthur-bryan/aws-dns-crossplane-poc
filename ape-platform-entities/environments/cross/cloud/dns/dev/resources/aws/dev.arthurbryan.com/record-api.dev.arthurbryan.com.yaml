@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-api-dev","name":"dns-api-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"api","type":"A","values":["10.0.0.1","10.0.0.99"],"enableWeightedRouting":false,"originalType":"A"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-api-dev","name":"dns-api-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"api","type":"A","values":["10.0.0.1","10.0.0.2"],"enableWeightedRouting":false,"originalType":"A"}'
 spec:
   name: record-api.dev.arthurbryan.com
   domain: cross
@@ -22,4 +22,4 @@ spec:
   ttl: 3600
   values:
   - 10.0.0.1
-  - 10.0.0.99
+  - 10.0.0.2

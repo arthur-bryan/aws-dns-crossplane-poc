@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-cdn-dev","name":"dns-cdn-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"cdn","type":"ALIAS","serviceType":"Custom","dnsName":"api6.dev.arthurbryan.com","evaluateTargetHealth":false,"customZoneId":"Z0945364EYNE5KZW0WIF","enableWeightedRouting":false,"originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-cdn-dev","name":"dns-cdn-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"cdn","type":"ALIAS","serviceType":"Custom","dnsName":"api.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"enableWeightedRouting":false,"originalType":"ALIAS"}'
 spec:
   name: record-cdn.dev.arthurbryan.com
   domain: cross
@@ -21,6 +21,6 @@ spec:
     accountName: dev-account
   aliasTarget:
     serviceType: Custom
-    dnsName: api6.dev.arthurbryan.com
+    dnsName: api.dev.arthurbryan.com
     hostedZoneId: Z0945364EYNE5KZW0WIF
     evaluateTargetHealth: false
