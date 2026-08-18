@@ -1,33 +1,27 @@
-apiVersion: backstage.io/v1alpha1
-kind: Resource
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
 metadata:
-  name: dns-api-dev
-  namespace: dns-eds437
-  description: DNS Record managed by template
+  name: record-api.dev.arthurbryan.com-apitest1
+  namespace: system-dns-dev
   annotations:
-    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/generated-by: catalog-to-xr
     dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-api-dev","name":"dns-api-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"api","type":"A","values":["10.0.0.1","10.0.0.2"],"enableWeightedRouting":true,"originalType":"A","weight":50,"setIdentifier":"apitest1"}'
-  labels:
-    environment: dev
-    cloud: aws
 spec:
-  type: DNSRecord
-  cloud: aws
-  owner: group:default/infrastructure
-  tribe: 
-  system: system:dns-eds437/dns
+  name: record-api.dev.arthurbryan.com-apitest1
+  domain: cross
+  system: dns
   environment: dev
-  name: dns-api-dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  aws:
-    account: "309670275661"
-    accountName: dev-account
-  recordName: "api"
+  recordName: api
   recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
   ttl: 600
   values:
-    - 10.0.0.1
-    - 10.0.0.2
+  - 10.0.0.1
+  - 10.0.0.2
   setIdentifier: apitest1
   weight: 50
