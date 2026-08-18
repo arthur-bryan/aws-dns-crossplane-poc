@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-importfixtest.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"name":"dns-importfixtest-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"importfixtest","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-importfixtest-dev","ttl":300,"values":["10.0.7.1"]}'
+spec:
+  name: record-importfixtest.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: importfixtest
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 300
+  values:
+  - 10.0.7.1
+  import:
+    existing: true
