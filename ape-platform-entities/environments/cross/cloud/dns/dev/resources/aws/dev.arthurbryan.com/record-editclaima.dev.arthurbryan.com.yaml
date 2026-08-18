@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-editclaima-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaima","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-editclaima-dev","ttl":300,"values":["10.0.6.1"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaima-dev","name":"dns-editclaima-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaima","type":"A","values":["10.0.6.1","10.0.6.99"],"enableWeightedRouting":false,"originalType":"A"}'
 spec:
   name: record-editclaima.dev.arthurbryan.com
   domain: cross
@@ -19,8 +19,7 @@ spec:
   aws:
     account: 309670275661
     accountName: dev-account
-  ttl: 300
+  ttl: 3600
   values:
   - 10.0.6.1
-  import:
-    existing: true
+  - 10.0.6.99

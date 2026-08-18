@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-editclaimweighted-dev-primary","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimweighted","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-editclaimweighted-dev-primary","enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"ttl":300,"values":["10.0.6.2"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaimweighted-dev-primary","name":"dns-editclaimweighted-dev-primary","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimweighted","type":"A","values":["10.0.6.2"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":77,"originalType":"A"}'
 spec:
   name: record-editclaimweighted.dev.arthurbryan.com-primary
   domain: cross
@@ -19,10 +19,8 @@ spec:
   aws:
     account: 309670275661
     accountName: dev-account
-  ttl: 300
+  ttl: 600
   values:
   - 10.0.6.2
   setIdentifier: primary
-  weight: 100
-  import:
-    existing: true
+  weight: 77

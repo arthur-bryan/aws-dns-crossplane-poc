@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-editclaimcname-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimcname","type":"CNAME","originalType":"CNAME","entityRef":"resource:dns-eds437/dns-editclaimcname-dev","ttl":300,"values":["target1.example.com"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaimcname-dev","name":"dns-editclaimcname-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimcname","type":"CNAME","values":["target2.example.com"],"enableWeightedRouting":false,"originalType":"CNAME"}'
 spec:
   name: record-editclaimcname.dev.arthurbryan.com
   domain: cross
@@ -19,8 +19,6 @@ spec:
   aws:
     account: 309670275661
     accountName: dev-account
-  ttl: 300
+  ttl: 3600
   values:
-  - target1.example.com
-  import:
-    existing: true
+  - target2.example.com
