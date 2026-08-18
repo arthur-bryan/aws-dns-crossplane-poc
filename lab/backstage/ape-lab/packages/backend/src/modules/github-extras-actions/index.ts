@@ -18,10 +18,15 @@ import {
   DefaultGithubCredentialsProvider,
   ScmIntegrations,
 } from '@backstage/integration';
+import { catalogServiceRef } from '@backstage/plugin-catalog-node';
 import {
   createTemplateAction,
   scaffolderActionsExtensionPoint,
 } from '@backstage/plugin-scaffolder-node';
+import {
+  createTemplateGlobalFunction,
+  scaffolderTemplatingExtensionPoint,
+} from '@backstage/plugin-scaffolder-node/alpha';
 import { exec as execCb } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -55,10 +60,24 @@ export const githubExtrasActionsModule = createBackendModule({
     reg.registerInit({
       deps: {
         scaffolderActions: scaffolderActionsExtensionPoint,
+        templating: scaffolderTemplatingExtensionPoint,
         config: coreServices.rootConfig,
         logger: coreServices.logger,
+        catalog: catalogServiceRef,
+        auth: coreServices.auth,
       },
-      async init({ scaffolderActions, config, logger }) {
+      async init({ scaffolderActions, templating, config, logger, catalog, auth }) {
+        // Matches APE's scaffolder-backend-module-extras `now` global exactly
+        // (id, description, fn) -- templates across APE rely on
+        // dock.tech/created-at: ${{ "'" + now() + "'" }}.
+        templating.addTemplateGlobals([
+          createTemplateGlobalFunction({
+            id: 'now',
+            description: 'Returns the current timestamp in milliseconds as a string',
+            fn: () => Date.now().toString(),
+          }),
+        ]);
+
         const integrations = ScmIntegrations.fromConfig(config);
         const ghCreds =
           DefaultGithubCredentialsProvider.fromIntegrations(integrations);
@@ -329,6 +348,68 @@ export const githubExtrasActionsModule = createBackendModule({
           }),
 
           createTemplateAction({
+            id: 'catalog:system:ownership:verify',
+            description:
+              'Verifies that the requesting user belongs to the squad that owns a System. ' +
+              'Mirrors APE\'s scaffolder-backend-module-extras VerifySystemOwnership action.',
+            schema: {
+              input: {
+                systemRef: z =>
+                  z.string({ description: 'Backstage entity reference for the System' }),
+              },
+              output: {
+                ownerRef: z => z.string(),
+              },
+            },
+            async handler(ctx) {
+              const { systemRef } = ctx.input as { systemRef: string };
+              const requesterRef = ctx.user?.ref;
+              if (!requesterRef) {
+                throw new Error('The requesting user could not be identified');
+              }
+
+              const normalizeGroupRef = (value: string): string | undefined => {
+                const normalized = value.trim().toLocaleLowerCase('en-US');
+                if (!normalized || normalized.startsWith('user:')) {
+                  return undefined;
+                }
+                return normalized.startsWith('group:')
+                  ? normalized
+                  : `group:default/${normalized}`;
+              };
+
+              const credentials = await auth.getOwnServiceCredentials();
+              const [system, requester] = await Promise.all([
+                catalog.getEntityByRef(systemRef, { credentials }),
+                catalog.getEntityByRef(requesterRef, { credentials }),
+              ]);
+              if (!system || system.kind.toLocaleLowerCase('en-US') !== 'system') {
+                throw new Error(`System ${systemRef} was not found`);
+              }
+
+              const ownerRef = normalizeGroupRef(
+                typeof system.spec?.owner === 'string' ? system.spec.owner : '',
+              );
+              if (!ownerRef) {
+                throw new Error(`System ${systemRef} does not have a squad owner`);
+              }
+
+              const belongsToOwner = requester?.relations?.some(
+                (relation: { type: string; targetRef: string }) =>
+                  relation.type === 'memberOf' &&
+                  normalizeGroupRef(relation.targetRef) === ownerRef,
+              );
+              if (!belongsToOwner) {
+                throw new Error(
+                  `You must belong to ${ownerRef} to create or change resources for System ${system.metadata.name}`,
+                );
+              }
+
+              ctx.output('ownerRef', ownerRef);
+            },
+          }),
+
+          createTemplateAction({
             id: 'catalog:refresh:location',
             description:
               'No-op in the lab. URL Locations are auto-refreshed by the ' +
@@ -355,7 +436,7 @@ export const githubExtrasActionsModule = createBackendModule({
         logger.info(
           'github-extras-actions: registered github:extras:{clone,commit,push}, ' +
             'fs:file:exists, error:launch, activity-log:publish, ' +
-            'catalog:refresh:location',
+            'catalog:refresh:location, catalog:system:ownership:verify',
         );
       },
     });
