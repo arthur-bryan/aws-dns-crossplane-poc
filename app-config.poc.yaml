@@ -66,17 +66,27 @@ catalog:
       rules:
         - allow: [Location, Template]
 
-# DNS account IDs — all pointing to arthur-bryan personal AWS account (dns-poc IAM user)
+# DNS account IDs — real AWS Organization member accounts under the
+# arthur-bryan master account (597230762851), matching Crossplane's own
+# per-environment ClusterProviderConfig role assumption
+# (lab/provider-config/dnszone-{dev,hml,prd}.yaml).
 dns:
   accounts:
     dev:
-      accountId: '597230762851'
+      accountId: '309670275661'
+      accountName: dev-account
+      roleArn: arn:aws:iam::309670275661:role/OrganizationAccountAccessRole
     hml:
-      accountId: '597230762851'
+      accountId: '382598791794'
+      accountName: hml-account
+      roleArn: arn:aws:iam::382598791794:role/OrganizationAccountAccessRole
     poc:
-      accountId: '597230762851'
+      accountId: '382598791794'
+      accountName: hml-account
+      roleArn: arn:aws:iam::382598791794:role/OrganizationAccountAccessRole
     prd:
       accountId: '597230762851'
+      accountName: prd-account
 
 # Scaffolder: point to PoC repo for entity commits/PRs
 scaffolder:
