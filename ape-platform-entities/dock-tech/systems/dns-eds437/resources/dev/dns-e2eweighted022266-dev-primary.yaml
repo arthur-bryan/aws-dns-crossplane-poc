@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-e2eweighted022266-dev-primary
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787022281826'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-e2eweighted022266-dev-primary","type":"A","values":["10.0.1.200"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"recordName":"e2eweighted022266","entityRef":"resource:/dns-e2eweighted022266-dev-primary"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-e2eweighted022266-dev-primary
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: ""
+    accountName: 
+  recordName: e2eweighted022266
+  recordType: A
+  ttl: 600
+  values:
+    - 10.0.1.200
+  setIdentifier: primary
+  weight: 100
