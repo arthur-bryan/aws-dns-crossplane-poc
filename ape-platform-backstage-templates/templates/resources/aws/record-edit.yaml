@@ -359,6 +359,19 @@ spec:
             3600
           )
 
+    - id: deriveAccount
+      name: Derive AWS account from environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          environment: ${{ parameters.environment }}
+          environments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+        expression: >-
+          (
+            $envCfg := environments[name = environment];
+            { "account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName }
+          )
+
     - id: nextParams
       name: Compute next-edit scaffolder-parameters snapshot
       action: roadiehq:utils:jsonata
@@ -405,6 +418,9 @@ spec:
             name: ${{ parameters.name }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
+            aws:
+              account: "${{ steps.deriveAccount.output.result.account }}"
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             recordName: "${{ parameters.recordName }}"
             recordType: ${{ parameters.type }}
             {%- if parameters.type != 'ALIAS' %}

@@ -89,6 +89,19 @@ spec:
             { "recordName": $recordName, "entityName": $entityName }
           )
 
+    - id: deriveAccount
+      name: Derive AWS account from environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          environment: ${{ parameters.environment }}
+          environments: ${{ steps.fetchSystem.output.entity.spec.environments }}
+        expression: >-
+          (
+            $envCfg := environments[name = environment];
+            { "account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName }
+          )
+
     - id: buildEditParams
       name: Build edit-template formData snapshot
       action: roadiehq:utils:jsonata
@@ -366,6 +379,9 @@ spec:
             name: ${{ steps.computeRecordName.output.result.entityName }}
             zoneId: ${{ parameters.zone.id }}
             zoneName: ${{ parameters.zone.name }}
+            aws:
+              account: "${{ steps.deriveAccount.output.result.account }}"
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             recordName: "${{ steps.computeRecordName.output.result.recordName }}"
             recordType: ${{ steps.buildEditParams.output.result.type }}
             import:
