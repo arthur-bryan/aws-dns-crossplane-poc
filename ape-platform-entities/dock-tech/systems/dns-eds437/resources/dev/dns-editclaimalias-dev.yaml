@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-editclaimalias-dev
   namespace: dns-eds437
-  description: DNS Record claimed by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787030507026'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-editclaimalias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimalias","type":"ALIAS","originalType":"ALIAS","entityRef":"resource:dns-eds437/dns-editclaimalias-dev","serviceType":"Custom","dnsName":"editclaima.dev.arthurbryan.com","evaluateTargetHealth":false,"customZoneId":"Z0945364EYNE5KZW0WIF"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaimalias-dev","name":"dns-editclaimalias-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimalias","type":"ALIAS","serviceType":"Custom","dnsName":"editclaimcname.dev.arthurbryan.com","customZoneId":"Z0945364EYNE5KZW0WIF","evaluateTargetHealth":false,"enableWeightedRouting":false,"originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,10 +27,8 @@ spec:
     accountName: dev-account
   recordName: "editclaimalias"
   recordType: ALIAS
-  import:
-    existing: true
   aliasTarget:
     serviceType: Custom
-    dnsName: editclaima.dev.arthurbryan.com
+    dnsName: editclaimcname.dev.arthurbryan.com
     hostedZoneId: Z0945364EYNE5KZW0WIF
     evaluateTargetHealth: false
