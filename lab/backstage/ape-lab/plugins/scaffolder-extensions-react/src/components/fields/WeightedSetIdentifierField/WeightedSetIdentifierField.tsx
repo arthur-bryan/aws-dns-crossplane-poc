@@ -36,6 +36,7 @@ export const WeightedSetIdentifierField = (props: FieldExtensionComponentProps<s
       errors={errors}
     >
       <TextField
+        id={idSchema?.$id}
         label={schema.title ?? 'Set Identifier'}
         value={formData ?? ''}
         onChange={(e) => onChange(e.target.value === '' ? undefined : e.target.value)}

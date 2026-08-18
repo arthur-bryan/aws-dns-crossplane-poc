@@ -54,6 +54,7 @@ export const WeightedWeightField = (props: FieldExtensionComponentProps<number>)
       errors={errors}
     >
       <TextField
+        id={idSchema?.$id}
         type="number"
         label={schema.title ?? 'Weight'}
         value={formData ?? schema.default ?? ''}
