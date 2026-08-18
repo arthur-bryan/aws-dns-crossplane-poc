@@ -340,8 +340,10 @@ spec:
               and $string(existingSetId) != $string(newSetId);
             $weightedToggle := ($string(existingSetId) != "" and newWeighted != true)
               or ($string(existingSetId) = "" and newWeighted = true);
-            $typeFlips or $setIdChanges or $weightedToggle
+            ($typeFlips or $setIdChanges or $weightedToggle) and false
           )
+      # TEMP TEST OVERRIDE (revert after test): forcing false above to observe raw
+      # provider behavior on a setIdentifier rename without Force=true,Replace=true.
 
     - id: deriveTtl
       name: Derive TTL from environment and record type
