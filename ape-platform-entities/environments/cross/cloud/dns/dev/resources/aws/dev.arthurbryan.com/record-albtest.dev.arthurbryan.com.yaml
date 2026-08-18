@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-albtest.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+spec:
+  name: record-albtest.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: albtest
+  recordType: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: ALB
+    dnsName: my-test-alb-123456789.us-east-1.elb.amazonaws.com
+    evaluateTargetHealth: false
