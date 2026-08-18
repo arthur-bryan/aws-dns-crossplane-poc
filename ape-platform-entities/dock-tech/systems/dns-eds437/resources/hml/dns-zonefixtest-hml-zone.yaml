@@ -1,0 +1,28 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-zonefixtest-hml-zone
+  namespace: dns-eds437
+  description: DNS Zone created by template
+  annotations:
+    dock.tech/created-at: '1787025131409'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-zone-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"hml","parentZone":{"id":"Z091442636MPUK86SZJ1T","name":"hml.arthurbryan.com","accountName":"hml-account","environment":"hml"},"kind":"Zone","name":"dns-zonefixtest-hml-zone"}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: DNSZone
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: hml
+  name: dns-zonefixtest-hml-zone
+  aws:
+    account: "382598791794"
+    accountName: hml-account
+  zoneName: zonefixtest.hml.arthurbryan.com
+  delegatedFromZoneId: Z091442636MPUK86SZJ1T
+  delegatedFromAccountName: dnszone-hml
