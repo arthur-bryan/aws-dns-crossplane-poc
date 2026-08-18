@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-importfixtest-dev
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/created-at: '1787031164752'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-importfixtest-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"importfixtest","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-importfixtest-dev","ttl":300,"values":["10.0.7.1"]}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-importfixtest-dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: "importfixtest"
+  recordType: A
+  import:
+    existing: true
+  ttl: 300
+  values:
+    - 10.0.7.1
