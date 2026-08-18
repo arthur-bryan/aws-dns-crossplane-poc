@@ -1,31 +1,29 @@
 import TextField from '@material-ui/core/TextField';
 import { ScaffolderField } from '@backstage/plugin-scaffolder-react/alpha';
 import type { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { getParentFormDataFromId } from '../utils';
 
-// See WeightedWeightField -- same self-clearing-on-unmount fix, for the
-// SetIdentifier text field that sits alongside it under the same
-// `dependencies.enableWeightedRouting.oneOf` branch.
+// See WeightedWeightField -- same "stay mounted in both oneOf branches, clear on toggle-off"
+// fix, for the SetIdentifier text field alongside it.
 export const WeightedSetIdentifierField = (props: FieldExtensionComponentProps<string>) => {
   const { onChange, formData, formContext, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } = props;
 
-  const latestRef = useRef({ formContextFormData: (formContext as any)?.formData, idSchemaId: idSchema?.$id, onChange });
-  useEffect(() => {
-    latestRef.current = { formContextFormData: (formContext as any)?.formData, idSchemaId: idSchema?.$id, onChange };
-  });
+  const rootFormData = ((formContext ?? {}) as { formData?: Record<string, any> }).formData ?? {};
+  const record = (getParentFormDataFromId(rootFormData, idSchema?.$id) ?? {}) as Record<string, any>;
+  const weighted = record.enableWeightedRouting === true;
 
   useEffect(() => {
-    return () => {
-      const { formContextFormData, idSchemaId, onChange: latestOnChange } = latestRef.current;
-      const record = getParentFormDataFromId(formContextFormData, idSchemaId) as Record<string, any> | undefined;
-      if (record && record.enableWeightedRouting === false) {
-        latestOnChange(undefined);
-      }
-    };
+    if (!weighted && formData !== undefined) {
+      onChange(undefined);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [weighted]);
+
+  if (!weighted) {
+    return null;
+  }
 
   return (
     <ScaffolderField

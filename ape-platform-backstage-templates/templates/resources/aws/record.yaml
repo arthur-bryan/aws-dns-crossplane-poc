@@ -309,6 +309,17 @@ spec:
                   - properties:
                       enableWeightedRouting:
                         const: false
+                      # Declared here too (unrequired) so WeightedSetIdentifierField /
+                      # WeightedWeightField stay mounted across the toggle instead of
+                      # unmounting -- see those components for why that matters: a field
+                      # that only exists in the "true" branch never gets a render with the
+                      # post-toggle value before React unmounts it.
+                      setIdentifier:
+                        type: string
+                        ui:field: WeightedSetIdentifierField
+                      weight:
+                        type: integer
+                        ui:field: WeightedWeightField
                   - properties:
                       enableWeightedRouting:
                         const: true
