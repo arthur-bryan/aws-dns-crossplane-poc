@@ -94,11 +94,14 @@ spec:
                   - CNAME
                   - TXT
                   - ALIAS
-                  - MX
-                  - SRV
-                  - NS
-                  - CAA
-                  - PTR
+                  # MX, SRV, NS, CAA, PTR temporarily disabled -- only A, AAAA, CNAME, TXT,
+                  # ALIAS are supported for now. Commented out (not deleted) so the record-type
+                  # oneOf branches below and this enum can be restored together later.
+                  # - MX
+                  # - SRV
+                  # - NS
+                  # - CAA
+                  # - PTR
 
               enableWeightedRouting:
                 title: Enable Weighted Routing
@@ -167,78 +170,78 @@ spec:
                     required:
                       - values
 
-                  - properties:
-                      type:
-                        const: MX
-                      values:
-                        title: MX Records
-                        type: array
-                        description: 'Mail exchange records (format: "priority hostname")'
-                        items:
-                          type: string
-                          pattern: '^\s*[0-9]+\s+\S+\s*$'
-                        minItems: 1
-                        ui:help: 'Example: "10 mail.example.com" (lower priority wins)'
-                    required:
-                      - values
+                  # - properties:
+                      # type:
+                        # const: MX
+                      # values:
+                        # title: MX Records
+                        # type: array
+                        # description: 'Mail exchange records (format: "priority hostname")'
+                        # items:
+                          # type: string
+                          # pattern: '^\s*[0-9]+\s+\S+\s*$'
+                        # minItems: 1
+                        # ui:help: 'Example: "10 mail.example.com" (lower priority wins)'
+                    # required:
+                      # - values
 
-                  - properties:
-                      type:
-                        const: SRV
-                      values:
-                        title: SRV Records
-                        type: array
-                        description: 'Service records (format: "priority weight port target")'
-                        items:
-                          type: string
-                          pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$'
-                        minItems: 1
-                        ui:help: 'Example: "10 60 5060 sipserver.example.com"'
-                    required:
-                      - values
+                  # - properties:
+                      # type:
+                        # const: SRV
+                      # values:
+                        # title: SRV Records
+                        # type: array
+                        # description: 'Service records (format: "priority weight port target")'
+                        # items:
+                          # type: string
+                          # pattern: '^\s*[0-9]+\s+[0-9]+\s+[0-9]+\s+\S+\s*$'
+                        # minItems: 1
+                        # ui:help: 'Example: "10 60 5060 sipserver.example.com"'
+                    # required:
+                      # - values
 
-                  - properties:
-                      type:
-                        const: NS
-                      values:
-                        title: Nameservers
-                        type: array
-                        description: Nameserver hostnames for subdomain delegation
-                        items:
-                          type: string
-                        minItems: 1
-                        ui:help: "Example: ns1.example.com (for delegating subdomains)"
-                    required:
-                      - values
+                  # - properties:
+                      # type:
+                        # const: NS
+                      # values:
+                        # title: Nameservers
+                        # type: array
+                        # description: Nameserver hostnames for subdomain delegation
+                        # items:
+                          # type: string
+                        # minItems: 1
+                        # ui:help: "Example: ns1.example.com (for delegating subdomains)"
+                    # required:
+                      # - values
 
-                  - properties:
-                      type:
-                        const: CAA
-                      values:
-                        title: CAA Records
-                        type: array
-                        description: 'Certificate authority authorization (format: "flags tag value")'
-                        items:
-                          type: string
-                          pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$'
-                        minItems: 1
-                        ui:help: 'Example: 0 issue "letsencrypt.org" (restricts which CAs can issue certs)'
-                    required:
-                      - values
+                  # - properties:
+                      # type:
+                        # const: CAA
+                      # values:
+                        # title: CAA Records
+                        # type: array
+                        # description: 'Certificate authority authorization (format: "flags tag value")'
+                        # items:
+                          # type: string
+                          # pattern: '^\s*[0-9]+\s+(issue|issuewild|iodef|contactemail|contactphone)\s+".*"\s*$'
+                        # minItems: 1
+                        # ui:help: 'Example: 0 issue "letsencrypt.org" (restricts which CAs can issue certs)'
+                    # required:
+                      # - values
 
-                  - properties:
-                      type:
-                        const: PTR
-                      values:
-                        title: Target Hostname
-                        type: array
-                        description: Hostname for reverse DNS lookup
-                        items:
-                          type: string
-                        minItems: 1
-                        maxItems: 1
-                    required:
-                      - values
+                  # - properties:
+                      # type:
+                        # const: PTR
+                      # values:
+                        # title: Target Hostname
+                        # type: array
+                        # description: Hostname for reverse DNS lookup
+                        # items:
+                          # type: string
+                        # minItems: 1
+                        # maxItems: 1
+                    # required:
+                      # - values
 
                   - properties:
                       type:
