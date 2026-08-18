@@ -217,13 +217,16 @@ spec:
                 type:
                   const: ALIAS
                 serviceType:
-                  title: AWS Service Type
+                  title: AWS Service Type (immutable)
                   type: string
                   description: >-
-                    Switching between service types is safe -- it never requires
-                    recreating the record (unlike changing record type). Use the
-                    zone ID preview below to confirm the platform resolves the
-                    correct alias target before submitting.
+                    The platform enforces this as immutable at the API level
+                    (spec.aliasTarget.serviceType: self == oldSelf) -- it can't
+                    be changed here regardless of whether the underlying AWS
+                    change would itself be safe. Delete and recreate the
+                    record if a different service type is needed. Region and
+                    target DNS name can still be edited freely below.
+                  ui:disabled: true
                   enum:
                     - CloudFront
                     - ALB
