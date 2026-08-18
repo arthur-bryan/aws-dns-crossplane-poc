@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-editnewWEIGHTED-dev-primary
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787030334027'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-editnewWEIGHTED-dev-primary","type":"A","values":["10.0.5.2"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"recordName":"editnewWEIGHTED","entityRef":"resource:/dns-editnewWEIGHTED-dev-primary"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editnewWEIGHTED-dev-primary","name":"dns-editnewWEIGHTED-dev-primary","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editnewWEIGHTED","type":"A","values":["10.0.5.2"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":55,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,10 +25,10 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: editnewWEIGHTED
+  recordName: "editnewWEIGHTED"
   recordType: A
   ttl: 600
   values:
     - 10.0.5.2
   setIdentifier: primary
-  weight: 100
+  weight: 55
