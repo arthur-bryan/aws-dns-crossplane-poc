@@ -17,7 +17,7 @@ spec:
     account: 309670275661
     accountName: dev-account
   delegatedFromZoneId: Z03010981ALJFZB4QLU8W
-  delegatedFromAccountName: prd-account
+  delegatedFromAccountName: dnszone-prd
   import:
     existing: true
     zoneId: Z0945364EYNE5KZW0WIF

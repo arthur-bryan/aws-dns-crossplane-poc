@@ -18,7 +18,7 @@ spec:
   environment: hml
   zoneName: hml.arthurbryan.com
   delegatedFromZoneId: Z03010981ALJFZB4QLU8W
-  delegatedFromAccountName: prd-account
+  delegatedFromAccountName: dnszone-prd
   import:
     existing: true
     zoneId: Z091442636MPUK86SZJ1T
