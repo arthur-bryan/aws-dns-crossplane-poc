@@ -82,8 +82,8 @@ export class DockZoneEnrichmentProcessor implements CatalogProcessor {
       // but fall back to synthesising a minimal snapshot from spec so
       // legacy records that never carried the annotation still get an
       // active Edit pencil in the UI. Also inject entityRef so the
-      // RecordChangeImpactWarning widget can compare against the live
-      // catalog entity.
+      // RecordTypeField widget can look up the live catalog entity's
+      // recordType.
       const entityRef = `resource:${entity.metadata.namespace ?? 'default'}/${entity.metadata.name}`;
       const params = synthesizeScaffolderParameters(entity, annotations, entityRef);
       if (!params) return entity;
@@ -172,7 +172,7 @@ export class DockZoneEnrichmentProcessor implements CatalogProcessor {
  *      persisting the snapshot.
  *
  * Always ensures entityRef is present so the frontend
- * RecordChangeImpactWarning widget can look up the live entity.
+ * RecordTypeField widget can look up the live entity.
  */
 function synthesizeScaffolderParameters(
   entity: Entity,

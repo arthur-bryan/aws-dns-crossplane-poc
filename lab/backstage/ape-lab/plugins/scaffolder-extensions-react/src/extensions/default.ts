@@ -48,7 +48,6 @@ import { AwsDnsZonePicker, AwsDnsZonePickerSchema } from '../components/fields/A
 import { AwsDnsRecordPicker, AwsDnsRecordPickerSchema } from '../components/fields/AwsDnsRecordPicker';
 import { RecordFqdnPreview, RecordFqdnPreviewSchema } from '../components/fields/RecordFqdnPreview';
 import { ZoneFqdnPreview, ZoneFqdnPreviewSchema } from '../components/fields/ZoneFqdnPreview';
-import { RecordChangeImpactWarning, RecordChangeImpactWarningSchema } from '../components/fields/RecordChangeImpactWarning';
 import { RecordTypeField, RecordTypeFieldSchema } from '../components/fields/RecordTypeField';
 import { WeightedWeightField, WeightedWeightFieldSchema } from '../components/fields/WeightedWeightField';
 import { WeightedSetIdentifierField, WeightedSetIdentifierFieldSchema } from '../components/fields/WeightedSetIdentifierField';
@@ -340,11 +339,6 @@ export const DEFAULT_SCAFFOLDER_FIELD_EXTENSIONS = [
     component: ZoneFqdnPreview,
     name: 'ZoneFqdnPreview',
     schema: ZoneFqdnPreviewSchema,
-  },
-  {
-    component: RecordChangeImpactWarning,
-    name: 'RecordChangeImpactWarning',
-    schema: RecordChangeImpactWarningSchema,
   },
   {
     component: RecordTypeField,

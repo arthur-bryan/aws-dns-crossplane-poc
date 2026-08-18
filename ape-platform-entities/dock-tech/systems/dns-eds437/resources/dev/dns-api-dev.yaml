@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-api-dev","name":"dns-api-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"api","type":"A","values":["10.0.0.1","10.0.0.2"],"enableWeightedRouting":true,"originalType":"A","weight":50,"setIdentifier":"apitest1"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-api-dev","name":"dns-api-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"api","type":"A","values":["10.0.0.1","10.0.0.2"],"enableWeightedRouting":false,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,9 +25,7 @@ spec:
     accountName: dev-account
   recordName: "api"
   recordType: A
-  ttl: 600
+  ttl: 3600
   values:
     - 10.0.0.1
     - 10.0.0.2
-  setIdentifier: apitest1
-  weight: 50

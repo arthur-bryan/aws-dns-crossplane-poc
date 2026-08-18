@@ -58,11 +58,6 @@ spec:
           type: string
           ui:field: RecordFqdnPreview
 
-        changeImpactWarningType:
-          title: ' '
-          type: string
-          ui:field: RecordChangeImpactWarning
-
         type:
           title: Record Type
           type: string
@@ -267,11 +262,6 @@ spec:
     - title: Weighted Routing (Optional)
       description: Enable weighted routing to distribute traffic across multiple records
       properties:
-        changeImpactWarningWeighted:
-          title: ' '
-          type: string
-          ui:field: RecordChangeImpactWarning
-
         enableWeightedRouting:
           title: Enable Weighted Routing
           type: boolean
@@ -319,31 +309,6 @@ spec:
       action: catalog:fetch
       input:
         entityRef: ${{ parameters.entityRef }}
-
-    - id: detectImmutableChanges
-      name: Detect whether this edit requires Route53 Replace
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          existingType: ${{ steps.fetchExisting.output.entity.spec.recordType }}
-          existingSetId: ${{ steps.fetchExisting.output.entity.spec.setIdentifier }}
-          newType: ${{ parameters.type }}
-          newSetId: ${{ parameters.setIdentifier }}
-          newWeighted: ${{ parameters.enableWeightedRouting }}
-        expression: >-
-          (
-            $normalize := function($t) { $t = "ALIAS" ? "A" : $t };
-            $existingMrType := $normalize(existingType);
-            $newMrType := $normalize(newType);
-            $typeFlips := $existingMrType != $newMrType;
-            $setIdChanges := ($string(existingSetId) != "" or $string(newSetId) != "")
-              and $string(existingSetId) != $string(newSetId);
-            $weightedToggle := ($string(existingSetId) != "" and newWeighted != true)
-              or ($string(existingSetId) = "" and newWeighted = true);
-            ($typeFlips or $setIdChanges or $weightedToggle) and false
-          )
-      # TEMP TEST OVERRIDE (revert after test): forcing false above to observe raw
-      # provider behavior on a setIdentifier rename without Force=true,Replace=true.
 
     - id: deriveTtl
       name: Derive TTL from environment and record type
@@ -407,9 +372,6 @@ spec:
               {%- endif %}
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: ${{ "'" + steps.nextParams.output.result | dump + "'" }}
-              {%- if steps.detectImmutableChanges.output.result %}
-              argocd.argoproj.io/sync-options: Force=true,Replace=true
-              {%- endif %}
             labels:
               environment: ${{ parameters.environment }}
               cloud: aws
