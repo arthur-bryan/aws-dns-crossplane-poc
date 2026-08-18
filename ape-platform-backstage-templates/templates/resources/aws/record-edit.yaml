@@ -443,6 +443,10 @@ spec:
             setIdentifier: ${{ parameters.setIdentifier }}
             weight: ${{ parameters.weight }}
             {%- endif %}
+            {%- if steps.fetchExisting.output.entity.spec.import %}
+            import:
+              existing: true
+            {%- endif %}
 
     - $yaml: ../../../shared/entities/commit.yaml
     - $yaml: ../../../shared/entities/push.yaml
