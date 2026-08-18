@@ -79,6 +79,14 @@ spec:
             - CAA
             - PTR
 
+        ttlPreview:
+          title: TTL (seconds)
+          type: number
+          description: >-
+            TTL is derived automatically from environment, record type, and
+            weighted-routing status -- it can't be set directly.
+          ui:field: RecordTtlPreview
+
       dependencies:
         type:
           oneOf:

@@ -49,6 +49,7 @@ import { AwsDnsRecordPicker, AwsDnsRecordPickerSchema } from '../components/fiel
 import { RecordFqdnPreview, RecordFqdnPreviewSchema } from '../components/fields/RecordFqdnPreview';
 import { ZoneFqdnPreview, ZoneFqdnPreviewSchema } from '../components/fields/ZoneFqdnPreview';
 import { RecordTypeField, RecordTypeFieldSchema } from '../components/fields/RecordTypeField';
+import { RecordTtlPreview, RecordTtlPreviewSchema } from '../components/fields/RecordTtlPreview';
 import { WeightedWeightField, WeightedWeightFieldSchema } from '../components/fields/WeightedWeightField';
 import { WeightedSetIdentifierField, WeightedSetIdentifierFieldSchema } from '../components/fields/WeightedSetIdentifierField';
 import {
@@ -344,6 +345,11 @@ export const DEFAULT_SCAFFOLDER_FIELD_EXTENSIONS = [
     component: RecordTypeField,
     name: 'RecordTypeField',
     schema: RecordTypeFieldSchema,
+  },
+  {
+    component: RecordTtlPreview,
+    name: 'RecordTtlPreview',
+    schema: RecordTtlPreviewSchema,
   },
   {
     component: WeightedWeightField,
