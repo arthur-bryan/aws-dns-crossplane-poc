@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-albtest2-dev","name":"dns-albtest2-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"albtest2","type":"ALIAS","enableWeightedRouting":false,"serviceType":"ALB","dnsName":"my-real-test-alb-987654321.us-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"region":"us-east-1","originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-albtest2-dev","name":"dns-albtest2-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"albtest2","type":"ALIAS","enableWeightedRouting":false,"serviceType":"CloudFront","dnsName":"d111111abcdef8.cloudfront.net","evaluateTargetHealth":false,"region":"global","originalType":"ALIAS"}'
 spec:
   name: record-albtest2.dev.arthurbryan.com
   domain: cross
@@ -20,7 +20,6 @@ spec:
     account: 309670275661
     accountName: dev-account
   aliasTarget:
-    serviceType: ALB
-    dnsName: my-real-test-alb-987654321.us-east-1.elb.amazonaws.com
+    serviceType: CloudFront
+    dnsName: d111111abcdef8.cloudfront.net
     evaluateTargetHealth: false
-    region: us-east-1
