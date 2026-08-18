@@ -267,7 +267,6 @@ spec:
               "Z10132843TYUYSLUG4HA3": {"serviceType": "APIGateway", "region": "ap-southeast-3"},
               "Z092189423Y7RJK61311D": {"serviceType": "APIGateway", "region": "ap-southeast-4"},
               "Z0314042F0KBUTZ3X5HF": {"serviceType": "APIGateway", "region": "ap-southeast-5"},
-              "Z01392953RKV2Q3RBP0KU": {"serviceType": "APIGateway", "region": "ap-southeast-6"},
               "Z048508712PZLK5NKG8R0": {"serviceType": "APIGateway", "region": "ap-southeast-7"},
               "Z1YSHQZHG15GKL": {"serviceType": "APIGateway", "region": "ap-northeast-1"},
               "Z20JF4UZKIW1U8": {"serviceType": "APIGateway", "region": "ap-northeast-2"},
