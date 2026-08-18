@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aaaatypetest-dev","type":"AAAA","enableWeightedRouting":false,"values":["2001:db8::99"],"recordName":"aaaatypetest","entityRef":"resource:dns-eds437/dns-aaaatypetest-dev","originalType":"AAAA"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aaaatypetest-dev","type":"A","enableWeightedRouting":false,"values":["10.44.44.44"],"recordName":"aaaatypetest","entityRef":"resource:dns-eds437/dns-aaaatypetest-dev","originalType":"A"}'
 spec:
   name: record-aaaatypetest.dev.arthurbryan.com
   domain: cross
@@ -15,10 +15,10 @@ spec:
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
   recordName: aaaatypetest
-  recordType: AAAA
+  recordType: A
   aws:
     account: 309670275661
     accountName: dev-account
   ttl: 3600
   values:
-  - 2001:db8::99
+  - 10.44.44.44
