@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-editclaimweighted-dev-primary
   namespace: dns-eds437
-  description: DNS Record claimed by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787030538877'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-editclaimweighted-dev-primary","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimweighted","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-editclaimweighted-dev-primary","enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"ttl":300,"values":["10.0.6.2"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaimweighted-dev-primary","name":"dns-editclaimweighted-dev-primary","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimweighted","type":"A","values":["10.0.6.2"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":77,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,10 +27,8 @@ spec:
     accountName: dev-account
   recordName: "editclaimweighted"
   recordType: A
-  import:
-    existing: true
-  setIdentifier: primary
-  weight: 100
-  ttl: 300
+  ttl: 600
   values:
     - 10.0.6.2
+  setIdentifier: primary
+  weight: 77
