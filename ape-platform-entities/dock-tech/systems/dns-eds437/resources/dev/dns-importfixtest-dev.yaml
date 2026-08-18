@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-importfixtest-dev
   namespace: dns-eds437
-  description: DNS Record claimed by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787031164752'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-importfixtest-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"importfixtest","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-importfixtest-dev","ttl":300,"values":["10.0.7.1"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-importfixtest-dev","name":"dns-importfixtest-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"importfixtest","type":"A","values":["10.0.7.1","10.0.7.2"],"enableWeightedRouting":false,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,8 +27,9 @@ spec:
     accountName: dev-account
   recordName: "importfixtest"
   recordType: A
-  import:
-    existing: true
-  ttl: 300
+  ttl: 3600
   values:
     - 10.0.7.1
+    - 10.0.7.2
+  import:
+    existing: true
