@@ -79,13 +79,15 @@ spec:
           zoneName: ${{ parameters.zone.name }}
           systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
+          setIdentifier: ${{ parameters.existingRecord.setIdentifier }}
         expression: >-
           (
             $f := $replace(fqdn, /\.$/, "");
             $z := $replace(zoneName, /\.$/, "");
             $recordName := $f = $z ? "" : $replace($f, "." & $z, "");
             $context := $recordName != "" ? $recordName : $z;
-            $entityName := systemName & "-" & $context & "-" & environment;
+            $weighted := $exists(setIdentifier) and $string(setIdentifier) != "";
+            $entityName := systemName & "-" & $context & "-" & environment & ($weighted ? "-" & setIdentifier : "");
             { "recordName": $recordName, "entityName": $entityName }
           )
 

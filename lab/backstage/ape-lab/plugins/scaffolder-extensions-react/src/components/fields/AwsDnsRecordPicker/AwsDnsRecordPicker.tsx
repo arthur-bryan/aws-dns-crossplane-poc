@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import useAsync from 'react-use/esm/useAsync';
 
 import { AwsDnsRecordPickerProps } from './schema';
+import { resolveDependentFieldValue } from '../utils';
 
 type DnsRecord = {
   name: string;
@@ -34,8 +35,9 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName ?? 'environment';
   const zoneFieldName = uiOptions.zoneFieldName ?? 'zoneId';
-  const environmentFromForm = formContext?.formData?.[environmentFieldName];
-  const zoneFromForm = formContext?.formData?.[zoneFieldName];
+  const formValues = formContext?.formData;
+  const environmentFromForm = resolveDependentFieldValue(formValues, idSchema?.$id, environmentFieldName);
+  const zoneFromForm = resolveDependentFieldValue(formValues, idSchema?.$id, zoneFieldName);
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
   const rawZoneId = uiOptions.zoneId ?? (zoneFromForm && typeof zoneFromForm === 'object' ? (zoneFromForm as { id: string }).id : zoneFromForm);
   const environment = typeof rawEnvironment === 'string' ? rawEnvironment : undefined;
@@ -53,9 +55,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     }
 
     const baseUrl = await discoveryApi.getBaseUrl('aws');
-    const response = await fetchApi.fetch(
-      `${baseUrl}/dns-records?environment=${encodeURIComponent(environment)}&zoneId=${encodeURIComponent(zoneId)}`,
-    );
+    const response = await fetchApi.fetch(`${baseUrl}/dns-records?environment=${encodeURIComponent(environment)}&zoneId=${encodeURIComponent(zoneId)}`);
 
     if (!response.ok) {
       throw new Error(`Failed to load DNS records (${response.status})`);
@@ -71,7 +71,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
 
     if (excludeClaimed) {
       const { items } = await catalogApi.getEntities({
-        filter: { kind: 'Resource', 'spec.type': 'dns-record', 'metadata.labels.environment': environment },
+        filter: { kind: 'Resource', 'spec.type': 'DNSRecord', 'metadata.labels.environment': environment },
         fields: ['spec.recordName', 'spec.zoneName', 'spec.setIdentifier'],
       });
       // Weighted records share one name -- multiple distinct Route53 record sets differing only by
