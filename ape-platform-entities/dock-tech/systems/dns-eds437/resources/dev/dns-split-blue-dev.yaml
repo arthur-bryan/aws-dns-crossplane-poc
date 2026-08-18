@@ -3,27 +3,30 @@ kind: Resource
 metadata:
   name: dns-split-blue-dev
   namespace: dns-eds437
-  description: DNS Record (weighted 30) created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-split-blue-dev","name":"dns-split-blue-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"split","type":"A","values":["10.1.0.1"],"enableWeightedRouting":true,"setIdentifier":"blue","weight":40,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
 spec:
-  type: dns-record
+  type: DNSRecord
   cloud: aws
   owner: group:default/infrastructure
+  tribe: 
   system: system:dns-eds437/dns
   environment: dev
+  name: dns-split-blue-dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: split
-  recordType: A
   aws:
     account: "309670275661"
     accountName: dev-account
+  recordName: "split"
+  recordType: A
   ttl: 600
   values:
     - 10.1.0.1
   setIdentifier: blue
-  weight: 30
+  weight: 40
