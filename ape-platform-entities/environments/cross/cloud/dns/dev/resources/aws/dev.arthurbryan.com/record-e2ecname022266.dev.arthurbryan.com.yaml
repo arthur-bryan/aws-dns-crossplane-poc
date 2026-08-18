@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-e2ecname022266.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"name":"dns-e2ecname022266-dev","type":"CNAME","values":["target.example.com"],"enableWeightedRouting":false,"recordName":"e2ecname022266","entityRef":"resource:/dns-e2ecname022266-dev"}'
+spec:
+  name: record-e2ecname022266.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: e2ecname022266
+  recordType: CNAME
+  aws:
+    account: ''
+    accountName: null
+  ttl: 3600
+  values:
+  - target.example.com

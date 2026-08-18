@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-e2eweighted022266.dev.arthurbryan.com-primary
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"name":"dns-e2eweighted022266-dev-primary","type":"A","values":["10.0.1.200"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"recordName":"e2eweighted022266","entityRef":"resource:/dns-e2eweighted022266-dev-primary"}'
+spec:
+  name: record-e2eweighted022266.dev.arthurbryan.com-primary
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: e2eweighted022266
+  recordType: A
+  aws:
+    account: ''
+    accountName: null
+  ttl: 600
+  values:
+  - 10.0.1.200
+  setIdentifier: primary
+  weight: 100
