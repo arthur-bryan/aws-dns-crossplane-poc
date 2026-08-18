@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-editnewA-dev","type":"A","values":["10.0.5.1"],"enableWeightedRouting":false,"recordName":"editnewA","entityRef":"resource:/dns-editnewA-dev"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editnewA-dev","name":"dns-editnewA-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editnewA","type":"A","values":["10.0.5.1","10.0.5.99"],"enableWeightedRouting":false,"originalType":"A"}'
 spec:
   name: record-editnewA.dev.arthurbryan.com
   domain: cross
@@ -22,3 +22,4 @@ spec:
   ttl: 3600
   values:
   - 10.0.5.1
+  - 10.0.5.99
