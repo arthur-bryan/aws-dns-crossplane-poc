@@ -10,13 +10,12 @@ metadata:
 spec:
   name: record-bryan.arthurbryan.com
   domain: cross
-  subdomain: cloud
   system: dns
   environment: prd
   zoneId: Z03010981ALJFZB4QLU8W
   zoneName: arthurbryan.com
   recordName: bryan
-  type: A
+  recordType: A
   aws:
     account: 597230762851
     accountName: prd-account

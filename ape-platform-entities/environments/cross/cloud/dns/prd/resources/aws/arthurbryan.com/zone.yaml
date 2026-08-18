@@ -9,7 +9,6 @@ metadata:
 spec:
   name: zone-arthurbryan.com
   domain: cross
-  subdomain: cloud
   system: dns
   environment: prd
   aws:

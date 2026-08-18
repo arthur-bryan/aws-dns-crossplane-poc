@@ -10,7 +10,6 @@ metadata:
 spec:
   name: zone-dev.arthurbryan.com
   domain: cross
-  subdomain: cloud
   system: dns
   environment: dev
   zoneName: dev.arthurbryan.com

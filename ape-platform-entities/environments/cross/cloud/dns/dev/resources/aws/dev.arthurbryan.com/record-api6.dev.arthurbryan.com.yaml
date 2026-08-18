@@ -9,13 +9,12 @@ metadata:
 spec:
   name: record-api6.dev.arthurbryan.com
   domain: cross
-  subdomain: cloud
   system: dns
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
   recordName: api6
-  type: AAAA
+  recordType: AAAA
   aws:
     account: 309670275661
     accountName: dev-account

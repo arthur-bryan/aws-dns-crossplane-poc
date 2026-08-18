@@ -161,13 +161,12 @@ def build_record_xr(
     xr_spec: dict = {
         "name": xr_name,
         "domain": domain,
-        "subdomain": subdomain,
         "system": system,
         "environment": env,
         "zoneId": spec["zoneId"],
         "zoneName": zone_name,
         "recordName": record_name,
-        "type": rtype,
+        "recordType": rtype,
     }
     aws = aws_block(spec.get("aws"))
     if aws:
@@ -262,7 +261,6 @@ def build_zone_xr(
     xr_spec: dict = {
         "name": xr_name,
         "domain": domain,
-        "subdomain": subdomain,
         "system": system,
         "environment": env,
         "zoneName": zone_name,
@@ -295,8 +293,8 @@ def build_zone_xr(
     return out_path, xr
 
 
-RECORD_TYPES = {"dns-record", "Record"}
-ZONE_TYPES = {"dns-zone", "Zone"}
+RECORD_TYPES = {"dns-record", "Record", "DNSRecord"}
+ZONE_TYPES = {"dns-zone", "Zone", "DNSZone"}
 
 
 def convert_one(
@@ -340,6 +338,11 @@ def main() -> int:
     # We only prune in subtrees we touched, so a converter that fails
     # to process some system can't accidentally wipe its existing XRs.
     touched_systems: set[tuple[str, str, str]] = set()
+    # (domain, subdomain, system, environment, namespace) pairs whose XRs we
+    # emitted this run -- used below to make sure the namespace each XR lives
+    # in actually exists. Real APE has a controller that provisions these;
+    # in this lab, catalog_to_xr is the stand-in, same as it is for the XRs.
+    touched_namespaces: set[tuple[str, str, str, str, str]] = set()
     for src in sources:
         try:
             docs = list(yaml.safe_load_all(src.read_text()))
@@ -356,7 +359,17 @@ def main() -> int:
             out = root / rel_path
             produced.add(out.resolve())
             xs = xr.get("spec", {})
-            touched_systems.add((xs.get("domain"), xs.get("subdomain"), xs.get("system")))
+            resolved = system_index.get(xs.get("system"))
+            subdomain = resolved[1] if resolved else None
+            touched_systems.add((xs.get("domain"), subdomain, xs.get("system")))
+            # Derive the namespace's own env from the namespace name itself
+            # (not xs["environment"]) -- zone XRs always live in the
+            # system's -prd namespace regardless of which env the zone
+            # spec says, so trusting xs["environment"] here would compute
+            # the wrong output path for zone namespace.yaml files.
+            xr_ns = xr["metadata"]["namespace"]
+            ns_env = xr_ns.removeprefix(f"system-{xs.get('system')}-")
+            touched_namespaces.add((xs.get("domain"), subdomain, xs.get("system"), ns_env, xr_ns))
             new_text = yaml.safe_dump(xr, sort_keys=False, default_flow_style=False)
             new_text = "---\n" + new_text
             old_text = out.read_text() if out.exists() else None
@@ -370,6 +383,41 @@ def main() -> int:
             out.write_text(new_text)
             written += 1
             print(f"catalog_to_xr: wrote {rel_path}")
+
+    # Make sure every namespace an XR lands in actually exists. Follows the
+    # same convention as the hand-written infrastructure namespace.yaml
+    # files (environments/<domain>/<subdomain>/<system>/<env>/namespace.yaml,
+    # labelled ape.dock.tech/{domain,subdomain,system,environment}).
+    for domain, subdomain, sysn, env, ns in sorted(touched_namespaces):
+        if not (domain and subdomain and sysn and env and ns):
+            continue
+        ns_rel_path = f"{ENV_BASE}/{domain}/{subdomain}/{sysn}/{env}/namespace.yaml"
+        ns_out = root / ns_rel_path
+        ns_doc = {
+            "apiVersion": "v1",
+            "kind": "Namespace",
+            "metadata": {
+                "name": ns,
+                "labels": {
+                    "ape.dock.tech/domain": domain,
+                    "ape.dock.tech/subdomain": subdomain,
+                    "ape.dock.tech/system": sysn,
+                    "ape.dock.tech/environment": env,
+                },
+            },
+        }
+        ns_new_text = "---\n" + yaml.safe_dump(ns_doc, sort_keys=False, default_flow_style=False)
+        ns_old_text = ns_out.read_text() if ns_out.exists() else None
+        if ns_old_text == ns_new_text:
+            continue
+        changed += 1
+        if args.check:
+            print(f"catalog_to_xr: DRIFT {ns_rel_path}")
+            continue
+        ns_out.parent.mkdir(parents=True, exist_ok=True)
+        ns_out.write_text(ns_new_text)
+        written += 1
+        print(f"catalog_to_xr: wrote {ns_rel_path}")
 
     # Prune orphan XR files. Strict criteria so we never touch a
     # manually-imported or hand-edited XR:

@@ -10,13 +10,12 @@ metadata:
 spec:
   name: record-tpl2split.dev.arthurbryan.com-green
   domain: cross
-  subdomain: cloud
   system: dns
   environment: dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
   recordName: tpl2split
-  type: A
+  recordType: A
   aws:
     account: 309670275661
     accountName: dev-account
