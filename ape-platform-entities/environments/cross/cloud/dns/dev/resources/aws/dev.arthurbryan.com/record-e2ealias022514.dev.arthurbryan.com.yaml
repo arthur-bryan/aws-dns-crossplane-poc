@@ -1,0 +1,25 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-e2ealias022514.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"name":"dns-e2ealias022514-dev","type":"ALIAS","serviceType":"CloudFront","dnsName":"d111111abcdef8.cloudfront.net","evaluateTargetHealth":false,"enableWeightedRouting":false,"recordName":"e2ealias022514","entityRef":"resource:/dns-e2ealias022514-dev"}'
+spec:
+  name: record-e2ealias022514.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: e2ealias022514
+  recordType: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: CloudFront
+    dnsName: d111111abcdef8.cloudfront.net
+    evaluateTargetHealth: false
