@@ -23,7 +23,13 @@ type DnsRecord = {
   };
   setIdentifier?: string;
   weight?: number;
+  weightPercent?: number;
 };
+
+const formatRecordLabel = (r: DnsRecord) =>
+  r.setIdentifier
+    ? `${r.name} (${r.type} · ${r.setIdentifier}: ${r.weightPercent ?? 0}%)`
+    : `${r.name} (${r.type})`;
 
 export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   const { onChange, formData, formContext, required, rawErrors, errors, schema, uiSchema, idSchema, disabled } = props;
@@ -62,7 +68,25 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
     }
 
     const data = (await response.json()) as { records?: DnsRecord[] };
-    let result = data.records ?? [];
+    const fetched = data.records ?? [];
+
+    // Weight is only meaningful relative to its sibling weighted records (same name + type,
+    // differing by SetIdentifier) -- compute the real Route53 traffic share here, against the
+    // full unfiltered set, before excludeTypes/excludeClaimed can drop a sibling out of the sum.
+    const weightSums = new Map<string, number>();
+    for (const r of fetched) {
+      if (r.setIdentifier && typeof r.weight === 'number') {
+        const key = `${r.name}|${r.type}`;
+        weightSums.set(key, (weightSums.get(key) ?? 0) + r.weight);
+      }
+    }
+    let result = fetched.map((r) => {
+      if (!r.setIdentifier || typeof r.weight !== 'number') {
+        return r;
+      }
+      const sum = weightSums.get(`${r.name}|${r.type}`) ?? 0;
+      return { ...r, weightPercent: sum > 0 ? Math.round((r.weight / sum) * 100) : 0 };
+    });
 
     if (excludeTypes.length > 0) {
       const excluded = excludeTypes.map((t: string) => t.toUpperCase());
@@ -94,7 +118,7 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
   }, [discoveryApi, fetchApi, catalogApi, environment, zoneId, excludeTypes, excludeClaimed]);
 
   useEffect(() => {
-    if (formData && records.length > 0 && !records.some((r) => r.name === formData.name && r.type === formData.type)) {
+    if (formData && records.length > 0 && !records.some((r) => r.name === formData.name && r.type === formData.type && r.setIdentifier === formData.setIdentifier)) {
       onChange(undefined);
     }
   }, [records, formData, onChange]);
@@ -123,17 +147,17 @@ export const AwsDnsRecordPicker = (props: AwsDnsRecordPickerProps) => {
           disabled={disabled || loading || !environment || !zoneId}
           loading={loading}
           options={records}
-          getOptionLabel={(r) => `${r.name} (${r.type})`}
-          getOptionSelected={(a, b) => a.name === b.name && a.type === b.type}
-          value={records.find((r) => r.name === formData?.name && r.type === formData?.type) ?? null}
+          getOptionLabel={formatRecordLabel}
+          getOptionSelected={(a, b) => a.name === b.name && a.type === b.type && a.setIdentifier === b.setIdentifier}
+          value={records.find((r) => r.name === formData?.name && r.type === formData?.type && r.setIdentifier === formData?.setIdentifier) ?? null}
           onChange={(_, selected) => onChange(selected ?? undefined)}
           filterOptions={(options, state) => {
             const input = state.inputValue.toLowerCase();
             return options.filter((r) => r.name.toLowerCase().includes(input) || r.type.toLowerCase().includes(input));
           }}
           renderOption={(r) => (
-            <MenuItem key={`${r.name}-${r.type}`}>
-              {r.name} ({r.type})
+            <MenuItem key={`${r.name}-${r.type}-${r.setIdentifier ?? ''}`}>
+              {formatRecordLabel(r)}
             </MenuItem>
           )}
           renderInput={(params) => (
