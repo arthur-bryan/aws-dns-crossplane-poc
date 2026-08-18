@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-editnewA-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787030334002'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-editnewA-dev","type":"A","values":["10.0.5.1"],"enableWeightedRouting":false,"recordName":"editnewA","entityRef":"resource:/dns-editnewA-dev"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editnewA-dev","name":"dns-editnewA-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editnewA","type":"A","values":["10.0.5.1","10.0.5.99"],"enableWeightedRouting":false,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,8 +25,9 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: editnewA
+  recordName: "editnewA"
   recordType: A
   ttl: 3600
   values:
     - 10.0.5.1
+    - 10.0.5.99
