@@ -217,10 +217,13 @@ spec:
                 type:
                   const: ALIAS
                 serviceType:
-                  title: AWS Service Type (immutable)
+                  title: AWS Service Type
                   type: string
-                  description: Type of AWS service (cannot be changed)
-                  ui:disabled: true
+                  description: >-
+                    Switching between service types is safe -- it never requires
+                    recreating the record (unlike changing record type). Use the
+                    zone ID preview below to confirm the platform resolves the
+                    correct alias target before submitting.
                   enum:
                     - CloudFront
                     - ALB
@@ -238,6 +241,10 @@ spec:
                   type: boolean
                   description: Whether to evaluate the health of the target
                   default: false
+                zoneIdPreview:
+                  title: ' '
+                  type: string
+                  ui:field: AliasZoneIdPreview
               required:
                 - serviceType
                 - dnsName
@@ -249,8 +256,16 @@ spec:
                           enum:
                             - CloudFront
                             - GlobalAccelerator
-                            - S3Website
-                            - APIGateway
+                        region:
+                          title: Region
+                          type: string
+                          description: >-
+                            This service type uses a single global endpoint --
+                            no region needed.
+                          enum:
+                            - global
+                          default: global
+                          ui:disabled: true
                     - properties:
                         serviceType:
                           const: Custom
@@ -266,6 +281,99 @@ spec:
                           enum:
                             - ALB
                             - NLB
+                        region:
+                          title: Region
+                          type: string
+                          description: AWS region the load balancer is deployed in.
+                          enum:
+                            - us-east-1
+                            - us-east-2
+                            - us-west-1
+                            - us-west-2
+                            - ca-central-1
+                            - ca-west-1
+                            - af-south-1
+                            - ap-east-1
+                            - ap-east-2
+                            - ap-south-1
+                            - ap-south-2
+                            - ap-southeast-1
+                            - ap-southeast-2
+                            - ap-southeast-3
+                            - ap-southeast-4
+                            - ap-southeast-5
+                            - ap-southeast-6
+                            - ap-southeast-7
+                            - ap-northeast-1
+                            - ap-northeast-2
+                            - ap-northeast-3
+                            - eu-west-1
+                            - eu-west-2
+                            - eu-west-3
+                            - eu-central-1
+                            - eu-central-2
+                            - eu-north-1
+                            - eu-south-1
+                            - eu-south-2
+                            - il-central-1
+                            - mx-central-1
+                            - me-central-1
+                            - me-south-1
+                            - sa-east-1
+                            - cn-north-1
+                            - cn-northwest-1
+                            - us-gov-east-1
+                            - us-gov-west-1
+                      required:
+                        - region
+                    - properties:
+                        serviceType:
+                          enum:
+                            - S3Website
+                            - APIGateway
+                        region:
+                          title: Region
+                          type: string
+                          description: AWS region the resource is deployed in.
+                          enum:
+                            - us-east-1
+                            - us-east-2
+                            - us-west-1
+                            - us-west-2
+                            - ca-central-1
+                            - ca-west-1
+                            - af-south-1
+                            - ap-east-1
+                            - ap-east-2
+                            - ap-south-1
+                            - ap-south-2
+                            - ap-southeast-1
+                            - ap-southeast-2
+                            - ap-southeast-3
+                            - ap-southeast-4
+                            - ap-southeast-5
+                            - ap-southeast-6
+                            - ap-southeast-7
+                            - ap-northeast-1
+                            - ap-northeast-2
+                            - ap-northeast-3
+                            - eu-west-1
+                            - eu-west-2
+                            - eu-west-3
+                            - eu-central-1
+                            - eu-central-2
+                            - eu-north-1
+                            - eu-south-1
+                            - eu-south-2
+                            - il-central-1
+                            - mx-central-1
+                            - me-central-1
+                            - me-south-1
+                            - sa-east-1
+                            - us-gov-east-1
+                            - us-gov-west-1
+                      required:
+                        - region
 
     - title: Weighted Routing (Optional)
       description: Enable weighted routing to distribute traffic across multiple records
@@ -410,6 +518,9 @@ spec:
               dnsName: ${{ parameters.dnsName }}
               {%- if parameters.serviceType == 'Custom' %}
               hostedZoneId: ${{ parameters.customZoneId }}
+              {%- endif %}
+              {%- if parameters.region and parameters.region != 'global' %}
+              region: ${{ parameters.region }}
               {%- endif %}
               evaluateTargetHealth: ${{ parameters.evaluateTargetHealth }}
             {%- endif %}
