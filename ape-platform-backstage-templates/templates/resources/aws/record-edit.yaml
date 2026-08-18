@@ -337,6 +337,61 @@ spec:
       input:
         entityRef: ${{ parameters.entityRef }}
 
+    - id: checkImmutableTypeChange
+      name: Check whether this edit changes the underlying Route53 record type
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          existingType: ${{ steps.fetchExisting.output.entity.spec.recordType }}
+          newType: ${{ parameters.type }}
+        expression: >-
+          (
+            $normalize := function($t) { $t = "ALIAS" ? "A" : $t };
+            $normalize(existingType) != $normalize(newType)
+          )
+
+    - id: launchErrorIfImmutableTypeChange
+      name: Abort if the edit would require Route53 to recreate the record
+      if: ${{ steps.checkImmutableTypeChange.output.result }}
+      action: error:launch
+      input:
+        message: >-
+          Changing type from ${{ steps.fetchExisting.output.entity.spec.recordType }}
+          to ${{ parameters.type }} is not allowed here -- Route53 would have to
+          destroy and recreate the record, and the underlying provider refuses
+          this kind of update outright. A and ALIAS are the only interchangeable
+          pair (both map to Route53 type A); every other type is locked to itself.
+          Delete this record and create a new one with the desired type instead.
+
+    - id: checkImmutableServiceTypeChange
+      name: Check whether this edit changes an existing alias target's service type
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          existingType: ${{ steps.fetchExisting.output.entity.spec.recordType }}
+          existingServiceType: ${{ steps.fetchExisting.output.entity.spec.aliasTarget.serviceType }}
+          newServiceType: ${{ parameters.serviceType }}
+        expression: >-
+          (
+            existingType = "ALIAS"
+            and $string(existingServiceType) != ""
+            and existingServiceType != newServiceType
+          )
+
+    - id: launchErrorIfImmutableServiceTypeChange
+      name: Abort if the edit would change an immutable alias service type
+      if: ${{ steps.checkImmutableServiceTypeChange.output.result }}
+      action: error:launch
+      input:
+        message: >-
+          Changing AWS Service Type from
+          ${{ steps.fetchExisting.output.entity.spec.aliasTarget.serviceType }} to
+          ${{ parameters.serviceType }} is not allowed -- the platform enforces
+          this as immutable at the API level (aliasTarget.serviceType is
+          immutable on the DNSRecord XRD). Delete this record and create a new
+          one with the desired service type instead. Region and target DNS name
+          can still be edited freely.
+
     - id: deriveTtl
       name: Derive TTL from environment and record type
       action: roadiehq:utils:jsonata
