@@ -321,6 +321,7 @@ spec:
                                 title: Region
                                 type: string
                                 description: AWS region the load balancer is deployed in.
+                                ui:disabled: false
                                 enum:
                                   - us-east-1
                                   - us-east-2
@@ -371,6 +372,7 @@ spec:
                                 title: Region
                                 type: string
                                 description: AWS region the resource is deployed in.
+                                ui:disabled: false
                                 enum:
                                   - us-east-1
                                   - us-east-2
