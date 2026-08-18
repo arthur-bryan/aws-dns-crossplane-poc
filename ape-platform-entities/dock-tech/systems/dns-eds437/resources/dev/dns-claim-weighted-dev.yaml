@@ -1,0 +1,36 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-claim-weighted-dev
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/created-at: '1787027552001'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-claim-weighted-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"claim-weighted","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-claim-weighted-dev","enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"ttl":300,"values":["10.0.2.200"]}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-claim-weighted-dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: "claim-weighted"
+  recordType: A
+  import:
+    existing: true
+  setIdentifier: primary
+  weight: 100
+  ttl: 300
+  values:
+    - 10.0.2.200
