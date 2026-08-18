@@ -1,0 +1,20 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-zonefixtest.hml.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"hml","parentZone":{"id":"Z091442636MPUK86SZJ1T","name":"hml.arthurbryan.com","accountName":"hml-account","environment":"hml"},"kind":"Zone","name":"dns-zonefixtest-hml-zone"}'
+spec:
+  name: zone-zonefixtest.hml.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: hml
+  zoneName: zonefixtest.hml.arthurbryan.com
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  delegatedFromZoneId: Z091442636MPUK86SZJ1T
+  delegatedFromAccountName: dnszone-hml
