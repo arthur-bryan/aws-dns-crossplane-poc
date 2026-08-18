@@ -27,7 +27,12 @@ export const AliasRegionField = (props: FieldExtensionComponentProps<string>) =>
     if (global) {
       if (formData !== 'global') onChange('global');
     } else if (regional) {
-      if (formData && !options.includes(formData)) onChange(undefined);
+      // Never leave this on an unresolvable value -- the dropdown only ever offers
+      // options from the same table AliasZoneIdPreview resolves against, so falling
+      // back to the first one the moment serviceType lands here (or changes to a
+      // service whose table doesn't include the current region) guarantees the
+      // preview always shows a real zone ID, never "no zone ID resolves".
+      if (!formData || !options.includes(formData)) onChange(options[0]);
     } else if (formData !== undefined) {
       onChange(undefined);
     }
