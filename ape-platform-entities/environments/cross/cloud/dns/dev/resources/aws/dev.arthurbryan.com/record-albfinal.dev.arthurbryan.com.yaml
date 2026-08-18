@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-albfinal-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"ALB","region":"us-east-1","dnsName":"my-alb-final-test.us-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"values":[null],"recordName":"albfinal","entityRef":"resource:/dns-albfinal-dev"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-albfinal-dev","name":"dns-albfinal-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"albfinal","type":"ALIAS","enableWeightedRouting":false,"serviceType":"ALB","region":"us-east-1","dnsName":"my-alb-final-test.us-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"originalType":"ALIAS"}'
 spec:
   name: record-albfinal.dev.arthurbryan.com
   domain: cross
