@@ -47,11 +47,6 @@ spec:
         parentZone:
           title: Parent Zone
           type: object
-          description: >-
-            Existing zone this subdomain will be delegated from. dev and hml
-            zones may delegate from their own environment or from prd; prd
-            zones may only delegate from prd; dev and hml can never delegate
-            from each other.
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
