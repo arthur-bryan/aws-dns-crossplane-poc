@@ -6,7 +6,7 @@ metadata:
   description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-www-dev","name":"dns-www-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"www","type":"CNAME","values":["api6.dev.arthurbryan.com"],"enableWeightedRouting":false,"originalType":"CNAME"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-www-dev","name":"dns-www-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"www","type":"CNAME","values":["api.dev.arthurbryan.com"],"enableWeightedRouting":false,"originalType":"CNAME"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,4 +27,4 @@ spec:
   recordType: CNAME
   ttl: 3600
   values:
-    - api6.dev.arthurbryan.com
+    - api.dev.arthurbryan.com
