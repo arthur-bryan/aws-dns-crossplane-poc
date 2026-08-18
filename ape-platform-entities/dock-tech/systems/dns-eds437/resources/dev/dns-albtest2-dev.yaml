@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-albtest2-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787064726462'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-albtest2-dev","name":"dns-albtest2-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"albtest2","type":"ALIAS","enableWeightedRouting":false,"serviceType":"ALB","dnsName":"my-real-test-alb-987654321.us-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"region":"us-east-1","originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-albtest2-dev","name":"dns-albtest2-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"albtest2","type":"ALIAS","enableWeightedRouting":false,"serviceType":"CloudFront","dnsName":"d111111abcdef8.cloudfront.net","evaluateTargetHealth":false,"region":"global","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,10 +25,9 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: albtest2
+  recordName: "albtest2"
   recordType: ALIAS
   aliasTarget:
-    serviceType: ALB
-    dnsName: my-real-test-alb-987654321.us-east-1.elb.amazonaws.com
-    region: us-east-1
+    serviceType: CloudFront
+    dnsName: d111111abcdef8.cloudfront.net
     evaluateTargetHealth: false
