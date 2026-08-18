@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-albfinal.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"name":"dns-albfinal-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"ALB","region":"us-east-1","dnsName":"my-alb-final-test.us-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"values":[null],"recordName":"albfinal","entityRef":"resource:/dns-albfinal-dev"}'
+spec:
+  name: record-albfinal.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: albfinal
+  recordType: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: ALB
+    dnsName: my-alb-final-test.us-east-1.elb.amazonaws.com
+    evaluateTargetHealth: false
+    region: us-east-1
