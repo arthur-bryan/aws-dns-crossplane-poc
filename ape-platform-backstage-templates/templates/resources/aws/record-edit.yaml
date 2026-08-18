@@ -67,9 +67,11 @@ spec:
           title: Record Type
           type: string
           description: >-
-            Changing the record type destroys the existing record in Route53 and
-            re-creates it with the new type. Expect brief DNS unavailability
-            during the swap.
+            Record types that would require Route53 to destroy and recreate
+            this record can't be selected here. A and ALIAS both map to
+            Route53 record type A, so switching between them is the only
+            cross-type change allowed; every other type is locked to itself.
+          ui:field: RecordTypeField
           enum:
             - A
             - AAAA
