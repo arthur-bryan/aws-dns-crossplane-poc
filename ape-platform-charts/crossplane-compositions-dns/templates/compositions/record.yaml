@@ -298,7 +298,8 @@ spec:
                 kind: ClusterProviderConfig
               [[- if $importing ]]
               managementPolicies:
-                - "*"
+                - Observe
+                - Update
               [[- else ]]
               managementPolicies:
                 {{- toYaml .Values.managementPolicies | nindent 16 }}
