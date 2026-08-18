@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"name":"dns-importfixtest-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"importfixtest","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-importfixtest-dev","ttl":300,"values":["10.0.7.1"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-importfixtest-dev","name":"dns-importfixtest-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"importfixtest","type":"A","values":["10.0.7.1","10.0.7.2"],"enableWeightedRouting":false,"originalType":"A"}'
 spec:
   name: record-importfixtest.dev.arthurbryan.com
   domain: cross
@@ -19,8 +19,9 @@ spec:
   aws:
     account: 309670275661
     accountName: dev-account
-  ttl: 300
+  ttl: 3600
   values:
   - 10.0.7.1
+  - 10.0.7.2
   import:
     existing: true
