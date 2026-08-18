@@ -1,0 +1,36 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-scn-weighted2-dev-west
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/created-at: '1787029008324'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-scn-weighted2-dev-west","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"scn-weighted2","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-scn-weighted2-dev-west","enableWeightedRouting":true,"setIdentifier":"west","weight":50,"ttl":300,"values":["10.0.3.20"]}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-scn-weighted2-dev-west
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: "scn-weighted2"
+  recordType: A
+  import:
+    existing: true
+  setIdentifier: west
+  weight: 50
+  ttl: 300
+  values:
+    - 10.0.3.20
