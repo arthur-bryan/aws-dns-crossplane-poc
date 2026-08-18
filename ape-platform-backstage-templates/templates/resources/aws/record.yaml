@@ -379,13 +379,17 @@ spec:
             $env := environment;
             $envCfg := environments[name = $env];
             $aws := { "account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName };
+            $sys := system;
+            $zn := zone;
+            $kd := kind;
+            $ns := namespace;
             [ records.(
               $weighted := enableWeightedRouting = true and $string(setIdentifier) != "";
               $s := $substringAfter(name, $prefix);
               $recordName := $substringBefore($s, $suffix);
               $entityName := $weighted ? name & "-" & setIdentifier : name;
               $isNs := type = "NS";
-              $isPrd := environment = "prd";
+              $isPrd := $env = "prd";
               $ttl := $weighted and ($isPrd = false) ? 600 : $isNs ? 172800 : 3600;
               {
                 "recordName": $recordName,
@@ -393,9 +397,9 @@ spec:
                 "ttl": $ttl,
                 "aws": $aws,
                 "params": $merge([
-                  { "system": system, "environment": environment, "zone": zone, "kind": kind },
+                  { "system": $sys, "environment": $env, "zone": $zn, "kind": $kd },
                   $,
-                  { "name": $entityName, "recordName": $recordName, "entityRef": "resource:" & namespace & "/" & $entityName }
+                  { "name": $entityName, "recordName": $recordName, "entityRef": "resource:" & $ns & "/" & $entityName }
                 ])
               }
             ) ]
