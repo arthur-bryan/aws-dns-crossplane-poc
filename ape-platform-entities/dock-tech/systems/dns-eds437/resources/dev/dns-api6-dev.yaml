@@ -18,10 +18,10 @@ spec:
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
   recordName: api6
-  recordType: AAAA
+  recordType: A
   aws:
     account: "309670275661"
     accountName: dev-account
   ttl: 600
   values:
-    - 2001:db8::1
+    - 10.99.99.1
