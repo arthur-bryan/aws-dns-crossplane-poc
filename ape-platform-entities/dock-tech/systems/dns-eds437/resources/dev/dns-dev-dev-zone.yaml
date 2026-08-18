@@ -19,6 +19,9 @@ spec:
   zoneName: dev.arthurbryan.com
   delegatedFromZoneId: Z03010981ALJFZB4QLU8W
   delegatedFromAccountName: prd-account
+  import:
+    existing: true
+    zoneId: Z0945364EYNE5KZW0WIF
   aws:
     account: 309670275661
     accountName: dev-account

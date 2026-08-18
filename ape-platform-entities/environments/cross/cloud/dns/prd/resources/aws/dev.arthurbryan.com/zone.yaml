@@ -18,3 +18,6 @@ spec:
     accountName: dev-account
   delegatedFromZoneId: Z03010981ALJFZB4QLU8W
   delegatedFromAccountName: prd-account
+  import:
+    existing: true
+    zoneId: Z0945364EYNE5KZW0WIF

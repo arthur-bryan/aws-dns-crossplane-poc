@@ -12,6 +12,8 @@ spec:
       namespace: crossplane-system
       name: aws-creds
       key: credentials
+  assumeRoleChain:
+    - roleARN: arn:aws:iam::382598791794:role/OrganizationAccountAccessRole
 ---
 apiVersion: apiextensions.crossplane.io/v1beta1
 kind: EnvironmentConfig
@@ -23,6 +25,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 data:
   aws:
-    account: "597230762851"
+    account: "382598791794"
     accountName: hml-account
     region: us-east-1
