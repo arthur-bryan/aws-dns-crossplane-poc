@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/arthur-bryan/aws-dns-crossplane-poc
-    targetRevision: feature/ape-platform-alignment
+    targetRevision: ape-platform-alignment
     path: lab/provider-config
   destination:
     server: https://kubernetes.default.svc

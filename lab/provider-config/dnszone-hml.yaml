@@ -2,7 +2,7 @@
 apiVersion: aws.m.upbound.io/v1beta1
 kind: ClusterProviderConfig
 metadata:
-  name: prd-account
+  name: dnszone-hml
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -16,13 +16,13 @@ spec:
 apiVersion: apiextensions.crossplane.io/v1beta1
 kind: EnvironmentConfig
 metadata:
-  name: prd-account
+  name: hml-account
   labels:
-    accountName: prd-account
+    accountName: hml-account
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 data:
   aws:
-    account: 597230762851
-    accountName: prd-account
+    account: "597230762851"
+    accountName: hml-account
     region: us-east-1

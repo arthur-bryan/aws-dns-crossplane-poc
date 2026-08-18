@@ -2,7 +2,7 @@
 apiVersion: aws.m.upbound.io/v1beta1
 kind: ClusterProviderConfig
 metadata:
-  name: hml-account
+  name: dnszone-prd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -12,19 +12,17 @@ spec:
       namespace: crossplane-system
       name: aws-creds
       key: credentials
-  assumeRoleChain:
-    - roleARN: arn:aws:iam::382598791794:role/OrganizationAccountAccessRole
 ---
 apiVersion: apiextensions.crossplane.io/v1beta1
 kind: EnvironmentConfig
 metadata:
-  name: hml-account
+  name: prd-account
   labels:
-    accountName: hml-account
+    accountName: prd-account
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 data:
   aws:
-    account: 382598791794
-    accountName: hml-account
+    account: "597230762851"
+    accountName: prd-account
     region: us-east-1

@@ -2,7 +2,7 @@
 apiVersion: aws.m.upbound.io/v1beta1
 kind: ClusterProviderConfig
 metadata:
-  name: dev-account
+  name: dnszone-dev
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -12,8 +12,6 @@ spec:
       namespace: crossplane-system
       name: aws-creds
       key: credentials
-  assumeRoleChain:
-    - roleARN: arn:aws:iam::309670275661:role/OrganizationAccountAccessRole
 ---
 apiVersion: apiextensions.crossplane.io/v1beta1
 kind: EnvironmentConfig
@@ -25,6 +23,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 data:
   aws:
-    account: 309670275661
+    account: "597230762851"
     accountName: dev-account
     region: us-east-1
