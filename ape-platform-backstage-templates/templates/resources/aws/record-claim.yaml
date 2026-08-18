@@ -392,10 +392,13 @@ spec:
             {%- endif %}
             {%- if parameters.existingRecord.aliasTarget %}
             aliasTarget:
-              serviceType: Custom
+              serviceType: ${{ steps.buildEditParams.output.result.serviceType }}
               dnsName: ${{ parameters.existingRecord.aliasTarget.dnsName }}
               hostedZoneId: ${{ parameters.existingRecord.aliasTarget.hostedZoneId }}
               evaluateTargetHealth: ${{ parameters.existingRecord.aliasTarget.evaluateTargetHealth }}
+              {%- if steps.buildEditParams.output.result.region %}
+              region: ${{ steps.buildEditParams.output.result.region }}
+              {%- endif %}
             {%- else %}
             ttl: ${{ parameters.existingRecord.ttl }}
             values:
