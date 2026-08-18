@@ -408,7 +408,7 @@ spec:
       each: ${{ parameters.records }}
       action: fs:file:exists
       input:
-        filepath: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordNames.output.result[each.key].entityName }}.yaml
+        filepath: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordNames.output.result[each.key].entityName }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -423,7 +423,7 @@ spec:
       each: ${{ parameters.records }}
       action: roadiehq:utils:fs:write
       input:
-        path: ./ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordNames.output.result[each.key].entityName }}.yaml
+        path: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeRecordNames.output.result[each.key].entityName }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
