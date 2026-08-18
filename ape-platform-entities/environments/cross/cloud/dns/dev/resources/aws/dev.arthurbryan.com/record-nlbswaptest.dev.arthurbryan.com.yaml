@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-nlbswaptest.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-nlbswaptest-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"NLB","region":"sa-east-1","dnsName":"my-nlb-saeast1.sa-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"values":[null],"recordName":"nlbswaptest","entityRef":"resource:dns-eds437/dns-nlbswaptest-dev"}'
+spec:
+  name: record-nlbswaptest.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: nlbswaptest
+  recordType: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: NLB
+    dnsName: my-nlb-saeast1.sa-east-1.elb.amazonaws.com
+    evaluateTargetHealth: false
+    region: sa-east-1
