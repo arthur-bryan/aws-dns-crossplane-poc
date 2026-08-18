@@ -6,6 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-www-dev","name":"dns-www-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"www","type":"CNAME","values":["api6.dev.arthurbryan.com"],"enableWeightedRouting":false,"originalType":"CNAME"}'
 spec:
   name: record-www.dev.arthurbryan.com
   domain: cross
@@ -18,6 +19,6 @@ spec:
   aws:
     account: 309670275661
     accountName: dev-account
-  ttl: 600
+  ttl: 3600
   values:
-  - api.dev.arthurbryan.com
+  - api6.dev.arthurbryan.com

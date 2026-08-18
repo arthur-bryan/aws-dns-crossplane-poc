@@ -6,6 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-split-blue-dev","name":"dns-split-blue-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"split","type":"A","values":["10.1.0.1"],"enableWeightedRouting":true,"setIdentifier":"blue","weight":40,"originalType":"A"}'
 spec:
   name: record-split.dev.arthurbryan.com-blue
   domain: cross
@@ -22,4 +23,4 @@ spec:
   values:
   - 10.1.0.1
   setIdentifier: blue
-  weight: 30
+  weight: 40
