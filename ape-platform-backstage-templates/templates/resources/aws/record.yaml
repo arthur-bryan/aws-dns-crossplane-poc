@@ -318,6 +318,7 @@ spec:
                         description: Unique identifier for this weighted record
                         minLength: 1
                         maxLength: 128
+                        ui:field: WeightedSetIdentifierField
                         ui:help: "Example: primary-us-east-2"
                       weight:
                         title: Weight
@@ -326,6 +327,7 @@ spec:
                         minimum: 0
                         maximum: 255
                         default: 100
+                        ui:field: WeightedWeightField
                         ui:help: "Higher weight = more traffic (relative to other records with same name)"
                     required:
                       - setIdentifier
