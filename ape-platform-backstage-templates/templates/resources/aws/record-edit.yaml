@@ -217,16 +217,16 @@ spec:
                 type:
                   const: ALIAS
                 serviceType:
-                  title: AWS Service Type (immutable)
+                  title: AWS Service Type
                   type: string
                   description: >-
-                    The platform enforces this as immutable at the API level
-                    (spec.aliasTarget.serviceType: self == oldSelf) -- it can't
-                    be changed here regardless of whether the underlying AWS
-                    change would itself be safe. Delete and recreate the
-                    record if a different service type is needed. Region and
-                    target DNS name can still be edited freely below.
-                  ui:disabled: true
+                    Switching service type is safe -- Route53 has no concept
+                    of "service type" on an alias target, only a hosted zone
+                    ID, so this is an ordinary field update, never a
+                    recreation. Update region and target DNS name to match
+                    the new target, and use the zone ID preview below to
+                    confirm the platform resolves the correct alias before
+                    submitting.
                   enum:
                     - CloudFront
                     - ALB
@@ -362,35 +362,6 @@ spec:
           this kind of update outright. A and ALIAS are the only interchangeable
           pair (both map to Route53 type A); every other type is locked to itself.
           Delete this record and create a new one with the desired type instead.
-
-    - id: checkImmutableServiceTypeChange
-      name: Check whether this edit changes an existing alias target's service type
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          existingType: ${{ steps.fetchExisting.output.entity.spec.recordType }}
-          existingServiceType: ${{ steps.fetchExisting.output.entity.spec.aliasTarget.serviceType }}
-          newServiceType: ${{ parameters.serviceType }}
-        expression: >-
-          (
-            existingType = "ALIAS"
-            and $string(existingServiceType) != ""
-            and existingServiceType != newServiceType
-          )
-
-    - id: launchErrorIfImmutableServiceTypeChange
-      name: Abort if the edit would change an immutable alias service type
-      if: ${{ steps.checkImmutableServiceTypeChange.output.result }}
-      action: error:launch
-      input:
-        message: >-
-          Changing AWS Service Type from
-          ${{ steps.fetchExisting.output.entity.spec.aliasTarget.serviceType }} to
-          ${{ parameters.serviceType }} is not allowed -- the platform enforces
-          this as immutable at the API level (aliasTarget.serviceType is
-          immutable on the DNSRecord XRD). Delete this record and create a new
-          one with the desired service type instead. Region and target DNS name
-          can still be edited freely.
 
     - id: deriveTtl
       name: Derive TTL from environment and record type

@@ -111,7 +111,12 @@ spec:
                       description: Target DNS name.
                     serviceType:
                       type: string
-                      description: Service type.
+                      description: >-
+                        Service type. Not immutable: changing it, together with
+                        region/dnsName, is an ordinary field update -- Route53
+                        has no concept of "service type" on an alias target
+                        (only hostedZoneId/dnsName/evaluateTargetHealth), so
+                        this never requires recreating the record.
                       enum:
                         [
                           CloudFront,
@@ -123,9 +128,6 @@ spec:
                           ElasticBeanstalk,
                           Custom,
                         ]
-                      x-kubernetes-validations:
-                        - rule: "self == oldSelf"
-                          message: "serviceType is immutable"
                     region:
                       type: string
                       description: Target region.
