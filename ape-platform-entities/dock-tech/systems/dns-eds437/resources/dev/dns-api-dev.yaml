@@ -3,26 +3,29 @@ kind: Resource
 metadata:
   name: dns-api-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-api-dev","name":"dns-api-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"api","type":"A","values":["10.0.0.1","10.0.0.99"],"enableWeightedRouting":false,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
 spec:
-  type: dns-record
+  type: DNSRecord
   cloud: aws
   owner: group:default/infrastructure
+  tribe: 
   system: system:dns-eds437/dns
   environment: dev
+  name: dns-api-dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: api
-  recordType: A
   aws:
     account: "309670275661"
     accountName: dev-account
-  ttl: 600
+  recordName: "api"
+  recordType: A
+  ttl: 3600
   values:
     - 10.0.0.1
-    - 10.0.0.2
+    - 10.0.0.99
