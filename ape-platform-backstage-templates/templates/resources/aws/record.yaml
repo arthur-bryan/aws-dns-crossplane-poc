@@ -431,6 +431,7 @@ spec:
             namespace: ${{ steps.fetchSystem.output.entity.metadata.namespace }}
             description: DNS Record created by template
             annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
               dock.tech/created-by: ${{ user.ref }}
               dock.tech/scaffolder-editable-template: dns-record-edit
               dock.tech/scaffolder-parameters: ${{ "'" + steps.computeRecordNames.output.result[each.key].params | dump + "'" }}
