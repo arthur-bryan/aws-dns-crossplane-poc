@@ -3,27 +3,30 @@ kind: Resource
 metadata:
   name: dns-cdn-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-cdn-dev","name":"dns-cdn-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"cdn","type":"ALIAS","serviceType":"Custom","dnsName":"api6.dev.arthurbryan.com","evaluateTargetHealth":false,"customZoneId":"Z0945364EYNE5KZW0WIF","enableWeightedRouting":false,"originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
 spec:
-  type: dns-record
+  type: DNSRecord
   cloud: aws
   owner: group:default/infrastructure
+  tribe: 
   system: system:dns-eds437/dns
   environment: dev
+  name: dns-cdn-dev
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
-  recordName: cdn
-  recordType: ALIAS
   aws:
     account: "309670275661"
     accountName: dev-account
+  recordName: "cdn"
+  recordType: ALIAS
   aliasTarget:
     serviceType: Custom
-    dnsName: api.dev.arthurbryan.com
+    dnsName: api6.dev.arthurbryan.com
     hostedZoneId: Z0945364EYNE5KZW0WIF
     evaluateTargetHealth: false
