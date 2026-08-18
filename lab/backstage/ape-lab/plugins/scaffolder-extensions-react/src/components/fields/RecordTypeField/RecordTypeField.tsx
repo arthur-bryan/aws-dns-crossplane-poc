@@ -53,7 +53,6 @@ export const RecordTypeField = (props: FieldExtensionComponentProps<string>) => 
   return (
     <ScaffolderField
       rawErrors={rawErrors}
-      rawDescription={uiSchema['ui:description'] ?? schema.description}
       required={required}
       disabled={disabled}
       errors={errors}
