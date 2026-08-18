@@ -51,6 +51,7 @@ import { ZoneFqdnPreview, ZoneFqdnPreviewSchema } from '../components/fields/Zon
 import { RecordTypeField, RecordTypeFieldSchema } from '../components/fields/RecordTypeField';
 import { RecordTtlPreview, RecordTtlPreviewSchema } from '../components/fields/RecordTtlPreview';
 import { AliasZoneIdPreview, AliasZoneIdPreviewSchema } from '../components/fields/AliasZoneIdPreview';
+import { AliasRegionField, AliasRegionFieldSchema } from '../components/fields/AliasRegionField';
 import { WeightedWeightField, WeightedWeightFieldSchema } from '../components/fields/WeightedWeightField';
 import { WeightedSetIdentifierField, WeightedSetIdentifierFieldSchema } from '../components/fields/WeightedSetIdentifierField';
 import {
@@ -356,6 +357,11 @@ export const DEFAULT_SCAFFOLDER_FIELD_EXTENSIONS = [
     component: AliasZoneIdPreview,
     name: 'AliasZoneIdPreview',
     schema: AliasZoneIdPreviewSchema,
+  },
+  {
+    component: AliasRegionField,
+    name: 'AliasRegionField',
+    schema: AliasRegionFieldSchema,
   },
   {
     component: WeightedWeightField,

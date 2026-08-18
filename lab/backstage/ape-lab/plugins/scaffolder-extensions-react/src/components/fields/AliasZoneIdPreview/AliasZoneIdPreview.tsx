@@ -4,7 +4,7 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import TextField from '@material-ui/core/TextField';
 
 import { getParentFormDataFromId } from '../utils';
-import { resolveAliasZoneId } from './aliasZoneIds';
+import { resolveAliasZoneId } from '../aliasZoneIds';
 
 // Read-only preview of the Route53 hosted-zone-ID the platform will actually resolve
 // for this alias target, mirroring the composition's lookup table exactly (see
