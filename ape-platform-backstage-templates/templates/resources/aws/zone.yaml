@@ -55,20 +55,6 @@ spec:
           type: string
           ui:field: ZoneFqdnPreview
 
-        comment:
-          title: Comment
-          type: string
-          description: Optional comment for the zone (max 256 characters)
-          maxLength: 256
-
-    - title: Additional Tags (Optional)
-      properties:
-        tags:
-          title: Tags
-          type: object
-          description: Additional AWS tags (hierarchy tags are added automatically)
-          ui:field: KeyValuePairInput
-
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
 
@@ -149,15 +135,6 @@ spec:
             zoneName: ${{ steps.computeZoneName.output.result }}
             delegatedFromZoneId: ${{ parameters.parentZone.id }}
             delegatedFromAccountName: ${{ parameters.parentZone.accountName }}
-            {%- if parameters.comment %}
-            comment: ${{ parameters.comment }}
-            {%- endif %}
-            {%- if parameters.tags %}
-            tags:
-            {%- for key, value in parameters.tags %}
-              {{ key }}: {{ value }}
-            {%- endfor %}
-            {%- endif %}
 
     - $yaml: ../../../shared/entities/commit.yaml
     - $yaml: ../../../shared/entities/push.yaml
