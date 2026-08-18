@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-aaaatypetest-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787068604002'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aaaatypetest-dev","type":"AAAA","enableWeightedRouting":false,"values":["2001:db8::99"],"recordName":"aaaatypetest","entityRef":"resource:dns-eds437/dns-aaaatypetest-dev"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aaaatypetest-dev","type":"AAAA","enableWeightedRouting":false,"values":["2001:db8::99"],"recordName":"aaaatypetest","entityRef":"resource:dns-eds437/dns-aaaatypetest-dev","originalType":"AAAA"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,7 +25,7 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: aaaatypetest
+  recordName: "aaaatypetest"
   recordType: AAAA
   ttl: 3600
   values:
