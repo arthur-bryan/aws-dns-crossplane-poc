@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-albtest2-dev
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787064726462'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-albtest2-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"ALB","dnsName":"my-real-test-alb-987654321.us-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"region":"us-east-1","values":[null],"recordName":"albtest2","entityRef":"resource:/dns-albtest2-dev"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-albtest2-dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: albtest2
+  recordType: ALIAS
+  aliasTarget:
+    serviceType: ALB
+    dnsName: my-real-test-alb-987654321.us-east-1.elb.amazonaws.com
+    region: us-east-1
+    evaluateTargetHealth: false
