@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-editclaimcname-dev
   namespace: dns-eds437
-  description: DNS Record claimed by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787030510968'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-editclaimcname-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimcname","type":"CNAME","originalType":"CNAME","entityRef":"resource:dns-eds437/dns-editclaimcname-dev","ttl":300,"values":["target1.example.com"]}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-editclaimcname-dev","name":"dns-editclaimcname-dev","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"editclaimcname","type":"CNAME","values":["target2.example.com"],"enableWeightedRouting":false,"originalType":"CNAME"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,8 +27,6 @@ spec:
     accountName: dev-account
   recordName: "editclaimcname"
   recordType: CNAME
-  import:
-    existing: true
-  ttl: 300
+  ttl: 3600
   values:
-    - target1.example.com
+    - target2.example.com
