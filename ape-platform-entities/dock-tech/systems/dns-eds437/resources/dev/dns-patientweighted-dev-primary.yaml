@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-patientweighted-dev-primary
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787032666912'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"name":"dns-patientweighted-dev-primary","type":"A","values":["10.0.9.10"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"recordName":"patientweighted","entityRef":"resource:/dns-patientweighted-dev-primary"}'
+    dock.tech/scaffolder-parameters: '{"entityRef":"resource:dns-eds437/dns-patientweighted-dev-primary","name":"dns-patientweighted-dev-primary","system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"recordName":"patientweighted","type":"A","values":["10.0.9.10"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":65,"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,10 +25,10 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: patientweighted
+  recordName: "patientweighted"
   recordType: A
   ttl: 600
   values:
     - 10.0.9.10
   setIdentifier: primary
-  weight: 100
+  weight: 65
