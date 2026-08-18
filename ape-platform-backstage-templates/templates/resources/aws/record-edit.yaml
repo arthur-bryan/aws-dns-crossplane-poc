@@ -232,6 +232,14 @@ spec:
                     - APIGateway
                     - GlobalAccelerator
                     - Custom
+                  enumNames:
+                    - "CloudFront Distribution"
+                    - "Application Load Balancer (ALB)"
+                    - "Network Load Balancer (NLB)"
+                    - "S3 Website Endpoint"
+                    - "API Gateway"
+                    - "Global Accelerator"
+                    - "Custom (provide zone ID manually)"
                 dnsName:
                   title: Target DNS Name
                   type: string
