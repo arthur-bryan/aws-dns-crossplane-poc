@@ -65,12 +65,19 @@ spec:
         entityRef: system:dns-eds437/dns
         defaultKind: System
 
-    - id: fetchDomain
-      name: Fetch Domain Entity
-      action: catalog:fetch
+    - id: deriveAccount
+      name: Derive AWS account from environment
+      action: roadiehq:utils:jsonata
       input:
-        entityRef: ${{ steps.fetchDnsSystem.output.entity.spec.domain }}
-        defaultKind: Domain
+        data:
+          environment: ${{ parameters.environment }}
+          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
+        expression: >-
+          (
+            $env := environment;
+            $envCfg := environments[name = $env];
+            { "account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName }
+          )
 
     - id: computeZoneName
       name: Compute child zone FQDN
@@ -131,10 +138,12 @@ spec:
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
             name: ${{ parameters.name }}
-            domain: ${{ steps.fetchDomain.output.entity.metadata.name }}
+            aws:
+              account: "${{ steps.deriveAccount.output.result.account }}"
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
             zoneName: ${{ steps.computeZoneName.output.result }}
             delegatedFromZoneId: ${{ parameters.parentZone.id }}
-            delegatedFromAccountName: ${{ parameters.parentZone.accountName }}
+            delegatedFromAccountName: dnszone-${{ parameters.parentZone.environment }}
 
     - $yaml: ../../../shared/entities/commit.yaml
     - $yaml: ../../../shared/entities/push.yaml

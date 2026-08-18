@@ -113,6 +113,7 @@ export async function createDnsRouter(opts: {
             private: z.Config?.PrivateZone ?? false,
             recordCount: z.ResourceRecordSetCount,
             accountName,
+            environment: env,
           }));
         }),
       );

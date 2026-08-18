@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import useAsync from 'react-use/esm/useAsync';
 
 import { AwsDnsZonePickerProps } from './schema';
+import { resolveDependentFieldValue } from '../utils';
 
 type Zone = {
   id: string;
@@ -25,7 +26,9 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
 
   const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName;
-  const environmentFromForm = environmentFieldName ? formContext?.formData?.[environmentFieldName] : undefined;
+  const environmentFromForm = environmentFieldName
+    ? resolveDependentFieldValue(formContext?.formData, idSchema?.$id, environmentFieldName)
+    : undefined;
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
   const environment = typeof rawEnvironment === 'string' && rawEnvironment.trim().length > 0 ? rawEnvironment : undefined;
   const zoneValue = formData && typeof formData === 'object' ? (formData as Zone) : undefined;
@@ -85,9 +88,7 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
           value={zones.find((zone) => zone.id === zoneValue?.id) ?? null}
           onChange={(_, selected) => onChange(selected ? { id: selected.id, name: selected.name, accountName: selected.accountName, environment: selected.environment } : undefined)}
           renderOption={(zone) => zone.name}
-          renderInput={(params) => (
-            <TextField {...params} label={schema.title ?? 'DNS Zone'} margin="dense" variant="outlined" required={required} fullWidth />
-          )}
+          renderInput={(params) => <TextField {...params} label={schema.title ?? 'DNS Zone'} margin="dense" variant="outlined" required={required} fullWidth />}
         />
         <FormHelperText>{helperText}</FormHelperText>
       </>
