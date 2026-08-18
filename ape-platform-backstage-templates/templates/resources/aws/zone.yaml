@@ -47,8 +47,15 @@ spec:
         parentZone:
           title: Parent Zone
           type: object
-          description: Existing zone this subdomain will be delegated from
+          description: >-
+            Existing zone this subdomain will be delegated from. dev and hml
+            zones may delegate from their own environment or from prd; prd
+            zones may only delegate from prd; dev and hml can never delegate
+            from each other.
           ui:field: AwsDnsZonePicker
+          ui:options:
+            environmentFieldName: environment
+            restrictParentEnvironments: true
 
         fqdnPreview:
           title: Resulting Zone
@@ -78,6 +85,31 @@ spec:
             $envCfg := environments[name = $env];
             { "account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName }
           )
+
+    - id: checkParentEnvironmentAllowed
+      name: Check parent zone against the delegation hierarchy
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          environment: ${{ parameters.environment }}
+          parentEnvironment: ${{ parameters.parentZone.environment }}
+        expression: >-
+          (
+            $childEnv := environment;
+            $parentEnv := parentEnvironment;
+            $childEnv != $parentEnv and $parentEnv != "prd"
+          )
+
+    - id: launchErrorIfParentEnvironmentNotAllowed
+      name: Abort if the parent zone violates the delegation hierarchy
+      if: ${{ steps.checkParentEnvironmentAllowed.output.result }}
+      action: error:launch
+      input:
+        message: >-
+          A ${{ parameters.environment }} zone cannot be delegated from a
+          ${{ parameters.parentZone.environment }} zone. dev and hml zones may
+          only delegate from their own environment or from prd; prd zones may
+          only delegate from prd.
 
     - id: computeZoneName
       name: Compute child zone FQDN

@@ -31,15 +31,20 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
     : undefined;
   const rawEnvironment = uiOptions.environment ?? environmentFromForm;
   const environment = typeof rawEnvironment === 'string' && rawEnvironment.trim().length > 0 ? rawEnvironment : undefined;
+  // When set, this picker is choosing a *parent* zone to delegate from, not a
+  // same-environment zone -- delegation hierarchy: dev/hml may delegate from
+  // their own environment or from prd; prd may only delegate from prd; dev
+  // and hml may never delegate from each other.
+  const restrictParentEnvironments = uiOptions.restrictParentEnvironments === true;
   const zoneValue = formData && typeof formData === 'object' ? (formData as Zone) : undefined;
 
   const {
-    value: zones = [],
+    value: fetchedZones = [],
     loading,
     error,
   } = useAsync(async () => {
     const baseUrl = await discoveryApi.getBaseUrl('aws');
-    const url = environment
+    const url = environment && !restrictParentEnvironments
       ? `${baseUrl}/dns-zones?environment=${encodeURIComponent(environment)}`
       : `${baseUrl}/dns-zones`;
     const response = await fetchApi.fetch(url);
@@ -50,7 +55,11 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
 
     const data = (await response.json()) as { zones?: Zone[] };
     return data.zones ?? [];
-  }, [discoveryApi, fetchApi, environment]);
+  }, [discoveryApi, fetchApi, environment, restrictParentEnvironments]);
+
+  const zones = restrictParentEnvironments && environment
+    ? fetchedZones.filter((zone) => zone.environment === environment || zone.environment === 'prd')
+    : fetchedZones;
 
   useEffect(() => {
     if (zoneValue && zones.length > 0 && !zones.some((zone) => zone.id === zoneValue.id)) {
