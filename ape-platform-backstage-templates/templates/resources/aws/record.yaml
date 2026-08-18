@@ -237,7 +237,6 @@ spec:
                           type: string
                         minItems: 1
                         maxItems: 1
-                        ui:help: "Example: server.example.com (for reverse DNS)"
                     required:
                       - values
 
