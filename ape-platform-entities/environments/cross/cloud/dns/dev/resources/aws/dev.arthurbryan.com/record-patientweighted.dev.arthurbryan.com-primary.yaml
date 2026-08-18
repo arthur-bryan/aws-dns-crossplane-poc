@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-patientweighted.dev.arthurbryan.com-primary
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"name":"dns-patientweighted-dev-primary","type":"A","values":["10.0.9.10"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":100,"recordName":"patientweighted","entityRef":"resource:/dns-patientweighted-dev-primary"}'
+spec:
+  name: record-patientweighted.dev.arthurbryan.com-primary
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: patientweighted
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 600
+  values:
+  - 10.0.9.10
+  setIdentifier: primary
+  weight: 100
