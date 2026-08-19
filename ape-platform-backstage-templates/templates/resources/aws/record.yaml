@@ -116,7 +116,7 @@ spec:
                       type:
                         const: A
                       values:
-                        title: IPv4 Addresses
+                        title: Record Value
                         type: array
                         description: List of IPv4 addresses
                         items:
@@ -131,7 +131,7 @@ spec:
                       type:
                         const: AAAA
                       values:
-                        title: IPv6 Addresses
+                        title: Record Value
                         type: array
                         description: List of IPv6 addresses
                         items:
@@ -145,7 +145,7 @@ spec:
                       type:
                         const: CNAME
                       values:
-                        title: Target Hostname
+                        title: Record Value
                         type: array
                         description: Target canonical name (only one value allowed for CNAME)
                         items:
@@ -160,7 +160,7 @@ spec:
                       type:
                         const: TXT
                       values:
-                        title: Text Values
+                        title: Record Value
                         type: array
                         description: Text values for the record
                         items:
@@ -173,7 +173,7 @@ spec:
                       # type:
                         # const: MX
                       # values:
-                        # title: MX Records
+                        # title: Record Value
                         # type: array
                         # description: 'Mail exchange records (format: "priority hostname")'
                         # items:
@@ -188,7 +188,7 @@ spec:
                       # type:
                         # const: SRV
                       # values:
-                        # title: SRV Records
+                        # title: Record Value
                         # type: array
                         # description: 'Service records (format: "priority weight port target")'
                         # items:
@@ -203,7 +203,7 @@ spec:
                       # type:
                         # const: NS
                       # values:
-                        # title: Nameservers
+                        # title: Record Value
                         # type: array
                         # description: Nameserver hostnames for subdomain delegation
                         # items:
@@ -217,7 +217,7 @@ spec:
                       # type:
                         # const: CAA
                       # values:
-                        # title: CAA Records
+                        # title: Record Value
                         # type: array
                         # description: 'Certificate authority authorization (format: "flags tag value")'
                         # items:
@@ -232,7 +232,7 @@ spec:
                       # type:
                         # const: PTR
                       # values:
-                        # title: Target Hostname
+                        # title: Record Value
                         # type: array
                         # description: Hostname for reverse DNS lookup
                         # items:
@@ -271,7 +271,7 @@ spec:
                         type: string
                         ui:field: AliasRegionField
                       dnsName:
-                        title: Target DNS Name
+                        title: Record Value
                         type: string
                         description: DNS name of the AWS resource
                         ui:help: "Example: d111111abcdef8.cloudfront.net"
