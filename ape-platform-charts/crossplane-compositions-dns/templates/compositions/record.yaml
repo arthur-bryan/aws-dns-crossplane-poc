@@ -385,13 +385,27 @@ spec:
 
             ---
             [[- if $record.status.atProvider ]]
+            [[- $syncedOk := true ]]
+            [[- $syncedMessage := "" ]]
+            [[- range $record.status.conditions ]]
+            [[- if and (eq .type "Synced") (ne .status "True") ]]
+            [[- $syncedOk = false ]]
+            [[- $syncedMessage = .message ]]
+            [[- end ]]
+            [[- end ]]
             apiVersion: dock.tech/v1
             kind: DNSRecord
             status:
               fqdn: [[ $displayFqdn ]]
               recordId: [[ $record.status.atProvider.id ]]
-              ready: true
-              message: [[ if $importing ]]"Record imported and observed"[[ else ]]"Record is ready"[[ end ]]
+              ready: [[ $syncedOk ]]
+              [[- if not $syncedOk ]]
+              message: [[ printf "%q" (printf "Record exists in AWS but failed to apply the latest change -- %s" $syncedMessage) ]]
+              [[- else if $importing ]]
+              message: "Record imported and observed"
+              [[- else ]]
+              message: "Record is ready"
+              [[- end ]]
             [[- end ]]
 
     - step: automatically-detect-ready-composed-resources
