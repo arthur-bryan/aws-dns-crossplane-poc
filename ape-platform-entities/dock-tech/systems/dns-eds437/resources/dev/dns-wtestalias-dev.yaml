@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787106292498'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtestalias-dev","type":"ALIAS","enableWeightedRouting":true,"serviceType":"CloudFront","region":"global","dnsName":"d4wtest.cloudfront.net","evaluateTargetHealth":false,"values":[null],"recordName":"wtestalias","entityRef":"resource:dns-eds437/dns-wtestalias-dev","weight":70,"setIdentifier":"alias1","originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtestalias-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"CloudFront","region":"global","dnsName":"d4wtest.cloudfront.net","evaluateTargetHealth":false,"values":[null],"recordName":"wtestalias","entityRef":"resource:dns-eds437/dns-wtestalias-dev","weight":70,"setIdentifier":"alias1","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -31,5 +31,3 @@ spec:
     serviceType: CloudFront
     dnsName: d4wtest.cloudfront.net
     evaluateTargetHealth: false
-  setIdentifier: alias1
-  weight: 70
