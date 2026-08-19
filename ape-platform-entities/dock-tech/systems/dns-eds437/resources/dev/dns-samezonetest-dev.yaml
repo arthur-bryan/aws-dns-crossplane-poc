@@ -1,0 +1,33 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-samezonetest-dev
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787146032364'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-samezonetest-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"SameZoneRecord","region":"global","dnsName":"www.dev.arthurbryan.com","evaluateTargetHealth":false,"values":[null],"recordName":"samezonetest","entityRef":"resource:dns-eds437/dns-samezonetest-dev"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-samezonetest-dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: samezonetest
+  recordType: ALIAS
+  aliasTarget:
+    serviceType: SameZoneRecord
+    dnsName: www.dev.arthurbryan.com
+    evaluateTargetHealth: false
