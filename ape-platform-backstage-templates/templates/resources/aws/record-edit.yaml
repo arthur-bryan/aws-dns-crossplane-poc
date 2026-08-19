@@ -235,6 +235,8 @@ spec:
                     - APIGateway
                     - GlobalAccelerator
                     - ElasticBeanstalk
+                    - AppRunner
+                    - SameZoneRecord
                   enumNames:
                     - "CloudFront Distribution"
                     - "Application Load Balancer (ALB)"
@@ -243,6 +245,8 @@ spec:
                     - "API Gateway"
                     - "Global Accelerator"
                     - "Elastic Beanstalk"
+                    - "App Runner"
+                    - "Another Record in This Zone"
                 region:
                   title: Region
                   type: string
@@ -250,7 +254,10 @@ spec:
                 dnsName:
                   title: Record Value
                   type: string
-                  description: DNS name of the AWS resource
+                  description: >-
+                    DNS name of the AWS resource, or -- when aliasing to
+                    another record in this zone -- that record's full DNS
+                    name.
                 evaluateTargetHealth:
                   title: Evaluate Target Health
                   type: boolean

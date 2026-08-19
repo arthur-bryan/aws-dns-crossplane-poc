@@ -7,6 +7,10 @@ export const GLOBAL_SERVICE_TYPES = ['CloudFront', 'GlobalAccelerator'] as const
 export const REGIONAL_ALB_NLB_TYPES = ['ALB', 'NLB'] as const;
 export const REGIONAL_S3_APIGW_TYPES = ['S3Website', 'APIGateway'] as const;
 export const REGIONAL_ELASTICBEANSTALK_TYPES = ['ElasticBeanstalk'] as const;
+export const REGIONAL_APPRUNNER_TYPES = ['AppRunner'] as const;
+// Not an AWS service -- aliases to another record in this same hosted zone, so its
+// "zone ID" is always the record's own parent zone, never looked up from a table.
+export const SAME_ZONE_SERVICE_TYPES = ['SameZoneRecord'] as const;
 
 const GLOBAL_ZONE_IDS: Record<string, string> = {
   CloudFront: 'Z2FDTNDATAQYW2',
@@ -210,16 +214,40 @@ const ELASTICBEANSTALK_ZONE_IDS: Record<string, string> = {
   'us-gov-west-1': 'Z4KAURWC4UUUG',
 };
 
+const APPRUNNER_ZONE_IDS: Record<string, string> = {
+  'us-east-1': 'Z01915732ZBZKC8D32TPT',
+  'us-east-2': 'Z0224347AD7KVHMLOX31',
+  'us-west-2': 'Z02243383FTQ64HJ5772Q',
+  'ap-south-1': 'Z00855883LBHKTIC4ODF2',
+  'ap-southeast-1': 'Z09819469CZ3KQ8PWMCL',
+  'ap-southeast-2': 'Z03657752RA8799S0TI5I',
+  'ap-northeast-1': 'Z08491812XW6IPYLR6CCA',
+  'eu-central-1': 'Z0334911C2FDI2Q9M4FZ',
+  'eu-west-1': 'Z087551914Z2PCAU0QHMW',
+  'eu-west-2': 'Z098228427VC6B3IX76ON',
+  'eu-west-3': 'Z087117439MBKHYM69QS6',
+};
+
 const REGIONAL_TABLES: Record<string, Record<string, string>> = {
   ALB: ALB_ZONE_IDS,
   NLB: NLB_ZONE_IDS,
   S3Website: S3WEBSITE_ZONE_IDS,
   APIGateway: APIGATEWAY_ZONE_IDS,
   ElasticBeanstalk: ELASTICBEANSTALK_ZONE_IDS,
+  AppRunner: APPRUNNER_ZONE_IDS,
 };
 
 export function isGlobalServiceType(serviceType?: string): boolean {
   return !!serviceType && (GLOBAL_SERVICE_TYPES as readonly string[]).includes(serviceType);
+}
+
+export function isSameZoneServiceType(serviceType?: string): boolean {
+  return !!serviceType && (SAME_ZONE_SERVICE_TYPES as readonly string[]).includes(serviceType);
+}
+
+// Neither a global fixed-zone service nor a same-zone self-reference needs a region picker.
+export function isNoRegionServiceType(serviceType?: string): boolean {
+  return isGlobalServiceType(serviceType) || isSameZoneServiceType(serviceType);
 }
 
 export function isRegionalServiceType(serviceType?: string): boolean {
@@ -238,8 +266,10 @@ export function regionsForServiceType(serviceType?: string): string[] {
 export function resolveAliasZoneId(
   serviceType: string | undefined,
   region: string | undefined,
+  currentZoneId: string | undefined,
 ): string {
   if (!serviceType) return '';
+  if (isSameZoneServiceType(serviceType)) return currentZoneId?.trim() ?? '';
   if (serviceType in GLOBAL_ZONE_IDS) return GLOBAL_ZONE_IDS[serviceType];
   const table = REGIONAL_TABLES[serviceType];
   if (!table || !region) return '';

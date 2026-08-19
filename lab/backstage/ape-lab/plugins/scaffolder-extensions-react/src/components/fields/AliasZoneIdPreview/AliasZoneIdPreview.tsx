@@ -22,12 +22,13 @@ export const AliasZoneIdPreview = (props: FieldExtensionComponentProps<string>) 
 
   const serviceType = record.serviceType as string | undefined;
   const region = record.region as string | undefined;
+  const currentZoneId = (rootFormData.zone as { id?: string } | undefined)?.id;
 
   if (!serviceType) {
     return null;
   }
 
-  const zoneId = resolveAliasZoneId(serviceType, region);
+  const zoneId = resolveAliasZoneId(serviceType, region, currentZoneId);
 
   // The region picker only ever offers options from this same resolution table (see
   // AliasRegionField), so an empty result here should be unreachable through the UI --

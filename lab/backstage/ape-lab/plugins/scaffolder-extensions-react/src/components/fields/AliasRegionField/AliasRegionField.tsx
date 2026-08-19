@@ -6,7 +6,7 @@ import TextField from '@material-ui/core/TextField';
 import { useEffect } from 'react';
 
 import { getParentFormDataFromId } from '../utils';
-import { isGlobalServiceType, isRegionalServiceType, regionsForServiceType } from '../aliasZoneIds';
+import { isNoRegionServiceType, isRegionalServiceType, isSameZoneServiceType, regionsForServiceType } from '../aliasZoneIds';
 
 // Declared as a single top-level field (not nested per-serviceType oneOf branch, unlike
 // the schema's first draft) specifically to avoid the same class of bug fixed earlier for
@@ -19,12 +19,13 @@ export const AliasRegionField = (props: FieldExtensionComponentProps<string>) =>
   const record = (getParentFormDataFromId(rootFormData, idSchema?.$id) ?? {}) as Record<string, any>;
   const serviceType = record.serviceType as string | undefined;
 
-  const global = isGlobalServiceType(serviceType);
+  const noRegion = isNoRegionServiceType(serviceType);
+  const sameZone = isSameZoneServiceType(serviceType);
   const regional = isRegionalServiceType(serviceType);
   const options = regionsForServiceType(serviceType);
 
   useEffect(() => {
-    if (global) {
+    if (noRegion) {
       if (formData !== 'global') onChange('global');
     } else if (regional) {
       // Never leave this on an unresolvable value -- the dropdown only ever offers
@@ -37,9 +38,9 @@ export const AliasRegionField = (props: FieldExtensionComponentProps<string>) =>
       onChange(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serviceType, global, regional]);
+  }, [serviceType, noRegion, regional]);
 
-  if (!serviceType || (!global && !regional)) {
+  if (!serviceType || (!noRegion && !regional)) {
     return null;
   }
 
@@ -59,11 +60,11 @@ export const AliasRegionField = (props: FieldExtensionComponentProps<string>) =>
           variant="outlined"
           required={required}
           fullWidth
-          value={global ? 'global' : formData ?? ''}
-          disabled={disabled || global}
+          value={noRegion ? 'global' : formData ?? ''}
+          disabled={disabled || noRegion}
           onChange={event => onChange(event.target.value)}
         >
-          {global ? (
+          {noRegion ? (
             <MenuItem value="global">global</MenuItem>
           ) : (
             options.map(region => (
@@ -74,9 +75,11 @@ export const AliasRegionField = (props: FieldExtensionComponentProps<string>) =>
           )}
         </TextField>
         <FormHelperText>
-          {global
-            ? 'This service type uses a single global endpoint -- no region needed.'
-            : (uiSchema['ui:help'] ?? schema.description ?? 'AWS region this resource is deployed in.')}
+          {sameZone
+            ? 'Aliasing to another record in this same hosted zone -- no separate region needed.'
+            : noRegion
+              ? 'This service type uses a single global endpoint -- no region needed.'
+              : (uiSchema['ui:help'] ?? schema.description ?? 'AWS region this resource is deployed in.')}
         </FormHelperText>
       </>
     </ScaffolderField>

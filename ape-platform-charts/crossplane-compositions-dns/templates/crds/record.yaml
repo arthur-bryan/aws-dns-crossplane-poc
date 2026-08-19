@@ -126,6 +126,8 @@ spec:
                           APIGateway,
                           GlobalAccelerator,
                           ElasticBeanstalk,
+                          AppRunner,
+                          SameZoneRecord,
                         ]
                     region:
                       type: string
