@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-wtestcname.dev.arthurbryan.com-cname1
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtestcname-dev","type":"CNAME","enableWeightedRouting":true,"values":["target-wcname.example.com"],"recordName":"wtestcname","entityRef":"resource:dns-eds437/dns-wtestcname-dev","weight":30,"setIdentifier":"cname1","originalType":"CNAME"}'
+spec:
+  name: record-wtestcname.dev.arthurbryan.com-cname1
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: wtestcname
+  recordType: CNAME
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 600
+  values:
+  - target-wcname.example.com
+  setIdentifier: cname1
+  weight: 30
