@@ -136,7 +136,7 @@ spec:
               $merge([$base, {
                 "enableWeightedRouting": true,
                 "setIdentifier": existingRecord.setIdentifier,
-                "weight": existingRecord.weight
+                "weight": $round(existingRecord.weight / 2.55)
               }]) : $base;
             $zoneMap := {
               "Z2FDTNDATAQYW2": {"serviceType": "CloudFront"},
@@ -321,22 +321,53 @@ spec:
               "Z2BBTEKR2I36N2": {"serviceType": "ElasticBeanstalk", "region": "me-south-1"},
               "Z10X7K2B4QSOFV": {"serviceType": "ElasticBeanstalk", "region": "sa-east-1"},
               "Z35TSARG0EJ4VU": {"serviceType": "ElasticBeanstalk", "region": "us-gov-east-1"},
-              "Z4KAURWC4UUUG":  {"serviceType": "ElasticBeanstalk", "region": "us-gov-west-1"}
+              "Z4KAURWC4UUUG":  {"serviceType": "ElasticBeanstalk", "region": "us-gov-west-1"},
+              "Z01915732ZBZKC8D32TPT": {"serviceType": "AppRunner", "region": "us-east-1"},
+              "Z0224347AD7KVHMLOX31":  {"serviceType": "AppRunner", "region": "us-east-2"},
+              "Z02243383FTQ64HJ5772Q": {"serviceType": "AppRunner", "region": "us-west-2"},
+              "Z00855883LBHKTIC4ODF2": {"serviceType": "AppRunner", "region": "ap-south-1"},
+              "Z09819469CZ3KQ8PWMCL":  {"serviceType": "AppRunner", "region": "ap-southeast-1"},
+              "Z03657752RA8799S0TI5I": {"serviceType": "AppRunner", "region": "ap-southeast-2"},
+              "Z08491812XW6IPYLR6CCA": {"serviceType": "AppRunner", "region": "ap-northeast-1"},
+              "Z0334911C2FDI2Q9M4FZ":  {"serviceType": "AppRunner", "region": "eu-central-1"},
+              "Z087551914Z2PCAU0QHMW": {"serviceType": "AppRunner", "region": "eu-west-1"},
+              "Z098228427VC6B3IX76ON": {"serviceType": "AppRunner", "region": "eu-west-2"},
+              "Z087117439MBKHYM69QS6": {"serviceType": "AppRunner", "region": "eu-west-3"}
             };
-            $resolved := $alias ? $lookup($zoneMap, $alias.hostedZoneId) : undefined;
+            $resolved := $alias ?
+              ($alias.hostedZoneId = zone.id ? {"serviceType": "SameZoneRecord"} : $lookup($zoneMap, $alias.hostedZoneId))
+              : undefined;
             $alias ?
-              $merge([$withRouting, {
-                "serviceType": $resolved ? $resolved.serviceType : "Custom",
-                "dnsName": $alias.dnsName,
-                "evaluateTargetHealth": $alias.evaluateTargetHealth,
-                "region": $resolved.region,
-                "customZoneId": $resolved ? undefined : $alias.hostedZoneId
-              }]) :
+              ($resolved ?
+                $merge([$withRouting, {
+                  "serviceType": $resolved.serviceType,
+                  "dnsName": $alias.dnsName,
+                  "evaluateTargetHealth": $alias.evaluateTargetHealth,
+                  "region": $resolved.region
+                }]) :
+                $merge([$withRouting, {
+                  "unknownZoneId": $alias.hostedZoneId,
+                  "dnsName": $alias.dnsName,
+                  "evaluateTargetHealth": $alias.evaluateTargetHealth
+                }])
+              ) :
               $merge([$withRouting, {
                 "ttl": existingRecord.ttl,
                 "values": existingRecord.values
               }])
           )
+
+    - id: launchErrorIfUnknownAliasZone
+      name: Abort if the alias target's hosted zone ID isn't recognized
+      if: ${{ steps.buildEditParams.output.result.unknownZoneId }}
+      action: error:launch
+      input:
+        message: >-
+          Cannot claim this record -- its alias target's hosted zone ID
+          (${{ steps.buildEditParams.output.result.unknownZoneId }}) doesn't
+          match any known AWS service or this zone's own ID. Manual zone ID
+          entry is no longer supported; only recognized AWS alias targets or
+          references to another record in this same zone can be claimed.
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
@@ -390,7 +421,7 @@ spec:
               existing: true
             {%- if steps.buildEditParams.output.result.setIdentifier %}
             setIdentifier: ${{ steps.buildEditParams.output.result.setIdentifier }}
-            weight: ${{ steps.buildEditParams.output.result.weight }}
+            weight: ${{ parameters.existingRecord.weight }}
             {%- endif %}
             {%- if parameters.existingRecord.aliasTarget %}
             aliasTarget:
