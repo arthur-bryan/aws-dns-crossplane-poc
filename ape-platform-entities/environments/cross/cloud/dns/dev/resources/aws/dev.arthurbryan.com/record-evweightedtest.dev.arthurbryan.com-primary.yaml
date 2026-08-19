@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-evweightedtest-dev-primary","type":"A","enableWeightedRouting":true,"values":["10.95.95.1"],"setIdentifier":"primary","weight":50,"recordName":"evweightedtest","entityRef":"resource:dns-eds437/dns-evweightedtest-dev-primary"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-evweightedtest-dev-primary","type":"A","enableWeightedRouting":true,"values":["10.95.95.1"],"setIdentifier":"primary","weight":75,"recordName":"evweightedtest","entityRef":"resource:dns-eds437/dns-evweightedtest-dev-primary","originalType":"A"}'
 spec:
   name: record-evweightedtest.dev.arthurbryan.com-primary
   domain: cross
@@ -23,4 +23,4 @@ spec:
   values:
   - 10.95.95.1
   setIdentifier: primary
-  weight: 128
+  weight: 191
