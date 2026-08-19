@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787150960313'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aliasedittest-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"SameZoneRecord","region":"global","dnsName":"aliasedittest.dev.arthurbryan.com","evaluateTargetHealth":false,"values":[null],"recordName":"aliasedittest","entityRef":"resource:dns-eds437/dns-aliasedittest-dev","originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aliasedittest-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"SameZoneRecord","region":"global","dnsName":"api.dev.arthurbryan.com","evaluateTargetHealth":false,"values":[null],"recordName":"aliasedittest","entityRef":"resource:dns-eds437/dns-aliasedittest-dev","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -29,5 +29,5 @@ spec:
   recordType: ALIAS
   aliasTarget:
     serviceType: SameZoneRecord
-    dnsName: aliasedittest.dev.arthurbryan.com
+    dnsName: api.dev.arthurbryan.com
     evaluateTargetHealth: false
