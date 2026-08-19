@@ -427,7 +427,6 @@ spec:
             aliasTarget:
               serviceType: ${{ steps.buildEditParams.output.result.serviceType }}
               dnsName: ${{ parameters.existingRecord.aliasTarget.dnsName }}
-              hostedZoneId: ${{ parameters.existingRecord.aliasTarget.hostedZoneId }}
               evaluateTargetHealth: ${{ parameters.existingRecord.aliasTarget.evaluateTargetHealth }}
               {%- if steps.buildEditParams.output.result.region %}
               region: ${{ steps.buildEditParams.output.result.region }}
