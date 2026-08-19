@@ -102,7 +102,6 @@ spec:
 - `serviceType` - Tipo de serviço AWS (CloudFront, ALB, NLB, S3Website, APIGateway, GlobalAccelerator, Custom)
 - `dnsName` - Nome DNS do destino
 - `customZoneId` - Zone ID (apenas se serviceType=Custom)
-- `evaluateTargetHealth` - Avaliar saúde do destino (default: false)
 
 **Weighted Routing (Opcional):**
 - `enableWeightedRouting` - Habilitar roteamento ponderado
@@ -161,7 +160,6 @@ spec:
 - `ttl` - Pode ser ajustado
 - `values` - IPs, hostnames podem ser alterados
 - `dnsName` - Destino do ALIAS pode mudar
-- `evaluateTargetHealth` - Pode ser alternado
 - `weight` - Peso pode ser ajustado
 - `setIdentifier` - Pode ser adicionado/modificado
 
@@ -199,7 +197,6 @@ spec:
 | `serviceType` | `spec.aliasTarget.serviceType` | required if type = ALIAS, enum, immutable |
 | `dnsName` | `spec.aliasTarget.dnsName` | required if type = ALIAS |
 | `customZoneId` | `spec.aliasTarget.hostedZoneId` | required if serviceType = Custom |
-| `evaluateTargetHealth` | `spec.aliasTarget.evaluateTargetHealth` | optional, default: false |
 | `setIdentifier` | `spec.setIdentifier` | optional, required with weight |
 | `weight` | `spec.weight` | optional, min: 0, max: 255, required with setIdentifier |
 

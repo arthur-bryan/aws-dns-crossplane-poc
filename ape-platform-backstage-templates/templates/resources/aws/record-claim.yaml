@@ -342,13 +342,11 @@ spec:
                 $merge([$withRouting, {
                   "serviceType": $resolved.serviceType,
                   "dnsName": $alias.dnsName,
-                  "evaluateTargetHealth": $alias.evaluateTargetHealth,
                   "region": $resolved.region
                 }]) :
                 $merge([$withRouting, {
                   "unknownZoneId": $alias.hostedZoneId,
-                  "dnsName": $alias.dnsName,
-                  "evaluateTargetHealth": $alias.evaluateTargetHealth
+                  "dnsName": $alias.dnsName
                 }])
               ) :
               $merge([$withRouting, {
@@ -427,7 +425,6 @@ spec:
             aliasTarget:
               serviceType: ${{ steps.buildEditParams.output.result.serviceType }}
               dnsName: ${{ parameters.existingRecord.aliasTarget.dnsName }}
-              evaluateTargetHealth: ${{ parameters.existingRecord.aliasTarget.evaluateTargetHealth }}
               {%- if steps.buildEditParams.output.result.region %}
               region: ${{ steps.buildEditParams.output.result.region }}
               {%- endif %}
