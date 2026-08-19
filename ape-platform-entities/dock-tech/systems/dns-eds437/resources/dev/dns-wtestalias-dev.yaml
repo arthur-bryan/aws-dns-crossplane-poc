@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-wtestalias-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787106292498'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtestalias-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"CloudFront","region":"global","dnsName":"d4wtest.cloudfront.net","evaluateTargetHealth":false,"values":[null],"recordName":"wtestalias","entityRef":"resource:dns-eds437/dns-wtestalias-dev"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtestalias-dev","type":"ALIAS","enableWeightedRouting":true,"serviceType":"CloudFront","region":"global","dnsName":"d4wtest.cloudfront.net","evaluateTargetHealth":false,"values":[null],"recordName":"wtestalias","entityRef":"resource:dns-eds437/dns-wtestalias-dev","weight":70,"setIdentifier":"alias1","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,9 +25,11 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: wtestalias
+  recordName: "wtestalias"
   recordType: ALIAS
   aliasTarget:
     serviceType: CloudFront
     dnsName: d4wtest.cloudfront.net
     evaluateTargetHealth: false
+  setIdentifier: alias1
+  weight: 70
