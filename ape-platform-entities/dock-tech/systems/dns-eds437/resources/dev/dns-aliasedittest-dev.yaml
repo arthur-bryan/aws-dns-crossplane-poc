@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-aliasedittest-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787150960313'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aliasedittest-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"AppRunner","region":"us-east-1","dnsName":"editabc123456.us-east-1.awsapprunner.com","evaluateTargetHealth":false,"values":[null],"recordName":"aliasedittest","entityRef":"resource:dns-eds437/dns-aliasedittest-dev"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-aliasedittest-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"ElasticBeanstalk","region":"us-east-1","dnsName":"editeb-env.us-east-1.elasticbeanstalk.com","evaluateTargetHealth":false,"values":[null],"recordName":"aliasedittest","entityRef":"resource:dns-eds437/dns-aliasedittest-dev","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,10 +25,10 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: aliasedittest
+  recordName: "aliasedittest"
   recordType: ALIAS
   aliasTarget:
-    serviceType: AppRunner
-    dnsName: editabc123456.us-east-1.awsapprunner.com
+    serviceType: ElasticBeanstalk
+    dnsName: editeb-env.us-east-1.elasticbeanstalk.com
     region: us-east-1
     evaluateTargetHealth: false
