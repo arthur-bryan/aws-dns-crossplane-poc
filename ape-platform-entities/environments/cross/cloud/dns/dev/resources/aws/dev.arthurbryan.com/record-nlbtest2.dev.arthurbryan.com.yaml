@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-nlbtest2.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-nlbtest2-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"NLB","region":"us-east-1","dnsName":"my-nlb-final-test.us-east-1.elb.amazonaws.com","evaluateTargetHealth":false,"values":[null],"recordName":"nlbtest2","entityRef":"resource:dns-eds437/dns-nlbtest2-dev"}'
+spec:
+  name: record-nlbtest2.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: nlbtest2
+  recordType: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: NLB
+    dnsName: my-nlb-final-test.us-east-1.elb.amazonaws.com
+    evaluateTargetHealth: false
+    region: us-east-1
