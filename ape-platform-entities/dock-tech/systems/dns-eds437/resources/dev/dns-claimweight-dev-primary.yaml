@@ -3,7 +3,7 @@ kind: Resource
 metadata:
   name: dns-claimweight-dev-primary
   namespace: dns-eds437
-  description: DNS Record claimed by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787159770879'
     dock.tech/created-by: user:development/guest
@@ -27,10 +27,10 @@ spec:
     accountName: dev-account
   recordName: "claimweight"
   recordType: A
-  import:
-    existing: true
-  setIdentifier: primary
-  weight: 128
   ttl: 600
   values:
     - 10.80.80.1
+  setIdentifier: primary
+  weight: 128
+  import:
+    existing: true
