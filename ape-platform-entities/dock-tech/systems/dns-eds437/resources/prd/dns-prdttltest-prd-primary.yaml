@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-prdttltest-prd-primary
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787151500350'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"prd","zone":{"id":"Z03010981ALJFZB4QLU8W","name":"arthurbryan.com","accountName":"prd-account","environment":"prd"},"kind":"Record","name":"dns-prdttltest-prd-primary","type":"A","enableWeightedRouting":true,"values":["10.50.50.1"],"setIdentifier":"primary","weight":100,"recordName":"prdttltest","entityRef":"resource:dns-eds437/dns-prdttltest-prd-primary"}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: prd
+  name: dns-prdttltest-prd-primary
+  zoneId: Z03010981ALJFZB4QLU8W
+  zoneName: arthurbryan.com
+  aws:
+    account: "597230762851"
+    accountName: prd-account
+  recordName: prdttltest
+  recordType: A
+  ttl: 3600
+  values:
+    - 10.50.50.1
+  setIdentifier: primary
+  weight: 255
