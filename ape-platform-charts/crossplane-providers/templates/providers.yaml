@@ -25,10 +25,14 @@ spec:
       template:
         metadata:
           annotations:
+            {{- $annotations := dict }}
             {{- range .Values.providers }}
-            {{- range $key, $value := .runtimeConfig.annotations }}
-            {{ $key }}: {{ $value | quote }}
+            {{- if .runtimeConfig }}
+            {{- $annotations = mergeOverwrite $annotations .runtimeConfig.annotations }}
             {{- end }}
+            {{- end }}
+            {{- range $key, $value := $annotations }}
+            {{ $key }}: {{ $value | quote }}
             {{- end }}
         spec:
           containers:
