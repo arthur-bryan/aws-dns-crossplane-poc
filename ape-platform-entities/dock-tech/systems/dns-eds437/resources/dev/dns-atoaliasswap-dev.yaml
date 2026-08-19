@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787104514018'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-atoaliasswap-dev","type":"ALIAS","enableWeightedRouting":false,"values":["10.20.30.40"],"recordName":"atoaliasswap","entityRef":"resource:dns-eds437/dns-atoaliasswap-dev","evaluateTargetHealth":false,"serviceType":"CloudFront","region":"global","dnsName":"d222222xyzabc9.cloudfront.net","originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-atoaliasswap-dev","type":"A","enableWeightedRouting":false,"values":["50.60.70.80"],"recordName":"atoaliasswap","entityRef":"resource:dns-eds437/dns-atoaliasswap-dev","evaluateTargetHealth":false,"serviceType":"CloudFront","region":"global","dnsName":"d222222xyzabc9.cloudfront.net","originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -26,8 +26,7 @@ spec:
     account: "309670275661"
     accountName: dev-account
   recordName: "atoaliasswap"
-  recordType: ALIAS
-  aliasTarget:
-    serviceType: CloudFront
-    dnsName: d222222xyzabc9.cloudfront.net
-    evaluateTargetHealth: false
+  recordType: A
+  ttl: 3600
+  values:
+    - 50.60.70.80
