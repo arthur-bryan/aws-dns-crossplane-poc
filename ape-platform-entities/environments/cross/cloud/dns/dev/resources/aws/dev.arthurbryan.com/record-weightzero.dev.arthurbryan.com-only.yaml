@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-weightzero.dev.arthurbryan.com-only
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-weightzero-dev-only","type":"A","enableWeightedRouting":true,"values":["10.30.30.1"],"setIdentifier":"only","weight":0,"recordName":"weightzero","entityRef":"resource:dns-eds437/dns-weightzero-dev-only"}'
+spec:
+  name: record-weightzero.dev.arthurbryan.com-only
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: weightzero
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 600
+  values:
+  - 10.30.30.1
+  setIdentifier: only
+  weight: 0
