@@ -1,0 +1,32 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-badiptest2-dev
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787147302105'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-badiptest2-dev","type":"A","enableWeightedRouting":false,"values":["999.999.999.999"],"recordName":"badiptest2","entityRef":"resource:dns-eds437/dns-badiptest2-dev"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-badiptest2-dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: badiptest2
+  recordType: A
+  ttl: 3600
+  values:
+    - 999.999.999.999
