@@ -1,0 +1,33 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-gatest-dev
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787144176925'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-gatest-dev","type":"ALIAS","enableWeightedRouting":false,"serviceType":"GlobalAccelerator","region":"global","dnsName":"a1234567890abcdef0.awsglobalaccelerator.com","evaluateTargetHealth":false,"values":[null],"recordName":"gatest","entityRef":"resource:dns-eds437/dns-gatest-dev"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: dns-gatest-dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: gatest
+  recordType: ALIAS
+  aliasTarget:
+    serviceType: GlobalAccelerator
+    dnsName: a1234567890abcdef0.awsglobalaccelerator.com
+    evaluateTargetHealth: false
