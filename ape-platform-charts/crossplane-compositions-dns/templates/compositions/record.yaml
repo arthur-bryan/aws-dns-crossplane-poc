@@ -276,6 +276,7 @@ spec:
             [[- else if eq $region "us-gov-west-1" ]][[- $resolvedAliasZoneId = "Z4KAURWC4UUUG" ]]
             [[- end ]]
             [[- end ]]
+            [[- end ]]
 
             ---
             [[- if $zoneId ]]
