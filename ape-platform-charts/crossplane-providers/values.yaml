@@ -14,16 +14,16 @@ providers:
   # here keeps the bump in lockstep when the family providers are
   # upgraded.
   - name: upbound-provider-family-aws
-    package: xpkg.upbound.io/upbound/provider-family-aws:v2.6.0
+    package: xpkg.upbound.io/upbound/provider-family-aws:v2.7.0
 
   - name: upbound-provider-aws-route53
-    package: xpkg.upbound.io/upbound/provider-aws-route53:v2.6.0
+    package: xpkg.upbound.io/upbound/provider-aws-route53:v2.7.0
     runtimeConfig:
       annotations:
         eks.amazonaws.com/role-arn: "arn:aws:iam::PLACEHOLDER:role/crossplane-route53"
 
   - name: upbound-provider-aws-cloudformation
-    package: xpkg.upbound.io/upbound/provider-aws-cloudformation:v2.6.0
+    package: xpkg.upbound.io/upbound/provider-aws-cloudformation:v2.7.0
     runtimeConfig:
       annotations:
         eks.amazonaws.com/role-arn: "arn:aws:iam::PLACEHOLDER:role/crossplane-route53"
