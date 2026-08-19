@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-valueedit.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-valueedit-dev","type":"A","enableWeightedRouting":false,"values":["10.40.40.1"],"recordName":"valueedit","entityRef":"resource:dns-eds437/dns-valueedit-dev"}'
+spec:
+  name: record-valueedit.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: valueedit
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+  - 10.40.40.1
