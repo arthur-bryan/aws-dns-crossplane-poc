@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-edittest-dev
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787147478651'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-edittest-dev","type":"A","enableWeightedRouting":false,"values":["10.1.1.1"],"recordName":"edittest","entityRef":"resource:dns-eds437/dns-edittest-dev"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-edittest-dev","type":"A","enableWeightedRouting":false,"values":["999.999.999.999"],"recordName":"edittest","entityRef":"resource:dns-eds437/dns-edittest-dev","originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,8 +25,8 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: edittest
+  recordName: "edittest"
   recordType: A
   ttl: 3600
   values:
-    - 10.1.1.1
+    - 999.999.999.999
