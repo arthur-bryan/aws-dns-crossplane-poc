@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787161377123'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-evweightedtest-dev-primary","type":"A","enableWeightedRouting":true,"values":["10.95.95.1"],"setIdentifier":"primary","weight":75,"recordName":"evweightedtest","entityRef":"resource:dns-eds437/dns-evweightedtest-dev-primary","originalType":"A"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-evweightedtest-dev-primary","type":"A","enableWeightedRouting":true,"values":["10.95.95.1"],"setIdentifier":"primary","weight":33,"recordName":"evweightedtest","entityRef":"resource:dns-eds437/dns-evweightedtest-dev-primary","originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -31,4 +31,4 @@ spec:
   values:
     - 10.95.95.1
   setIdentifier: primary
-  weight: 191
+  weight: 84
