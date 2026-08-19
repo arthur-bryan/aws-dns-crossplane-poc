@@ -275,9 +275,6 @@ spec:
             [[- else if eq $region "us-gov-east-1" ]][[- $resolvedAliasZoneId = "Z35TSARG0EJ4VU" ]]
             [[- else if eq $region "us-gov-west-1" ]][[- $resolvedAliasZoneId = "Z4KAURWC4UUUG" ]]
             [[- end ]]
-            [[- else if eq $serviceType "Custom" ]]
-            [[- $resolvedAliasZoneId = $aliasTarget.hostedZoneId ]]
-            [[- end ]]
             [[- end ]]
 
             ---

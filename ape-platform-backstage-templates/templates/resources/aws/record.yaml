@@ -248,7 +248,11 @@ spec:
                       serviceType:
                         title: AWS Service Type
                         type: string
-                        description: Type of AWS service being aliased
+                        description: >-
+                          Type of AWS service being aliased. The hosted zone
+                          ID is always resolved automatically from this and
+                          the region below -- there is no manual zone ID
+                          entry.
                         default: CloudFront
                         enum:
                           - CloudFront
@@ -257,7 +261,7 @@ spec:
                           - S3Website
                           - APIGateway
                           - GlobalAccelerator
-                          - Custom
+                          - ElasticBeanstalk
                         enumNames:
                           - "CloudFront Distribution"
                           - "Application Load Balancer (ALB)"
@@ -265,7 +269,7 @@ spec:
                           - "S3 Website Endpoint"
                           - "API Gateway"
                           - "Global Accelerator"
-                          - "Custom (provide zone ID manually)"
+                          - "Elastic Beanstalk"
                       region:
                         title: Region
                         type: string
@@ -287,29 +291,6 @@ spec:
                     required:
                       - serviceType
                       - dnsName
-                    dependencies:
-                      serviceType:
-                        oneOf:
-                          - properties:
-                              serviceType:
-                                enum:
-                                  - CloudFront
-                                  - GlobalAccelerator
-                                  - ALB
-                                  - NLB
-                                  - S3Website
-                                  - APIGateway
-                          - properties:
-                              serviceType:
-                                const: Custom
-                              customZoneId:
-                                title: Custom Hosted Zone ID
-                                type: string
-                                description: Hosted zone ID for custom alias target
-                                pattern: "^Z[A-Z0-9]+$"
-                                ui:help: "Example: Z2FDTNDATAQYW2"
-                            required:
-                              - customZoneId
 
               enableWeightedRouting:
                 oneOf:
@@ -340,9 +321,12 @@ spec:
                       weight:
                         title: Weight
                         type: integer
-                        description: Traffic weight (0-255) for weighted routing
+                        description: >-
+                          Relative traffic share, as a percentage (0-100) of this
+                          record's set-identifier group. Converted automatically to
+                          Route53's native 0-255 weight range behind the scenes.
                         minimum: 0
-                        maximum: 255
+                        maximum: 100
                         default: 100
                         ui:field: WeightedWeightField
                     required:
@@ -391,10 +375,12 @@ spec:
               $isNs := type = "NS";
               $isPrd := $env = "prd";
               $ttl := $weighted and ($isPrd = false) ? 600 : $isNs ? 172800 : 3600;
+              $route53Weight := $weighted and $type(weight) = "number" ? $round(weight * 255 / 100) : undefined;
               {
                 "recordName": $recordName,
                 "entityName": $entityName,
                 "ttl": $ttl,
+                "route53Weight": $route53Weight,
                 "aws": $aws,
                 "params": $merge([
                   { "system": $sys, "environment": $env, "zone": $zn, "kind": $kd },
@@ -489,9 +475,6 @@ spec:
             aliasTarget:
               serviceType: ${{ each.value.serviceType }}
               dnsName: ${{ each.value.dnsName }}
-              {%- if each.value.serviceType == 'Custom' %}
-              hostedZoneId: ${{ each.value.customZoneId }}
-              {%- endif %}
               {%- if each.value.region and each.value.region != 'global' %}
               region: ${{ each.value.region }}
               {%- endif %}
@@ -499,7 +482,7 @@ spec:
             {%- endif %}
             {%- if each.value.enableWeightedRouting %}
             setIdentifier: ${{ each.value.setIdentifier }}
-            weight: ${{ each.value.weight }}
+            weight: ${{ steps.computeRecordNames.output.result[each.key].route53Weight }}
             {%- endif %}
 
     - id: buildRequestSummary

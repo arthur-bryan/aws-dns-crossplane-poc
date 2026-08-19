@@ -234,7 +234,7 @@ spec:
                     - S3Website
                     - APIGateway
                     - GlobalAccelerator
-                    - Custom
+                    - ElasticBeanstalk
                   enumNames:
                     - "CloudFront Distribution"
                     - "Application Load Balancer (ALB)"
@@ -242,7 +242,7 @@ spec:
                     - "S3 Website Endpoint"
                     - "API Gateway"
                     - "Global Accelerator"
-                    - "Custom (provide zone ID manually)"
+                    - "Elastic Beanstalk"
                 region:
                   title: Region
                   type: string
@@ -263,28 +263,6 @@ spec:
               required:
                 - serviceType
                 - dnsName
-              dependencies:
-                serviceType:
-                  oneOf:
-                    - properties:
-                        serviceType:
-                          enum:
-                            - CloudFront
-                            - GlobalAccelerator
-                            - ALB
-                            - NLB
-                            - S3Website
-                            - APIGateway
-                    - properties:
-                        serviceType:
-                          const: Custom
-                        customZoneId:
-                          title: Custom Hosted Zone ID
-                          type: string
-                          description: Hosted zone ID for custom alias target
-                          pattern: "^Z[A-Z0-9]+$"
-                      required:
-                        - customZoneId
 
     - title: Weighted Routing (Optional)
       description: Enable weighted routing to distribute traffic across multiple records
@@ -313,9 +291,12 @@ spec:
                 weight:
                   title: Weight
                   type: integer
-                  description: Traffic weight (0-255)
+                  description: >-
+                    Relative traffic share, as a percentage (0-100) of this
+                    record's set-identifier group. Converted automatically to
+                    Route53's native 0-255 weight range behind the scenes.
                   minimum: 0
-                  maximum: 255
+                  maximum: 100
                   default: 100
               required:
                 - setIdentifier
@@ -380,6 +361,16 @@ spec:
             $isNs ? 172800 :
             3600
           )
+
+    - id: deriveRoute53Weight
+      name: Convert weight percentage to Route53 native 0-255 range
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          weighted: ${{ parameters.enableWeightedRouting }}
+          weight: ${{ parameters.weight }}
+        expression: >-
+          weighted = true and $type(weight) = "number" ? $round(weight * 255 / 100) : undefined
 
     - id: deriveAccount
       name: Derive AWS account from environment
@@ -453,9 +444,6 @@ spec:
             aliasTarget:
               serviceType: ${{ parameters.serviceType }}
               dnsName: ${{ parameters.dnsName }}
-              {%- if parameters.serviceType == 'Custom' %}
-              hostedZoneId: ${{ parameters.customZoneId }}
-              {%- endif %}
               {%- if parameters.region and parameters.region != 'global' %}
               region: ${{ parameters.region }}
               {%- endif %}
@@ -463,7 +451,7 @@ spec:
             {%- endif %}
             {%- if parameters.enableWeightedRouting %}
             setIdentifier: ${{ parameters.setIdentifier }}
-            weight: ${{ parameters.weight }}
+            weight: ${{ steps.deriveRoute53Weight.output.result }}
             {%- endif %}
             {%- if steps.fetchExisting.output.entity.spec.import %}
             import:

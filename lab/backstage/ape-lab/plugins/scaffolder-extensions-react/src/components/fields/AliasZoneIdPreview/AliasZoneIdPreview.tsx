@@ -22,40 +22,33 @@ export const AliasZoneIdPreview = (props: FieldExtensionComponentProps<string>) 
 
   const serviceType = record.serviceType as string | undefined;
   const region = record.region as string | undefined;
-  const customZoneId = record.customZoneId as string | undefined;
 
   if (!serviceType) {
     return null;
   }
 
-  const zoneId = resolveAliasZoneId(serviceType, region, customZoneId);
+  const zoneId = resolveAliasZoneId(serviceType, region);
 
-  // For every service type except Custom, the region picker only ever offers options
-  // from this same resolution table (see AliasRegionField), so an empty result here
-  // should be unreachable through the UI -- this branch is a defense-in-depth message
-  // for a non-UI submission, not something a normal user should ever see. Custom is
-  // different: customZoneId is free text the user is expected to type, so "not filled
-  // in yet" is a normal, expected transient state, not a bad combination.
-  const isCustomNotYetTyped = serviceType === 'Custom' && !zoneId;
-
+  // The region picker only ever offers options from this same resolution table (see
+  // AliasRegionField), so an empty result here should be unreachable through the UI --
+  // this is defense-in-depth messaging for a non-UI submission, not something a normal
+  // user should ever see.
   return (
     <ScaffolderField required={false} disabled>
       <TextField
         id={idSchema?.$id}
         label="Resolved Alias Zone ID (preview)"
-        value={zoneId || (isCustomNotYetTyped ? '(enter a hosted zone ID above)' : '(none -- this combination will fail)')}
-        error={!zoneId && !isCustomNotYetTyped}
+        value={zoneId || '(none -- this combination will fail)'}
+        error={!zoneId}
         disabled
         margin="dense"
         variant="outlined"
         fullWidth
       />
-      <FormHelperText error={!zoneId && !isCustomNotYetTyped}>
+      <FormHelperText error={!zoneId}>
         {zoneId
           ? 'This is the AWS hosted zone ID the platform will write for this alias target.'
-          : isCustomNotYetTyped
-            ? 'Enter the custom hosted zone ID above to see it previewed here.'
-            : 'No zone ID resolves for this service type + region combination -- submitting this will get stuck in ReconcileError. Pick a different region or service type.'}
+          : 'No zone ID resolves for this service type + region combination -- submitting this will get stuck in ReconcileError. Pick a different region or service type.'}
       </FormHelperText>
     </ScaffolderField>
   );

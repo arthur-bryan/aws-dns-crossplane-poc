@@ -126,15 +126,11 @@ spec:
                           APIGateway,
                           GlobalAccelerator,
                           ElasticBeanstalk,
-                          Custom,
                         ]
                     region:
                       type: string
                       description: Target region.
                       pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
-                    hostedZoneId:
-                      type: string
-                      description: Target zone ID.
                     evaluateTargetHealth:
                       type: boolean
                       description: Evaluate health.
@@ -245,8 +241,6 @@ spec:
                   message: "aliasTarget is required for ALIAS records"
                 - rule: "self.recordType == 'ALIAS' || has(self.values)"
                   message: "values is required for non-ALIAS records"
-                - rule: "!has(self.aliasTarget) || self.aliasTarget.serviceType != 'Custom' || has(self.aliasTarget.hostedZoneId)"
-                  message: "hostedZoneId is required when serviceType is Custom"
                 - rule: "!has(self.weight) || has(self.setIdentifier)"
                   message: "setIdentifier is required when weight is provided (weighted routing)"
                 - rule: "!has(self.failoverRoutingPolicy) || has(self.setIdentifier)"
