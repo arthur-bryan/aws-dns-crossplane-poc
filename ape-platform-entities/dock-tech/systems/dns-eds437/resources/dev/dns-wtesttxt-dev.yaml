@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787106251581'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtesttxt-dev","type":"TXT","enableWeightedRouting":true,"values":["hello-weighted-test"],"recordName":"wtesttxt","entityRef":"resource:dns-eds437/dns-wtesttxt-dev","weight":25,"setIdentifier":"txt1","originalType":"TXT"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtesttxt-dev","type":"TXT","enableWeightedRouting":false,"values":["hello-weighted-test"],"recordName":"wtesttxt","entityRef":"resource:dns-eds437/dns-wtesttxt-dev","weight":25,"setIdentifier":"txt1","originalType":"TXT"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,8 +27,6 @@ spec:
     accountName: dev-account
   recordName: "wtesttxt"
   recordType: TXT
-  ttl: 600
+  ttl: 3600
   values:
     - hello-weighted-test
-  setIdentifier: txt1
-  weight: 25
