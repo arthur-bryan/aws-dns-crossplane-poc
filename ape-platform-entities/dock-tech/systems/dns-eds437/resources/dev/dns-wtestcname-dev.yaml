@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787106212581'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtestcname-dev","type":"CNAME","enableWeightedRouting":true,"values":["target-wcname.example.com"],"recordName":"wtestcname","entityRef":"resource:dns-eds437/dns-wtestcname-dev","weight":30,"setIdentifier":"cname1","originalType":"CNAME"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtestcname-dev","type":"CNAME","enableWeightedRouting":false,"values":["target-wcname.example.com"],"recordName":"wtestcname","entityRef":"resource:dns-eds437/dns-wtestcname-dev","weight":30,"setIdentifier":"cname1","originalType":"CNAME"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,8 +27,6 @@ spec:
     accountName: dev-account
   recordName: "wtestcname"
   recordType: CNAME
-  ttl: 600
+  ttl: 3600
   values:
     - target-wcname.example.com
-  setIdentifier: cname1
-  weight: 30
