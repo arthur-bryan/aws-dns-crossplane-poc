@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787106125885'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtesta-dev","type":"A","enableWeightedRouting":true,"values":["10.1.1.1"],"recordName":"wtesta","entityRef":"resource:dns-eds437/dns-wtesta-dev","weight":60,"setIdentifier":"primary","originalType":"A"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-wtesta-dev","type":"A","enableWeightedRouting":false,"values":["10.1.1.1"],"recordName":"wtesta","entityRef":"resource:dns-eds437/dns-wtesta-dev","weight":60,"setIdentifier":"primary","originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -27,8 +27,6 @@ spec:
     accountName: dev-account
   recordName: "wtesta"
   recordType: A
-  ttl: 600
+  ttl: 3600
   values:
     - 10.1.1.1
-  setIdentifier: primary
-  weight: 60
