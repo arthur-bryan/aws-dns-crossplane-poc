@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: dns-evweightedtest-dev-primary
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787161377123'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-evweightedtest-dev-primary","type":"A","enableWeightedRouting":true,"values":["10.95.95.1"],"setIdentifier":"primary","weight":50,"recordName":"evweightedtest","entityRef":"resource:dns-eds437/dns-evweightedtest-dev-primary"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"dns-evweightedtest-dev-primary","type":"A","enableWeightedRouting":true,"values":["10.95.95.1"],"setIdentifier":"primary","weight":75,"recordName":"evweightedtest","entityRef":"resource:dns-eds437/dns-evweightedtest-dev-primary","originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,10 +25,10 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: evweightedtest
+  recordName: "evweightedtest"
   recordType: A
   ttl: 600
   values:
     - 10.95.95.1
   setIdentifier: primary
-  weight: 128
+  weight: 191
