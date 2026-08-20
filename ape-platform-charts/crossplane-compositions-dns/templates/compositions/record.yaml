@@ -384,7 +384,7 @@ spec:
             [[- end ]]
 
             ---
-            [[- if $record.status.atProvider ]]
+            [[- if $record.status.conditions ]]
             [[- $syncedOk := true ]]
             [[- $syncedMessage := "" ]]
             [[- range $record.status.conditions ]]
@@ -393,14 +393,21 @@ spec:
             [[- $syncedMessage = .message ]]
             [[- end ]]
             [[- end ]]
+            [[- $everObserved := $record.status.atProvider ]]
             apiVersion: dock.tech/v1
             kind: DNSRecord
             status:
               fqdn: [[ $displayFqdn ]]
+              [[- if $everObserved ]]
               recordId: [[ $record.status.atProvider.id ]]
+              [[- end ]]
               ready: [[ $syncedOk ]]
               [[- if not $syncedOk ]]
+              [[- if $everObserved ]]
               message: [[ printf "%q" (printf "Record exists in AWS but failed to apply the latest change -- %s" $syncedMessage) ]]
+              [[- else ]]
+              message: [[ printf "%q" (printf "Record does not exist in AWS yet -- creation failed: %s" $syncedMessage) ]]
+              [[- end ]]
               [[- else if $importing ]]
               message: "Record imported and observed"
               [[- else ]]
