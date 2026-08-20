@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: testweighteddebug-primary
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787188834358'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z03903073OAOJDBZPNFAKE","name":"test-weighted-debug-zone","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"testweighteddebug-primary","type":"A","values":["10.0.0.1"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":70,"recordName":"testweighteddebug","entityRef":"resource:dns-eds437/testweighteddebug-primary"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: testweighteddebug-primary
+  zoneId: Z03903073OAOJDBZPNFAKE
+  zoneName: test-weighted-debug-zone
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: testweighteddebug
+  recordType: A
+  ttl: 600
+  values:
+    - 10.0.0.1
+  setIdentifier: primary
+  weight: 178
