@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-testweighteddebug.test-weighted-debug-zone-primary
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z03903073OAOJDBZPNFAKE","name":"test-weighted-debug-zone","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"testweighteddebug-primary","type":"A","values":["10.0.0.1"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":70,"recordName":"testweighteddebug","entityRef":"resource:dns-eds437/testweighteddebug-primary"}'
+spec:
+  name: record-testweighteddebug.test-weighted-debug-zone-primary
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z03903073OAOJDBZPNFAKE
+  zoneName: test-weighted-debug-zone
+  recordName: testweighteddebug
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 600
+  values:
+  - 10.0.0.1
+  setIdentifier: primary
+  weight: 178
