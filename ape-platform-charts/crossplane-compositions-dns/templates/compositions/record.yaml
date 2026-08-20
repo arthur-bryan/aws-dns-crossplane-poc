@@ -329,7 +329,7 @@ spec:
                 [[- end ]]
                 [[- if ne $weight nil ]]
                 weightedRoutingPolicy:
-                  weight: [[ int (round (mulf (float64 $weight) 2.55) 0) ]]
+                  weight: [[ $weight ]]
                 [[- end ]]
                 [[- if $failoverPolicy ]]
                 failoverRoutingPolicy:
