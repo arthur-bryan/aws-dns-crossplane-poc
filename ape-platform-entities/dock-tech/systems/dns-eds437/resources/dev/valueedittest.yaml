@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: valueedittest
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787336209929'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"valueedittest","type":"A","values":["10.99.0.1"],"recordName":"valueedittest","entityRef":"resource:dns-eds437/valueedittest"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"valueedittest","type":"A","values":["10.99.0.99"],"recordName":"valueedittest","entityRef":"resource:dns-eds437/valueedittest","originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,8 +25,8 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: valueedittest
+  recordName: "valueedittest"
   recordType: A
   ttl: 3600
   values:
-    - 10.99.0.1
+    - 10.99.0.99
