@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: upjetweighttest-primary
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787335490024'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"upjetweighttest-primary","type":"A","values":["10.99.1.1"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":60,"recordName":"upjetweighttest","entityRef":"resource:dns-eds437/upjetweighttest-primary"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"upjetweighttest-primary","type":"A","values":["10.99.1.1"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":45,"recordName":"upjetweighttest","entityRef":"resource:dns-eds437/upjetweighttest-primary","originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,10 +25,10 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: upjetweighttest
+  recordName: "upjetweighttest"
   recordType: A
   ttl: 600
   values:
     - 10.99.1.1
   setIdentifier: primary
-  weight: 153
+  weight: 115
