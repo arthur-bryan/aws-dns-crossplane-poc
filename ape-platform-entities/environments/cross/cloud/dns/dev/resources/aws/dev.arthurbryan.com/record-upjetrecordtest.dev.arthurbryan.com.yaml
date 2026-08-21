@@ -1,0 +1,24 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-upjetrecordtest.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"upjetrecordtest","type":"A","values":["10.99.0.1"],"recordName":"upjetrecordtest","entityRef":"resource:dns-eds437/upjetrecordtest"}'
+spec:
+  name: record-upjetrecordtest.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: upjetrecordtest
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+  - 10.99.0.1
