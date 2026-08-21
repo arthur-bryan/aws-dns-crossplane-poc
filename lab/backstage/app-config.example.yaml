@@ -45,6 +45,14 @@ scaffolder:
     name: APE Scaffolder
     email: scaffolder@ape.local
   defaultCommitMessage: "chore(dns): scaffolder-generated change"
+  # Backstage's own built-in ${{ environment.parameters.* }} template context
+  # -- feeds shared/entities/{clone,push}.yaml's entitiesRepository/
+  # entitiesBranch, matching APE's real templates exactly. Adjust if your
+  # fork/branch differs.
+  defaultEnvironment:
+    parameters:
+      entitiesRepository: https://github.com/arthur-bryan/aws-dns-crossplane-poc.git
+      entitiesBranch: ape-platform-alignment
 
 dns:
   accounts:
