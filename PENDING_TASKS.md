@@ -52,8 +52,6 @@ the form no longer asks the user for `name` / `type` / `ttl` / `values` /
   EnvironmentConfig for sandbox account 382598791794)
 - `lab/backstage-templates/zone.yaml` `deriveAccount` jsonata maps
   `hml → 382598791794`, default VPC `vpc-067a880ce560341f8`
-- `lab/stuck-mr-recoverer/10-configmap.yaml` `PROVIDER_ROLE_CHAIN`
-  knows about hml's `OrganizationAccountAccessRole`
 
 ### TASK-9: 🗑 `import.existing` flow — model retired
 Originally validated the [Observe, Update]-only adoption path with a
