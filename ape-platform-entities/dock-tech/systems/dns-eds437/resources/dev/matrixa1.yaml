@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: matrixa1
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787598574518'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixa1","type":"A","values":["10.20.1.1"],"recordName":"matrixa1","entityRef":"resource:dns-eds437/matrixa1"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixa1","entityRef":"resource:dns-eds437/matrixa1","recordName":"matrixa1","type":"A","values":["10.20.1.9"],"originalType":"A"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,8 +25,8 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: matrixa1
+  recordName: "matrixa1"
   recordType: A
   ttl: 3600
   values:
-    - 10.20.1.1
+    - 10.20.1.9
