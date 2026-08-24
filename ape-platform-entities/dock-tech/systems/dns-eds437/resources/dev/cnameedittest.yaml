@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: cnameedittest
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787592224176'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"cnameedittest","type":"CNAME","values":["target1.example.com"],"recordName":"cnameedittest","entityRef":"resource:dns-eds437/cnameedittest"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"cnameedittest","type":"CNAME","values":["target2.example.com"],"recordName":"cnameedittest","entityRef":"resource:dns-eds437/cnameedittest","originalType":"CNAME"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,8 +25,8 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: cnameedittest
+  recordName: "cnameedittest"
   recordType: CNAME
   ttl: 3600
   values:
-    - target1.example.com
+    - target2.example.com
