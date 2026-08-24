@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: matrixalias2
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787598574548'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias2","type":"ALIAS","serviceType":"ALB","region":"us-east-1","dnsName":"my-alb-123456.us-east-1.elb.amazonaws.com","recordName":"matrixalias2","entityRef":"resource:dns-eds437/matrixalias2"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias2","entityRef":"resource:dns-eds437/matrixalias2","recordName":"matrixalias2","type":"ALIAS","serviceType":"ALB","region":"sa-east-1","dnsName":"my-alb-999999.sa-east-1.elb.amazonaws.com","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,9 +25,9 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: matrixalias2
+  recordName: "matrixalias2"
   recordType: ALIAS
   aliasTarget:
     serviceType: ALB
-    dnsName: my-alb-123456.us-east-1.elb.amazonaws.com
-    region: us-east-1
+    dnsName: my-alb-999999.sa-east-1.elb.amazonaws.com
+    region: sa-east-1
