@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: matrixweighted-secondary
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787598603882'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixweighted-secondary","type":"A","values":["10.30.1.2"],"enableWeightedRouting":true,"setIdentifier":"secondary","weight":30,"recordName":"matrixweighted","entityRef":"resource:dns-eds437/matrixweighted-secondary"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: matrixweighted-secondary
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: matrixweighted
+  recordType: A
+  ttl: 600
+  values:
+    - 10.30.1.2
+  setIdentifier: secondary
+  weight: 30
