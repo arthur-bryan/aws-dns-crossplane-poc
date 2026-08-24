@@ -8,7 +8,7 @@ metadata:
     dock.tech/created-at: '1787598574546'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias1","entityRef":"resource:dns-eds437/matrixalias1","recordName":"matrixalias1","type":"ALIAS","serviceType":"CloudFront","dnsName":"d222222abcdef9.cloudfront.net","originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias1","entityRef":"resource:dns-eds437/matrixalias1","recordName":"matrixalias1","type":"ALIAS","serviceType":"NLB","region":"us-west-2","dnsName":"my-nlb-654321.elb.us-west-2.amazonaws.com","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -28,5 +28,6 @@ spec:
   recordName: "matrixalias1"
   recordType: ALIAS
   aliasTarget:
-    serviceType: CloudFront
-    dnsName: d222222abcdef9.cloudfront.net
+    serviceType: NLB
+    dnsName: my-nlb-654321.elb.us-west-2.amazonaws.com
+    region: us-west-2
