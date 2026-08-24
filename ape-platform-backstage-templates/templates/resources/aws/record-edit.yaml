@@ -51,6 +51,7 @@ spec:
         recordName:
           title: Record Name
           type: string
+          maxLength: 50
           ui:disabled: true
 
         fqdnPreview:

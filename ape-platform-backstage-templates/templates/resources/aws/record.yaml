@@ -72,6 +72,7 @@ spec:
                 title: Record Name
                 type: string
                 description: Context to compose the record name (e.g., 'www', 'api', 'cdn')
+                maxLength: 50
                 ui:autofocus: true
                 ui:field: EntityNameComposerPicker
                 ui:options:
