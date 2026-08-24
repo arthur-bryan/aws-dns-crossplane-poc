@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: matrixaaaa1
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787598574528'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixaaaa1","type":"AAAA","values":["2001:0db8:85a3:0000:0000:8a2e:0370:7334"],"recordName":"matrixaaaa1","entityRef":"resource:dns-eds437/matrixaaaa1"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixaaaa1","entityRef":"resource:dns-eds437/matrixaaaa1","type":"AAAA","recordName":"matrixaaaa1","values":["2001:db8::99"],"originalType":"AAAA"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,8 +25,8 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: matrixaaaa1
+  recordName: "matrixaaaa1"
   recordType: AAAA
   ttl: 3600
   values:
-    - 2001:0db8:85a3:0000:0000:8a2e:0370:7334
+    - 2001:db8::99
