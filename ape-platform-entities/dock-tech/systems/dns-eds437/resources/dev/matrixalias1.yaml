@@ -3,12 +3,12 @@ kind: Resource
 metadata:
   name: matrixalias1
   namespace: dns-eds437
-  description: DNS Record created by template
+  description: DNS Record managed by template
   annotations:
     dock.tech/created-at: '1787598574546'
     dock.tech/created-by: user:development/guest
     dock.tech/scaffolder-editable-template: dns-record-edit
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias1","type":"ALIAS","serviceType":"CloudFront","dnsName":"d111111abcdef8.cloudfront.net","recordName":"matrixalias1","entityRef":"resource:dns-eds437/matrixalias1"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias1","entityRef":"resource:dns-eds437/matrixalias1","recordName":"matrixalias1","type":"ALIAS","serviceType":"CloudFront","dnsName":"d222222abcdef9.cloudfront.net","originalType":"ALIAS"}'
   labels:
     environment: dev
     cloud: aws
@@ -25,8 +25,8 @@ spec:
   aws:
     account: "309670275661"
     accountName: dev-account
-  recordName: matrixalias1
+  recordName: "matrixalias1"
   recordType: ALIAS
   aliasTarget:
     serviceType: CloudFront
-    dnsName: d111111abcdef8.cloudfront.net
+    dnsName: d222222abcdef9.cloudfront.net
