@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-matrixaliasz.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixaliasz","type":"ALIAS","serviceType":"ALB","region":"us-east-1","dnsName":"my-alb-111111.us-east-1.elb.amazonaws.com","recordName":"matrixaliasz","entityRef":"resource:dns-eds437/matrixaliasz"}'
+spec:
+  name: record-matrixaliasz.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: matrixaliasz
+  recordType: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: ALB
+    dnsName: my-alb-111111.us-east-1.elb.amazonaws.com
+    evaluateTargetHealth: false
+    region: us-east-1

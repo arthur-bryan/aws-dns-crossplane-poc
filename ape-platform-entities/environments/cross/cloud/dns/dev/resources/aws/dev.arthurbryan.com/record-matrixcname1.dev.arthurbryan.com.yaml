@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixcname1","type":"CNAME","values":["api.example.com"],"recordName":"matrixcname1","entityRef":"resource:dns-eds437/matrixcname1"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixcname1","entityRef":"resource:dns-eds437/matrixcname1","type":"CNAME","recordName":"matrixcname1","values":["api2.example.com"],"originalType":"CNAME"}'
 spec:
   name: record-matrixcname1.dev.arthurbryan.com
   domain: cross
@@ -21,4 +21,4 @@ spec:
     accountName: dev-account
   ttl: 3600
   values:
-  - api.example.com
+  - api2.example.com

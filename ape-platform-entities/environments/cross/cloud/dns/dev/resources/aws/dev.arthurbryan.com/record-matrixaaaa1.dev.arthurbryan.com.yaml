@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixaaaa1","type":"AAAA","values":["2001:0db8:85a3:0000:0000:8a2e:0370:7334"],"recordName":"matrixaaaa1","entityRef":"resource:dns-eds437/matrixaaaa1"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixaaaa1","entityRef":"resource:dns-eds437/matrixaaaa1","type":"AAAA","recordName":"matrixaaaa1","values":["2001:db8::99"],"originalType":"AAAA"}'
 spec:
   name: record-matrixaaaa1.dev.arthurbryan.com
   domain: cross
@@ -21,4 +21,4 @@ spec:
     accountName: dev-account
   ttl: 3600
   values:
-  - 2001:0db8:85a3:0000:0000:8a2e:0370:7334
+  - 2001:db8::99

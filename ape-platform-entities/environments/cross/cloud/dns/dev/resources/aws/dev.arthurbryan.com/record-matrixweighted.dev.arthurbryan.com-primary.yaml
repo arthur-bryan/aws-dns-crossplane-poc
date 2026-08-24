@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixweighted-primary","type":"A","values":["10.30.1.1"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":70,"recordName":"matrixweighted","entityRef":"resource:dns-eds437/matrixweighted-primary"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixweighted-primary","entityRef":"resource:dns-eds437/matrixweighted-primary","type":"A","recordName":"matrixweighted","values":["10.30.1.101"],"enableWeightedRouting":true,"setIdentifier":"primary","weight":85,"originalType":"A"}'
 spec:
   name: record-matrixweighted.dev.arthurbryan.com-primary
   domain: cross
@@ -21,6 +21,6 @@ spec:
     accountName: dev-account
   ttl: 600
   values:
-  - 10.30.1.1
+  - 10.30.1.101
   setIdentifier: primary
-  weight: 70
+  weight: 85
