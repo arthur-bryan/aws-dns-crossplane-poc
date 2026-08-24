@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-weighted-multi.dev.arthurbryan.com-secondary
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"weighted-multi-secondary","type":"A","values":["10.65.0.2"],"enableWeightedRouting":true,"setIdentifier":"secondary","weight":30,"recordName":"weighted-multi","entityRef":"resource:dns-eds437/weighted-multi-secondary"}'
+spec:
+  name: record-weighted-multi.dev.arthurbryan.com-secondary
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: weighted-multi
+  recordType: A
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 600
+  values:
+  - 10.65.0.2
+  setIdentifier: secondary
+  weight: 30
