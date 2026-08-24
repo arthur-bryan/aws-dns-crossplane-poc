@@ -22,4 +22,3 @@ spec:
   aliasTarget:
     serviceType: GlobalAccelerator
     dnsName: a1234567890abcdef.awsglobalaccelerator.com
-    evaluateTargetHealth: false

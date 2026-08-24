@@ -22,5 +22,4 @@ spec:
   aliasTarget:
     serviceType: ALB
     dnsName: my-alb-999999.sa-east-1.elb.amazonaws.com
-    evaluateTargetHealth: false
     region: sa-east-1
