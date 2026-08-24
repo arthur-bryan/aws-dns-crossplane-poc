@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"valueedittest","entityRef":"resource:dns-eds437/valueedittest","type":"A","recordName":"valueedittest","values":["10.99.0.250"],"originalType":"A"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"valueedittest","entityRef":"resource:dns-eds437/valueedittest","recordName":"valueedittest","type":"ALIAS","serviceType":"CloudFront","dnsName":"d444444abcdefb.cloudfront.net","originalType":"ALIAS"}'
 spec:
   name: record-valueedittest.dev.arthurbryan.com
   domain: cross
@@ -15,10 +15,11 @@ spec:
   zoneId: Z0945364EYNE5KZW0WIF
   zoneName: dev.arthurbryan.com
   recordName: valueedittest
-  recordType: A
+  recordType: ALIAS
   aws:
     account: 309670275661
     accountName: dev-account
-  ttl: 3600
-  values:
-  - 10.99.0.250
+  aliasTarget:
+    serviceType: CloudFront
+    dnsName: d444444abcdefb.cloudfront.net
+    evaluateTargetHealth: false
