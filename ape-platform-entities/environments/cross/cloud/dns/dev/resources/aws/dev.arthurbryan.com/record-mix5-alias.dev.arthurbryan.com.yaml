@@ -1,0 +1,25 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-mix5-alias.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"mix5-alias","type":"ALIAS","serviceType":"CloudFront","dnsName":"d111111abcdef8.cloudfront.net","recordName":"mix5-alias","entityRef":"resource:dns-eds437/mix5-alias"}'
+spec:
+  name: record-mix5-alias.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: mix5-alias
+  recordType: ALIAS
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  aliasTarget:
+    serviceType: CloudFront
+    dnsName: d111111abcdef8.cloudfront.net
+    evaluateTargetHealth: false
