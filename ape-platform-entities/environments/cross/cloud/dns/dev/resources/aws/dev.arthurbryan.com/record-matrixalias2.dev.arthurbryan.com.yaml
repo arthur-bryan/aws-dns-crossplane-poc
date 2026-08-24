@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias2","type":"ALIAS","serviceType":"ALB","region":"us-east-1","dnsName":"my-alb-123456.us-east-1.elb.amazonaws.com","recordName":"matrixalias2","entityRef":"resource:dns-eds437/matrixalias2"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias2","entityRef":"resource:dns-eds437/matrixalias2","recordName":"matrixalias2","type":"ALIAS","serviceType":"ALB","region":"sa-east-1","dnsName":"my-alb-999999.sa-east-1.elb.amazonaws.com","originalType":"ALIAS"}'
 spec:
   name: record-matrixalias2.dev.arthurbryan.com
   domain: cross
@@ -21,6 +21,6 @@ spec:
     accountName: dev-account
   aliasTarget:
     serviceType: ALB
-    dnsName: my-alb-123456.us-east-1.elb.amazonaws.com
+    dnsName: my-alb-999999.sa-east-1.elb.amazonaws.com
     evaluateTargetHealth: false
-    region: us-east-1
+    region: sa-east-1

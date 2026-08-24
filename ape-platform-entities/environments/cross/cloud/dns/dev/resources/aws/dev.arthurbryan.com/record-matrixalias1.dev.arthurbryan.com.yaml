@@ -6,7 +6,7 @@ metadata:
   namespace: system-dns-dev
   annotations:
     dock.tech/generated-by: catalog-to-xr
-    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias1","entityRef":"resource:dns-eds437/matrixalias1","recordName":"matrixalias1","type":"ALIAS","serviceType":"CloudFront","dnsName":"d222222abcdef9.cloudfront.net","originalType":"ALIAS"}'
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixalias1","entityRef":"resource:dns-eds437/matrixalias1","recordName":"matrixalias1","type":"ALIAS","serviceType":"NLB","region":"us-west-2","dnsName":"my-nlb-654321.elb.us-west-2.amazonaws.com","originalType":"ALIAS"}'
 spec:
   name: record-matrixalias1.dev.arthurbryan.com
   domain: cross
@@ -20,6 +20,7 @@ spec:
     account: 309670275661
     accountName: dev-account
   aliasTarget:
-    serviceType: CloudFront
-    dnsName: d222222abcdef9.cloudfront.net
+    serviceType: NLB
+    dnsName: my-nlb-654321.elb.us-west-2.amazonaws.com
     evaluateTargetHealth: false
+    region: us-west-2
