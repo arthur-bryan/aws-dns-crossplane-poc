@@ -133,10 +133,6 @@ spec:
                       type: string
                       description: Target region.
                       pattern: '^[a-z]{2}-[a-z]+-\d{1}$'
-                    evaluateTargetHealth:
-                      type: boolean
-                      description: Evaluate health.
-                      default: false
                   required:
                     - dnsName
                     - serviceType

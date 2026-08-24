@@ -18,7 +18,6 @@ type DnsRecord = {
   aliasTarget?: {
     dnsName: string;
     hostedZoneId: string;
-    evaluateTargetHealth: boolean;
   };
   setIdentifier?: string;
   weight?: number;

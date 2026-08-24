@@ -379,7 +379,7 @@ spec:
                 alias:
                   name: [[ $aliasTarget.dnsName ]]
                   zoneId: [[ $resolvedAliasZoneId ]]
-                  evaluateTargetHealth: [[ default false $aliasTarget.evaluateTargetHealth ]]
+                  evaluateTargetHealth: false
                 [[- end ]]
             [[- end ]]
 
