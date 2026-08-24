@@ -419,7 +419,7 @@ spec:
               existing: true
             {%- if steps.buildEditParams.output.result.setIdentifier %}
             setIdentifier: ${{ steps.buildEditParams.output.result.setIdentifier }}
-            weight: ${{ parameters.existingRecord.weight }}
+            weight: ${{ steps.buildEditParams.output.result.weight }}
             {%- endif %}
             {%- if parameters.existingRecord.aliasTarget %}
             aliasTarget:

@@ -100,7 +100,9 @@ spec:
                   items:
                     type: string
                     pattern: '^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$'
+                    errorMessage: "Enter a valid IPv4 address. Example: 10.0.1.100. CIDR notation (e.g. /24) is not allowed."
                   minItems: 1
+                  ui:help: "Example: 10.0.1.100"
               required:
                 - values
 
@@ -114,7 +116,9 @@ spec:
                   items:
                     type: string
                     pattern: '^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$'
+                    errorMessage: "Enter a valid IPv6 address. Example: 2001:db8::1. Plain IPv4 addresses are not valid here."
                   minItems: 1
+                  ui:help: "Example: 2001:0db8:85a3::8a2e:0370:7334"
               required:
                 - values
 
@@ -127,8 +131,11 @@ spec:
                   description: Target canonical name
                   items:
                     type: string
+                    pattern: '^(?!.*\d+\.\d+\.\d+\.\d+)(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\.?$'
+                    errorMessage: "Enter a valid hostname (e.g. api.example.com). IP addresses and single-label names are not allowed."
                   maxItems: 1
                   minItems: 1
+                  ui:help: "Example: api.example.com"
               required:
                 - values
 
@@ -141,7 +148,10 @@ spec:
                   description: Text values for the record
                   items:
                     type: string
+                    maxLength: 255
+                    errorMessage: "Each TXT string must be 255 characters or fewer. Split longer content into multiple values."
                   minItems: 1
+                  ui:help: "Example: v=spf1 include:_spf.google.com ~all"
               required:
                 - values
 
@@ -259,6 +269,9 @@ spec:
                     DNS name of the AWS resource, or -- when aliasing to
                     another record in this zone -- that record's full DNS
                     name.
+                  pattern: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\.?$'
+                  errorMessage: "Enter a valid DNS hostname. Example: d111111abcdef8.cloudfront.net"
+                  ui:help: "Example: d111111abcdef8.cloudfront.net"
                 zoneIdPreview:
                   title: ' '
                   type: string
@@ -291,6 +304,9 @@ spec:
                   description: Unique identifier for this weighted record
                   minLength: 1
                   maxLength: 128
+                  pattern: '^\S+$'
+                  errorMessage: "Set identifier cannot contain spaces. Example: primary-us-east-2"
+                  ui:help: "Example: primary-us-east-2 (no spaces allowed)"
                 weight:
                   title: Weight
                   type: integer
@@ -364,16 +380,6 @@ spec:
             $isNs ? 172800 :
             3600
           )
-
-    - id: deriveRoute53Weight
-      name: Convert weight percentage to Route53 native 0-255 range
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          weighted: ${{ parameters.enableWeightedRouting }}
-          weight: ${{ parameters.weight }}
-        expression: >-
-          weighted = true and $type(weight) = "number" ? $round(weight * 255 / 100) : undefined
 
     - id: deriveAccount
       name: Derive AWS account from environment
@@ -453,7 +459,7 @@ spec:
             {%- endif %}
             {%- if parameters.enableWeightedRouting %}
             setIdentifier: ${{ parameters.setIdentifier }}
-            weight: ${{ steps.deriveRoute53Weight.output.result }}
+            weight: ${{ parameters.weight }}
             {%- endif %}
             {%- if steps.fetchExisting.output.entity.spec.import %}
             import:

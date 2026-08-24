@@ -149,9 +149,12 @@ spec:
 
                 weight:
                   type: integer
-                  description: Weight.
+                  description: >-
+                    Relative traffic share as a percentage (0-100) of this
+                    record's set-identifier group. The composition converts
+                    this to Route53's native 0-255 weight range.
                   minimum: 0
-                  maximum: 255
+                  maximum: 100
 
                 failoverRoutingPolicy:
                   type: object
