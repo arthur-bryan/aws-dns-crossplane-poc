@@ -1,0 +1,33 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: matrixaliasz
+  namespace: dns-eds437
+  description: DNS Record created by template
+  annotations:
+    dock.tech/created-at: '1787604341853'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixaliasz","type":"ALIAS","serviceType":"ALB","region":"us-east-1","dnsName":"my-alb-111111.us-east-1.elb.amazonaws.com","recordName":"matrixaliasz","entityRef":"resource:dns-eds437/matrixaliasz"}'
+  labels:
+    environment: dev
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: dev
+  name: matrixaliasz
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  aws:
+    account: "309670275661"
+    accountName: dev-account
+  recordName: matrixaliasz
+  recordType: ALIAS
+  aliasTarget:
+    serviceType: ALB
+    dnsName: my-alb-111111.us-east-1.elb.amazonaws.com
+    region: us-east-1
