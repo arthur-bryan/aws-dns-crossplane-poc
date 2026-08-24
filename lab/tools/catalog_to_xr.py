@@ -178,7 +178,6 @@ def build_record_xr(
             "serviceType": at.get("serviceType", "Custom"),
             "dnsName": at.get("dnsName"),
             "hostedZoneId": at.get("hostedZoneId"),
-            "evaluateTargetHealth": at.get("evaluateTargetHealth", False),
             "region": at.get("region"),
         }.items() if v is not None}
     else:
