@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-matrixtxt3.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"matrixtxt3","type":"TXT","values":["v=spf1
+      include:_spf.google.com ~all","google-site-verification=abc123"],"recordName":"matrixtxt3","entityRef":"resource:dns-eds437/matrixtxt3"}'
+spec:
+  name: record-matrixtxt3.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: matrixtxt3
+  recordType: TXT
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+  - v=spf1 include:_spf.google.com ~all
+  - google-site-verification=abc123
