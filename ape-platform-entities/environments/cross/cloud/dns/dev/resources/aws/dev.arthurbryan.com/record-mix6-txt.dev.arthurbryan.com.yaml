@@ -1,0 +1,25 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-mix6-txt.dev.arthurbryan.com
+  namespace: system-dns-dev
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","zone":{"id":"Z0945364EYNE5KZW0WIF","name":"dev.arthurbryan.com","accountName":"dev-account","environment":"dev"},"kind":"Record","name":"mix6-txt","type":"TXT","values":["hello
+      world"],"recordName":"mix6-txt","entityRef":"resource:dns-eds437/mix6-txt"}'
+spec:
+  name: record-mix6-txt.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneId: Z0945364EYNE5KZW0WIF
+  zoneName: dev.arthurbryan.com
+  recordName: mix6-txt
+  recordType: TXT
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  ttl: 3600
+  values:
+  - hello world
