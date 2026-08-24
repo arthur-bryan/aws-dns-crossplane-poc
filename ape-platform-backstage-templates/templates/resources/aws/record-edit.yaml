@@ -134,7 +134,6 @@ spec:
                     errorMessage: "Enter a valid hostname (e.g. api.example.com). IP addresses and single-label names are not allowed."
                   maxItems: 1
                   minItems: 1
-                  ui:help: "Example: api.example.com"
               required:
                 - values
 
