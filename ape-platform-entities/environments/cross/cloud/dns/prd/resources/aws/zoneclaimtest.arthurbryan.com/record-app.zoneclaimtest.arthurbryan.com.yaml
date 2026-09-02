@@ -1,0 +1,26 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSRecord
+metadata:
+  name: record-app.zoneclaimtest.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"name":"dns-app-prd","system":"system:dns-eds437/dns","environment":"prd","zone":{"id":"Z03166922WDL5QMLGKR78","name":"zoneclaimtest.arthurbryan.com","accountName":"prd-account","environment":"prd"},"recordName":"app","type":"A","originalType":"A","entityRef":"resource:dns-eds437/dns-app-prd","ttl":300,"values":["203.0.113.10"]}'
+spec:
+  name: record-app.zoneclaimtest.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: prd
+  zoneId: Z03166922WDL5QMLGKR78
+  zoneName: zoneclaimtest.arthurbryan.com
+  recordName: app
+  recordType: A
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  ttl: 300
+  values:
+  - 203.0.113.10
+  import:
+    existing: true
