@@ -1,0 +1,171 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aws-dns-zone-claim
+  title: Claim Existing DNS Zone
+  description: Bring an existing public Route53 hosted zone under platform management
+  labels:
+    category: resources
+  tags:
+    - resource
+    - aws
+    - public
+spec:
+  type: resource
+
+  parameters:
+    - title: DNS Zone to Claim
+      required:
+        - system
+        - environment
+        - zone
+      properties:
+        system:
+          title: System
+          type: string
+          description: System that will own this zone
+          ui:field: OwnedEntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: System
+                metadata.labels.aws: "true"
+
+        environment:
+          title: Environment
+          type: string
+          description: Environment where the zone exists
+          ui:field: EnvironmentPicker
+          ui:options:
+            systemFieldName: system
+
+        zone:
+          title: Hosted Zone
+          type: object
+          description: Select the existing Route53 zone to bring under management
+          ui:field: AwsDnsZonePicker
+          ui:options:
+            environmentFieldName: environment
+
+        kind:
+          title: Kind
+          type: string
+          default: Zone
+          ui:widget: hidden
+
+  steps:
+    - $yaml: ../../../shared/entities/clone.yaml
+
+    - id: verifySystemOwnership
+      name: Verify System Ownership
+      action: catalog:system:ownership:verify
+      input:
+        systemRef: ${{ parameters.system }}
+
+    - $yaml: ../../../shared/entities/fetch-system.yaml
+
+    - id: fetchDnsSystem
+      name: Fetch DNS System Entity
+      action: catalog:fetch
+      input:
+        entityRef: system:dns-eds437/dns
+        defaultKind: System
+
+    - id: fetchDomain
+      name: Fetch Domain Entity
+      action: catalog:fetch
+      input:
+        entityRef: ${{ steps.fetchDnsSystem.output.entity.spec.domain }}
+        defaultKind: Domain
+
+    - id: deriveAccount
+      name: Derive AWS account from DNS system entity
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            $env := environment;
+            $envCfg := environments[name = $env];
+            {"account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName}
+          )
+
+    - id: computeEntityName
+      name: Compute entity name from zone name and environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          zoneName: ${{ parameters.zone.name }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            $sanitized := $replace($replace(zoneName, /\.$/, ""), ".", "-");
+            $sanitized & "-" & environment & "-zone"
+          )
+
+    - id: checkIfFileAlreadyExists
+      name: Check If File Already Exists
+      action: fs:file:exists
+      input:
+        filepath: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
+
+    - id: launchErrorIfFileExists
+      name: Launch Error If File Exists
+      if: ${{ steps.checkIfFileAlreadyExists.output.exists }}
+      action: error:launch
+      input:
+        message: A resource file for this DNS zone already exists in the platform.
+
+    - id: writeFile
+      name: Create Resource File
+      action: roadiehq:utils:fs:write
+      input:
+        path: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
+        content: |
+          apiVersion: backstage.io/v1alpha1
+          kind: Resource
+          metadata:
+            name: ${{ steps.computeEntityName.output.result }}
+            namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
+            description: DNS Zone claimed by template
+            annotations:
+              dock.tech/created-at: ${{ "'" + now() + "'" }}
+              dock.tech/created-by: ${{ user.ref }}
+              dock.tech/scaffolder-editable-template: dns-zone-edit
+              dock.tech/scaffolder-parameters: ${{ "'" + parameters | dump + "'" }}
+            labels:
+              environment: ${{ parameters.environment }}
+              cloud: aws
+          spec:
+            type: DNSZone
+            cloud: aws
+            owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            tribe: ${{ steps.fetchSystem.output.entity.spec.tribe }}
+            system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
+            environment: ${{ parameters.environment }}
+            name: ${{ steps.computeEntityName.output.result }}
+            domain: ${{ steps.fetchDomain.output.entity.metadata.name }}
+            zoneName: ${{ parameters.zone.name }}
+            visibility: public
+            aws:
+              account: "${{ steps.deriveAccount.output.result.account }}"
+              accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            import:
+              existing: true
+              zoneId: ${{ parameters.zone.id }}
+
+    - $yaml: ../../../shared/entities/commit.yaml
+    - $yaml: ../../../shared/entities/push.yaml
+
+    - id: publish-activity-log
+      action: activity-log:publish
+      input:
+        action: created
+        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.computeEntityName.output.result }}
+        payload: ${{ parameters }}
+
+    - $yaml: ../../../shared/entities/refresh-entities.yaml
+    - $yaml: ../../../shared/notify.yaml
+
+  output: {}
