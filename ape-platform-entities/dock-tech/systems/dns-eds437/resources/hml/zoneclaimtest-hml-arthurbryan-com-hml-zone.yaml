@@ -1,0 +1,31 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: zoneclaimtest-hml-arthurbryan-com-hml-zone
+  namespace: dns-eds437
+  description: DNS Zone claimed by template
+  annotations:
+    dock.tech/created-at: '1788366769762'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-zone-edit
+    dock.tech/scaffolder-parameters: '{"zone":{"id":"Z018927622SDKCSR4ZZ2F","name":"zoneclaimtest.hml.arthurbryan.com","accountName":"hml-account","environment":"hml"},"kind":"Zone","system":"system:dns-eds437/dns","environment":"hml"}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: DNSZone
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: hml
+  name: zoneclaimtest-hml-arthurbryan-com-hml-zone
+  domain: cloud
+  zoneName: zoneclaimtest.hml.arthurbryan.com
+  visibility: public
+  aws:
+    account: "382598791794"
+    accountName: hml-account
+  import:
+    existing: true
+    zoneId: Z018927622SDKCSR4ZZ2F
