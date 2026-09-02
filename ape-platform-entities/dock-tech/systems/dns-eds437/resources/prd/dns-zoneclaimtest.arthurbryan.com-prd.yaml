@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-zoneclaimtest.arthurbryan.com-prd
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/created-at: '1788367125590'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-zoneclaimtest.arthurbryan.com-prd","system":"system:dns-eds437/dns","environment":"prd","zone":{"id":"Z03166922WDL5QMLGKR78","name":"zoneclaimtest.arthurbryan.com","accountName":"prd-account","environment":"prd"},"recordName":"","type":"TXT","originalType":"TXT","entityRef":"resource:dns-eds437/dns-zoneclaimtest.arthurbryan.com-prd","ttl":300,"values":["\"v=spf1 -all\""]}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: prd
+  name: dns-zoneclaimtest.arthurbryan.com-prd
+  zoneId: Z03166922WDL5QMLGKR78
+  zoneName: zoneclaimtest.arthurbryan.com
+  aws:
+    account: "597230762851"
+    accountName: prd-account
+  recordName: ""
+  recordType: TXT
+  import:
+    existing: true
+  ttl: 300
+  values:
+    - "v=spf1 -all"
