@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-zoneclaimtest.hml.arthurbryan.com-hml
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/created-at: '1788367233980'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-zoneclaimtest.hml.arthurbryan.com-hml","system":"system:dns-eds437/dns","environment":"hml","zone":{"id":"Z018927622SDKCSR4ZZ2F","name":"zoneclaimtest.hml.arthurbryan.com","accountName":"hml-account","environment":"hml"},"recordName":"","type":"TXT","originalType":"TXT","entityRef":"resource:dns-eds437/dns-zoneclaimtest.hml.arthurbryan.com-hml","ttl":300,"values":["\"v=spf1 -all\""]}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: hml
+  name: dns-zoneclaimtest.hml.arthurbryan.com-hml
+  zoneId: Z018927622SDKCSR4ZZ2F
+  zoneName: zoneclaimtest.hml.arthurbryan.com
+  aws:
+    account: "382598791794"
+    accountName: hml-account
+  recordName: ""
+  recordType: TXT
+  import:
+    existing: true
+  ttl: 300
+  values:
+    - "v=spf1 -all"
