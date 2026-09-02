@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-www-hml
+  namespace: dns-eds437
+  description: DNS Record claimed by template
+  annotations:
+    dock.tech/created-at: '1788367196255'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-record-edit
+    dock.tech/scaffolder-parameters: '{"name":"dns-www-hml","system":"system:dns-eds437/dns","environment":"hml","zone":{"id":"Z018927622SDKCSR4ZZ2F","name":"zoneclaimtest.hml.arthurbryan.com","accountName":"hml-account","environment":"hml"},"recordName":"www","type":"CNAME","originalType":"CNAME","entityRef":"resource:dns-eds437/dns-www-hml","ttl":300,"values":["app.zoneclaimtest.hml.arthurbryan.com"]}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: DNSRecord
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: hml
+  name: dns-www-hml
+  zoneId: Z018927622SDKCSR4ZZ2F
+  zoneName: zoneclaimtest.hml.arthurbryan.com
+  aws:
+    account: "382598791794"
+    accountName: hml-account
+  recordName: "www"
+  recordType: CNAME
+  import:
+    existing: true
+  ttl: 300
+  values:
+    - app.zoneclaimtest.hml.arthurbryan.com
