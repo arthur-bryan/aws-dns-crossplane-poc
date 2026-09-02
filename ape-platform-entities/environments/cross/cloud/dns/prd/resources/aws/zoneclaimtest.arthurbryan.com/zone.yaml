@@ -1,0 +1,22 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-zoneclaimtest.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"zone":{"id":"Z03166922WDL5QMLGKR78","name":"zoneclaimtest.arthurbryan.com","accountName":"prd-account","environment":"prd"},"kind":"Zone","system":"system:dns-eds437/dns","environment":"prd"}'
+spec:
+  name: zone-zoneclaimtest.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: prd
+  zoneName: zoneclaimtest.arthurbryan.com
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  visibility: public
+  import:
+    existing: true
+    zoneId: Z03166922WDL5QMLGKR78

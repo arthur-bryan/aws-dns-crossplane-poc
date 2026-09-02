@@ -1,0 +1,22 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-zoneclaimtest.hml.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"zone":{"id":"Z018927622SDKCSR4ZZ2F","name":"zoneclaimtest.hml.arthurbryan.com","accountName":"hml-account","environment":"hml"},"kind":"Zone","system":"system:dns-eds437/dns","environment":"hml"}'
+spec:
+  name: zone-zoneclaimtest.hml.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: hml
+  zoneName: zoneclaimtest.hml.arthurbryan.com
+  aws:
+    account: 382598791794
+    accountName: hml-account
+  visibility: public
+  import:
+    existing: true
+    zoneId: Z018927622SDKCSR4ZZ2F
