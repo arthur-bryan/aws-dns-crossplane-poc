@@ -70,13 +70,6 @@ spec:
         entityRef: system:dns-eds437/dns
         defaultKind: System
 
-    - id: fetchDomain
-      name: Fetch Domain Entity
-      action: catalog:fetch
-      input:
-        entityRef: ${{ steps.fetchDnsSystem.output.entity.spec.domain }}
-        defaultKind: Domain
-
     - id: deriveAccount
       name: Derive AWS account from DNS system entity
       action: roadiehq:utils:jsonata
@@ -145,7 +138,6 @@ spec:
             system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
             environment: ${{ parameters.environment }}
             name: ${{ steps.computeEntityName.output.result }}
-            domain: ${{ steps.fetchDomain.output.entity.metadata.name }}
             zoneName: ${{ parameters.zone.name }}
             visibility: public
             aws:

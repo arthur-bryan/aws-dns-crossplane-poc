@@ -20,7 +20,6 @@ spec:
   system: system:dns-eds437/dns
   environment: hml
   name: zoneclaimtest-hml-arthurbryan-com-hml-zone
-  domain: cloud
   zoneName: zoneclaimtest.hml.arthurbryan.com
   visibility: public
   aws:

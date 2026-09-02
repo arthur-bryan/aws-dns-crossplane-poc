@@ -20,7 +20,6 @@ spec:
   system: system:dns-eds437/dns
   environment: prd
   name: zoneclaimtest-arthurbryan-com-prd-zone
-  domain: cloud
   zoneName: zoneclaimtest.arthurbryan.com
   visibility: public
   aws:
