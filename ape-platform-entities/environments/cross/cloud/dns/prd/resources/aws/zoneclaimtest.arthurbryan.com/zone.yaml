@@ -9,7 +9,7 @@ metadata:
     dock.tech/scaffolder-parameters: '{"zone":{"id":"Z03166922WDL5QMLGKR78","name":"zoneclaimtest.arthurbryan.com","accountName":"prd-account","environment":"prd"},"kind":"Zone","system":"system:dns-eds437/dns","environment":"prd"}'
 spec:
   name: zone-zoneclaimtest.arthurbryan.com
-  domain: cloud
+  domain: cross
   system: dns
   environment: prd
   zoneName: zoneclaimtest.arthurbryan.com

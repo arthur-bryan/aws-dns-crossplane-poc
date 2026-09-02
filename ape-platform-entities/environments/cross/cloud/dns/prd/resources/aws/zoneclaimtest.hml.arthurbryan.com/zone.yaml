@@ -9,7 +9,7 @@ metadata:
     dock.tech/scaffolder-parameters: '{"zone":{"id":"Z018927622SDKCSR4ZZ2F","name":"zoneclaimtest.hml.arthurbryan.com","accountName":"hml-account","environment":"hml"},"kind":"Zone","system":"system:dns-eds437/dns","environment":"hml"}'
 spec:
   name: zone-zoneclaimtest.hml.arthurbryan.com
-  domain: cloud
+  domain: cross
   system: dns
   environment: hml
   zoneName: zoneclaimtest.hml.arthurbryan.com
