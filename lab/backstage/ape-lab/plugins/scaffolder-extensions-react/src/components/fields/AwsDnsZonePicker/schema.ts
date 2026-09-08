@@ -6,6 +6,7 @@ export const AwsDnsZonePickerFieldSchema = makeFieldSchema({
       .object({
         id: z.string(),
         name: z.string(),
+        accountName: z.string().optional(),
       })
       .describe('The selected Route53 hosted zone'),
   uiOptions: (z) =>

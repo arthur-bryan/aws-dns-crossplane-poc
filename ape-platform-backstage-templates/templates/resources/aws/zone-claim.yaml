@@ -45,6 +45,7 @@ spec:
           ui:field: AwsDnsZonePicker
           ui:options:
             environmentFieldName: environment
+            excludeClaimed: true
 
         kind:
           title: Kind

@@ -1,4 +1,5 @@
 import { discoveryApiRef, fetchApiRef, useApi } from '@backstage/core-plugin-api';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { ScaffolderField } from '@backstage/plugin-scaffolder-react/alpha';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import TextField from '@material-ui/core/TextField';
@@ -23,6 +24,7 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
 
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
+  const catalogApi = useApi(catalogApiRef);
 
   const uiOptions = uiSchema['ui:options'] ?? {};
   const environmentFieldName = uiOptions.environmentFieldName;
@@ -36,6 +38,7 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
   // their own environment or from prd; prd may only delegate from prd; dev
   // and hml may never delegate from each other.
   const restrictParentEnvironments = uiOptions.restrictParentEnvironments === true;
+  const excludeClaimed = uiOptions.excludeClaimed ?? false;
   const zoneValue = formData && typeof formData === 'object' ? (formData as Zone) : undefined;
 
   const {
@@ -54,8 +57,20 @@ export const AwsDnsZonePicker = (props: AwsDnsZonePickerProps) => {
     }
 
     const data = (await response.json()) as { zones?: Zone[] };
-    return data.zones ?? [];
-  }, [discoveryApi, fetchApi, environment, restrictParentEnvironments]);
+    let result = data.zones ?? [];
+
+    if (excludeClaimed) {
+      const filter: Record<string, string | string[]> = { kind: 'Resource', 'spec.type': 'DNSZone' };
+      if (environment) {
+        filter['metadata.labels.environment'] = environment;
+      }
+      const { items } = await catalogApi.getEntities({ filter, fields: ['spec.zoneName'] });
+      const claimedZoneNames = new Set(items.map((e) => String((e.spec as any)?.zoneName ?? '').replace(/\.$/, '')));
+      result = result.filter((z) => !claimedZoneNames.has(z.name.replace(/\.$/, '')));
+    }
+
+    return result;
+  }, [discoveryApi, fetchApi, catalogApi, environment, restrictParentEnvironments, excludeClaimed]);
 
   const zones = restrictParentEnvironments && environment
     ? fetchedZones.filter((zone) => zone.environment === environment || zone.environment === 'prd')
