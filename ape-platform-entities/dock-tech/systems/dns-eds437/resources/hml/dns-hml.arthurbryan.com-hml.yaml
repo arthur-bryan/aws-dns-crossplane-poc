@@ -11,7 +11,7 @@ metadata:
     environment: hml
     cloud: aws
 spec:
-  type: dns-zone
+  type: DNSZone
   cloud: aws
   owner: group:default/infrastructure
   system: system:dns-eds437/dns
