@@ -66,6 +66,11 @@ spec:
                   items:
                     type: object
                     required: [vpcId, vpcRegion]
+                    properties:
+                      vpcId:
+                        type: string
+                      vpcRegion:
+                        type: string
                   ui:field: AwsVpcPicker
                   ui:options:
                     environmentFieldName: environment
