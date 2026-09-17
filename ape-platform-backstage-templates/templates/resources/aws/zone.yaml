@@ -16,17 +16,26 @@ spec:
   parameters:
     - title: DNS Zone Information
       required:
+        - system
         - environment
-        - name
-        - parentZone
       properties:
+        system:
+          title: System
+          type: string
+          description: System that will own this zone
+          ui:field: OwnedEntityPicker
+          ui:options:
+            catalogFilter:
+              - kind: System
+                metadata.labels.aws: "true"
+
         environment:
           title: Environment
           type: string
           description: Environment where the DNS zone will be created
           ui:field: EnvironmentPicker
           ui:options:
-            systemRef: system:dns-eds437/dns
+            systemFieldName: system
 
         kind:
           title: Kind
@@ -34,31 +43,51 @@ spec:
           default: Zone
           ui:widget: hidden
 
-        name:
-          title: Subdomain
-          type: string
-          description: Subdomain label for the new zone (e.g., 'payments' to create payments.dev.dock.tech)
-          ui:autofocus: true
-          ui:field: EntityNameComposerPicker
-          ui:options:
-            systemRef: system:dns-eds437/dns
-            suffix: zone
+        private:
+          title: Private Hosted Zone
+          type: boolean
+          description: Only resolvable from associated VPCs, not the public internet
+          default: false
 
-        parentZone:
-          title: Parent Zone
-          type: object
-          ui:field: AwsDnsZonePicker
-          ui:options:
-            environmentFieldName: environment
-            restrictParentEnvironments: true
-
-        fqdnPreview:
-          title: Resulting Zone
-          type: string
-          ui:field: ZoneFqdnPreview
+      dependencies:
+        private:
+          oneOf:
+            - properties:
+                private:
+                  const: false
+            - properties:
+                private:
+                  const: true
+                vpcs:
+                  title: Associated VPCs
+                  type: array
+                  description: VPCs this private zone will be resolvable from
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [vpcId, vpcRegion]
+                    properties:
+                      vpcId:
+                        type: string
+                      vpcRegion:
+                        type: string
+                  ui:field: AwsVpcPicker
+                  ui:options:
+                    environmentFieldName: environment
+                    excludeDefault: true
+              required:
+                - vpcs
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
+
+    - id: verifySystemOwnership
+      name: Verify System Ownership
+      action: catalog:system:ownership:verify
+      input:
+        systemRef: ${{ parameters.system }}
+
+    - $yaml: ../../../shared/entities/fetch-system.yaml
 
     - id: fetchDnsSystem
       name: Fetch DNS System Entity
@@ -68,67 +97,52 @@ spec:
         defaultKind: System
 
     - id: deriveAccount
-      name: Derive AWS account from environment
+      name: Derive AWS account from DNS system entity
       action: roadiehq:utils:jsonata
       input:
         data:
-          environment: ${{ parameters.environment }}
           environments: ${{ steps.fetchDnsSystem.output.entity.spec.environments }}
+          environment: ${{ parameters.environment }}
         expression: >-
           (
             $env := environment;
             $envCfg := environments[name = $env];
-            { "account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName }
+            {"account": $envCfg.aws.account, "accountName": $envCfg.aws.accountName}
           )
-
-    - id: checkParentEnvironmentAllowed
-      name: Check parent zone against the delegation hierarchy
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          environment: ${{ parameters.environment }}
-          parentEnvironment: ${{ parameters.parentZone.environment }}
-        expression: >-
-          (
-            $childEnv := environment;
-            $parentEnv := parentEnvironment;
-            $childEnv != $parentEnv and $parentEnv != "prd"
-          )
-
-    - id: launchErrorIfParentEnvironmentNotAllowed
-      name: Abort if the parent zone violates the delegation hierarchy
-      if: ${{ steps.checkParentEnvironmentAllowed.output.result }}
-      action: error:launch
-      input:
-        message: >-
-          A ${{ parameters.environment }} zone cannot be delegated from a
-          ${{ parameters.parentZone.environment }} zone. dev and hml zones may
-          only delegate from their own environment or from prd; prd zones may
-          only delegate from prd.
 
     - id: computeZoneName
-      name: Compute child zone FQDN
+      name: Compute zone FQDN
       action: roadiehq:utils:jsonata
       input:
         data:
-          composedName: ${{ parameters.name }}
-          systemName: ${{ steps.fetchDnsSystem.output.entity.metadata.name }}
+          systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
           environment: ${{ parameters.environment }}
-          parentZoneName: ${{ parameters.parentZone.name }}
+          private: ${{ parameters.private }}
         expression: >-
           (
-            $suffix := "-" & environment & "-zone";
-            $withoutSuffix := $substringBefore(composedName, $suffix);
-            $prefix := systemName & "-";
-            $context := $substringAfter($withoutSuffix, $prefix);
-            $context & "." & parentZoneName
+            $visPart := private = true ? ".internal" : "";
+            $envSuffix := environment = "prd" ? "" : ("." & environment);
+            systemName & $visPart & $envSuffix & ".arthurbryan.com"
+          )
+
+    - id: computeEntityName
+      name: Compute entity name from zone name and environment
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          zoneName: ${{ steps.computeZoneName.output.result }}
+          environment: ${{ parameters.environment }}
+        expression: >-
+          (
+            $sanitized := $replace(zoneName, ".", "-");
+            $sanitized & "-" & environment & "-zone"
           )
 
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
       input:
-        filepath: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        filepath: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
 
     - id: launchErrorIfFileExists
       name: Launch Error If File Exists
@@ -141,12 +155,12 @@ spec:
       name: Create Resource File
       action: roadiehq:utils:fs:write
       input:
-        path: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ parameters.name }}.yaml
+        path: ./entities/ape-platform-entities/dock-tech/systems/${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/resources/${{ parameters.environment }}/${{ steps.computeEntityName.output.result }}.yaml
         content: |
           apiVersion: backstage.io/v1alpha1
           kind: Resource
           metadata:
-            name: ${{ parameters.name }}
+            name: ${{ steps.computeEntityName.output.result }}
             namespace: ${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}
             description: DNS Zone created by template
             annotations:
@@ -160,17 +174,23 @@ spec:
           spec:
             type: DNSZone
             cloud: aws
-            owner: ${{ steps.fetchDnsSystem.output.entity.spec.owner }}
-            tribe: ${{ steps.fetchDnsSystem.output.entity.spec.tribe }}
-            system: system:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.fetchDnsSystem.output.entity.metadata.name }}
+            owner: ${{ steps.fetchSystem.output.entity.spec.owner }}
+            tribe: ${{ steps.fetchSystem.output.entity.spec.tribe }}
+            system: ${{ parameters.system }}
             environment: ${{ parameters.environment }}
-            name: ${{ parameters.name }}
+            name: ${{ steps.computeEntityName.output.result }}
+            zoneName: ${{ steps.computeZoneName.output.result }}
+            visibility: ${{ parameters.private ? "private" : "public" }}
             aws:
               account: "${{ steps.deriveAccount.output.result.account }}"
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
-            zoneName: ${{ steps.computeZoneName.output.result }}
-            delegatedFromZoneId: ${{ parameters.parentZone.id }}
-            delegatedFromAccountName: dnszone-${{ parameters.parentZone.environment }}
+            {%- if parameters.private %}
+            vpcs:
+            {%- for vpc in parameters.vpcs %}
+              - vpcId: ${{ vpc.vpcId }}
+                vpcRegion: ${{ vpc.vpcRegion }}
+            {%- endfor %}
+            {%- endif %}
 
     - $yaml: ../../../shared/entities/commit.yaml
     - $yaml: ../../../shared/entities/push.yaml
@@ -179,7 +199,7 @@ spec:
       action: activity-log:publish
       input:
         action: created
-        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ parameters.name }}
+        entityRef: resource:${{ steps.fetchDnsSystem.output.entity.metadata.namespace }}/${{ steps.computeEntityName.output.result }}
         payload: ${{ parameters }}
 
     - $yaml: ../../../shared/entities/refresh-entities.yaml

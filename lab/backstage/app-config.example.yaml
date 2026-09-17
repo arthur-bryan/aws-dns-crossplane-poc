@@ -60,14 +60,17 @@ dns:
       accountId: ${DNS_ACCOUNT_ID_DEV}
       accountName: ${DNS_ACCOUNT_NAME_DEV}
       roleArn: ${DNS_ROLE_ARN_DEV}
+      region: ${DNS_ACCOUNT_REGION_DEV}
     hml:
       accountId: ${DNS_ACCOUNT_ID_HML}
       accountName: ${DNS_ACCOUNT_NAME_HML}
       roleArn: ${DNS_ROLE_ARN_HML}
+      region: ${DNS_ACCOUNT_REGION_HML}
     prd:
       accountId: ${DNS_ACCOUNT_ID_PRD}
       accountName: ${DNS_ACCOUNT_NAME_PRD}
       roleArn: ${DNS_ROLE_ARN_PRD}
+      region: ${DNS_ACCOUNT_REGION_PRD}
 
 auth:
   providers:

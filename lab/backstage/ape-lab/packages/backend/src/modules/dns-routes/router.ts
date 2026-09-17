@@ -6,6 +6,7 @@ import {
   HostedZone,
   ResourceRecordSet,
 } from '@aws-sdk/client-route-53';
+import { EC2Client, DescribeVpcsCommand, Vpc } from '@aws-sdk/client-ec2';
 import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 import type { LoggerService, RootConfigService } from '@backstage/backend-plugin-api';
 
@@ -13,6 +14,7 @@ type DnsAccountConfig = {
   accountId: string;
   accountName: string;
   roleArn: string;
+  region: string;
 };
 
 function getAccountConfig(
@@ -30,7 +32,9 @@ function getAccountConfig(
   // no cross-account AssumeRole is needed).
   const roleArn =
     config.getOptionalString(`dns.accounts.${environment}.roleArn`) ?? '';
-  return { accountId, accountName, roleArn };
+  const region =
+    config.getOptionalString(`dns.accounts.${environment}.region`) ?? 'us-east-1';
+  return { accountId, accountName, roleArn, region };
 }
 
 function makeRoute53Client(roleArn: string): Route53Client {
@@ -44,6 +48,34 @@ function makeRoute53Client(roleArn: string): Route53Client {
         }
       : {}),
   });
+}
+
+function makeEc2Client(roleArn: string, region: string): EC2Client {
+  return new EC2Client({
+    region,
+    ...(roleArn
+      ? {
+          credentials: fromTemporaryCredentials({
+            params: { RoleArn: roleArn },
+          }),
+        }
+      : {}),
+  });
+}
+
+async function listAllVpcs(client: EC2Client): Promise<Vpc[]> {
+  const vpcs: Vpc[] = [];
+  let nextToken: string | undefined;
+
+  do {
+    const resp = await client.send(
+      new DescribeVpcsCommand({ NextToken: nextToken, MaxResults: 100 }),
+    );
+    vpcs.push(...(resp.Vpcs ?? []));
+    nextToken = resp.NextToken;
+  } while (nextToken);
+
+  return vpcs;
 }
 
 async function listAllZones(client: Route53Client): Promise<HostedZone[]> {
@@ -170,6 +202,36 @@ export async function createDnsRouter(opts: {
       logger.error(
         `Failed to list records for zone ${zoneId} in ${environment}: ${err.message}`,
       );
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.get('/dns-vpcs', async (req, res) => {
+    const environment = req.query.environment as string;
+
+    if (!environment) {
+      res.status(400).json({ error: 'environment query param required' });
+      return;
+    }
+
+    try {
+      const { roleArn, region } = getAccountConfig(config, environment);
+      const client = makeEc2Client(roleArn, region);
+      const vpcs = await listAllVpcs(client);
+
+      res.json({
+        vpcs: vpcs.map(v => ({
+          id: v.VpcId,
+          region,
+          cidrBlock: v.CidrBlock,
+          isDefault: v.IsDefault ?? false,
+          tags: Object.fromEntries(
+            (v.Tags ?? []).map(t => [t.Key, t.Value]),
+          ),
+        })),
+      });
+    } catch (err: any) {
+      logger.error(`Failed to list VPCs for ${environment}: ${err.message}`);
       res.status(500).json({ error: err.message });
     }
   });
