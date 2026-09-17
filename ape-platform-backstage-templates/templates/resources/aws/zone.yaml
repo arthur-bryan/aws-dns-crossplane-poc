@@ -62,21 +62,12 @@ spec:
                   title: Associated VPCs
                   type: array
                   description: VPCs this private zone will be resolvable from
-                  minItems: 1
                   items:
                     type: object
-                    required: [vpcId, vpcRegion]
-                    properties:
-                      vpcId:
-                        type: string
-                      vpcRegion:
-                        type: string
                   ui:field: AwsVpcPicker
                   ui:options:
                     environmentFieldName: environment
                     excludeDefault: true
-              required:
-                - vpcs
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
