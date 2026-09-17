@@ -62,6 +62,7 @@ spec:
                   title: Associated VPCs
                   type: array
                   description: VPCs this private zone will be resolvable from
+                  minItems: 1
                   items:
                     type: object
                   ui:field: AwsVpcPicker
