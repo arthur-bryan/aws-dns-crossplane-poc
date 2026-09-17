@@ -65,6 +65,7 @@ spec:
                   minItems: 1
                   items:
                     type: object
+                    required: [vpcId, vpcRegion]
                   ui:field: AwsVpcPicker
                   ui:options:
                     environmentFieldName: environment
