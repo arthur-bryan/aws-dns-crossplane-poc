@@ -46,35 +46,8 @@ spec:
         private:
           title: Private Hosted Zone
           type: boolean
-          description: Only resolvable from associated VPCs, not the public internet
+          description: Only resolvable from the platform's VPCs, not the public internet. The DNS account default VPC and the base network VPC are associated automatically.
           default: false
-
-      dependencies:
-        private:
-          oneOf:
-            - properties:
-                private:
-                  const: false
-            - properties:
-                private:
-                  const: true
-                vpcs:
-                  title: Associated VPCs
-                  type: array
-                  description: Your VPCs in this environment's account (at least one). The platform base network VPC is authorized and associated automatically.
-                  minItems: 1
-                  items:
-                    type: object
-                    required: [vpcId, vpcRegion]
-                    properties:
-                      vpcId:
-                        type: string
-                      vpcRegion:
-                        type: string
-                  ui:field: AwsVpcPicker
-                  ui:options:
-                    environmentFieldName: environment
-                    excludeDefault: true
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml
@@ -193,6 +166,23 @@ spec:
             $sanitized & "-" & environment & "-zone"
           )
 
+    - id: validateNameLengths
+      name: Validate generated names fit Kubernetes and Backstage limits
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          zoneName: ${{ steps.computeZoneName.output.result }}
+          entityName: ${{ steps.computeEntityName.output.result }}
+        expression: >-
+          $length("zone-" & zoneName) <= 63 and $length(entityName) <= 63
+
+    - id: launchErrorIfNameTooLong
+      name: Abort if the generated names are too long
+      if: ${{ not steps.validateNameLengths.output.result }}
+      action: error:launch
+      input:
+        message: The system name is too long for this zone. The generated names ${{ steps.computeZoneName.output.result }} would exceed the 63 character limit for the platform object names.
+
     - id: checkIfFileAlreadyExists
       name: Check If File Already Exists
       action: fs:file:exists
@@ -242,13 +232,6 @@ spec:
             {%- if not parameters.private %}
             delegatedFromZoneId: ${{ steps.resolveParentZone.output.result.id }}
             delegatedFromAccountName: ${{ steps.resolveParentZone.output.result.accountName }}
-            {%- endif %}
-            {%- if parameters.private %}
-            vpcs:
-            {%- for vpc in parameters.vpcs %}
-              - vpcId: ${{ vpc.vpcId }}
-                vpcRegion: ${{ vpc.vpcRegion }}
-            {%- endfor %}
             {%- endif %}
 
     - $yaml: ../../../shared/entities/commit.yaml

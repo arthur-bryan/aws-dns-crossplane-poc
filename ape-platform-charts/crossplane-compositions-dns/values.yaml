@@ -7,3 +7,13 @@ baseVpc:
   vpcId: vpc-0b57ae7919a8433f4
   vpcRegion: us-east-1
   accountName: dnszone-hml
+defaultVpcs:
+  dev:
+    vpcId: vpc-0dd3eaef2e5c11f69
+    vpcRegion: us-east-1
+  hml:
+    vpcId: vpc-067a880ce560341f8
+    vpcRegion: us-east-1
+  prd:
+    vpcId: vpc-0410f81cfe1bba322
+    vpcRegion: us-east-1

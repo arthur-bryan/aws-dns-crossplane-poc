@@ -85,7 +85,7 @@ spec:
 
                 vpcs:
                   type: array
-                  description: Additional VPC associations requested by the user. For private zones the platform also associates the base network VPC configured in the chart values (baseVpc) automatically, so it is not listed here. At least one VPC in the zone's own account is required because CreateHostedZone needs a same-account VPC.
+                  description: Optional extra VPC associations. Private zones always get the DNS account's default VPC (chart values defaultVpcs) as the creation VPC and the base network VPC (baseVpc) authorized and associated automatically; neither needs to be listed here.
                   items:
                     type: object
                     required: [vpcId, vpcRegion]
@@ -152,8 +152,6 @@ spec:
                   message: "zoneName must not start with hyphen"
                 - rule: "!self.zoneName.contains('..')"
                   message: "zoneName must not contain consecutive dots"
-                - rule: "!has(self.visibility) || self.visibility != 'private' || (has(self.vpcs) && size(self.vpcs) >= 1)"
-                  message: "visibility=private requires at least one vpcs entry (AWS Route 53 rejects DisassociateVPCFromHostedZone on the last association)"
                 - rule: "!has(self.delegatedFromZoneId) || has(self.delegatedFromAccountName)"
                   message: "delegatedFromAccountName is required when delegatedFromZoneId is set (parent zone may live in a different DNS account)"
 
