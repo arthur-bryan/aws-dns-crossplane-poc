@@ -85,7 +85,7 @@ spec:
 
                 vpcs:
                   type: array
-                  description: VPC associations.
+                  description: Additional VPC associations requested by the user. For private zones the platform also associates the base network VPC configured in the chart values (baseVpc) automatically, so it is not listed here. At least one VPC in the zone's own account is required because CreateHostedZone needs a same-account VPC.
                   items:
                     type: object
                     required: [vpcId, vpcRegion]
@@ -101,7 +101,7 @@ spec:
                       accountName:
                         type: string
                         minLength: 1
-                        description: AccountName matching a ClusterProviderConfig that owns the VPC. When equal to spec.aws.accountName the VPC is associated inline at zone creation. When different the platform emits a VPCAssociationAuthorization in this account plus a ZoneAssociation in the zone's account so the cross-account association is built without manual intervention. Defaults to spec.aws.accountName.
+                        description: ClusterProviderConfig name (for example dnszone-hml) that can act in the account owning the VPC. When it resolves to the zone's own DNS account the VPC is associated inline at zone creation. When different the platform emits a VPCAssociationAuthorization in this account plus a ZoneAssociation in the zone's account so the cross-account association is built without manual intervention. Defaults to spec.aws.accountName.
 
                 import:
                   type: object

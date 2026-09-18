@@ -61,7 +61,7 @@ spec:
                 vpcs:
                   title: Associated VPCs
                   type: array
-                  description: VPCs this private zone will be resolvable from
+                  description: Your VPCs in this environment's account (at least one). The platform base network VPC is authorized and associated automatically.
                   minItems: 1
                   items:
                     type: object

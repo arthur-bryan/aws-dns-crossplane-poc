@@ -3,3 +3,7 @@ managementPolicies:
   - Create
   - Update
   - Delete
+baseVpc:
+  vpcId: vpc-0b57ae7919a8433f4
+  vpcRegion: us-east-1
+  accountName: dnszone-hml

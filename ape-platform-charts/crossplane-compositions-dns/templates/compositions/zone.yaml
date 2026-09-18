@@ -50,13 +50,35 @@ spec:
             [[- $delegationName := printf "%s-delegation" $name ]]
             [[- $delegationRecord := getComposedResource . $delegationName ]]
 
+            [[- $allVpcs := list ]]
+            [[- range $vpc := $vpcs ]]
+            [[-   $allVpcs = append $allVpcs $vpc ]]
+            [[- end ]]
+            {{- if .Values.baseVpc }}
+            [[- if eq $visibility "private" ]]
+            [[-   $baseVpcId := "{{ .Values.baseVpc.vpcId }}" ]]
+            [[-   $baseVpcPresent := false ]]
+            [[-   range $vpc := $vpcs ]]
+            [[-     if eq $vpc.vpcId $baseVpcId ]]
+            [[-       $baseVpcPresent = true ]]
+            [[-     end ]]
+            [[-   end ]]
+            [[-   if not $baseVpcPresent ]]
+            [[-     $allVpcs = append $allVpcs (dict "vpcId" $baseVpcId "vpcRegion" "{{ .Values.baseVpc.vpcRegion }}" "accountName" "{{ .Values.baseVpc.accountName }}") ]]
+            [[-   end ]]
+            [[- end ]]
+            {{- end }}
+
             [[- $firstSameAccountVpc := dict ]]
             [[- $normalizedVpcs := list ]]
-            [[- range $vpc := $vpcs ]]
-            [[-   $vpcAccount := default $squadAccountName $vpc.accountName ]]
+            [[- range $vpc := $allVpcs ]]
+            [[-   $vpcAccount := default $accountName $vpc.accountName ]]
+            [[-   if eq $vpcAccount $squadAccountName ]]
+            [[-     $vpcAccount = $accountName ]]
+            [[-   end ]]
             [[-   $entry := dict "vpcId" $vpc.vpcId "vpcRegion" $vpc.vpcRegion "accountName" $vpcAccount ]]
             [[-   $normalizedVpcs = append $normalizedVpcs $entry ]]
-            [[-   if and (eq $vpcAccount $squadAccountName) (not $firstSameAccountVpc.vpcId) ]]
+            [[-   if and (eq $vpcAccount $accountName) (not $firstSameAccountVpc.vpcId) ]]
             [[-     $firstSameAccountVpc = $entry ]]
             [[-   end ]]
             [[- end ]]
@@ -181,6 +203,13 @@ spec:
             [[- $isCrossAccount := ne $vpc.accountName $accountName ]]
             [[- $authName := printf "%s-vpcauth-%s" $name $vpc.vpcId ]]
             [[- $assocName := printf "%s-vpcassoc-%s" $name $vpc.vpcId ]]
+            [[- $authReady := false ]]
+            [[- $authObserved := getComposedResource $ $authName ]]
+            [[- range $cond := $authObserved.status.conditions ]]
+            [[-   if and (eq $cond.type "Ready") (eq $cond.status "True") ]]
+            [[-     $authReady = true ]]
+            [[-   end ]]
+            [[- end ]]
             [[- if $isCrossAccount ]]
             ---
             apiVersion: route53.aws.m.upbound.io/v1beta1
@@ -208,6 +237,7 @@ spec:
                 vpcRegion: [[ $vpc.vpcRegion ]]
                 zoneId: [[ $childZoneId ]]
             [[- end ]]
+            [[- if or (not $isCrossAccount) $authReady ]]
             ---
             apiVersion: route53.aws.m.upbound.io/v1beta1
             kind: ZoneAssociation
@@ -233,6 +263,7 @@ spec:
                 vpcId: [[ $vpc.vpcId ]]
                 vpcRegion: [[ $vpc.vpcRegion ]]
                 zoneId: [[ $childZoneId ]]
+            [[- end ]]
             [[- end ]]
             [[- end ]]
 
