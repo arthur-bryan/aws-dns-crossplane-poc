@@ -1,0 +1,27 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-internal-arthurbryan-com-prd-zone
+  namespace: dns-eds437
+  description: DNS Zone created by template
+  annotations:
+    dock.tech/created-at: '1789760952152'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-zone-edit
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"prd","kind":"Zone","private":true}'
+  labels:
+    environment: prd
+    cloud: aws
+spec:
+  type: DNSZone
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: prd
+  name: dns-internal-arthurbryan-com-prd-zone
+  zoneName: dns.internal.arthurbryan.com
+  visibility: private
+  aws:
+    account: "597230762851"
+    accountName: prd-account
