@@ -235,7 +235,7 @@ spec:
             environment: ${{ parameters.environment }}
             name: ${{ steps.computeEntityName.output.result }}
             zoneName: ${{ steps.computeZoneName.output.result }}
-            visibility: ${{ parameters.private ? "private" : "public" }}
+            visibility: ${{ "private" if parameters.private else "public" }}
             aws:
               account: "${{ steps.deriveAccount.output.result.account }}"
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
