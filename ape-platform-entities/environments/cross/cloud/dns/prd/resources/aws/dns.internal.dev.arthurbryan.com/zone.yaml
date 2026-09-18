@@ -1,0 +1,22 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-dns.internal.dev.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"dev","kind":"Zone","private":true,"vpcs":[{"vpcId":"vpc-0be51ad70cd373b81","vpcRegion":"us-east-1"}]}'
+spec:
+  name: zone-dns.internal.dev.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: dev
+  zoneName: dns.internal.dev.arthurbryan.com
+  aws:
+    account: 309670275661
+    accountName: dev-account
+  visibility: private
+  vpcs:
+  - vpcId: vpc-0be51ad70cd373b81
+    vpcRegion: us-east-1
