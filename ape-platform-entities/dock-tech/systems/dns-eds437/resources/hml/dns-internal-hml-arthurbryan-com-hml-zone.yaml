@@ -1,0 +1,27 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: dns-internal-hml-arthurbryan-com-hml-zone
+  namespace: dns-eds437
+  description: DNS Zone created by template
+  annotations:
+    dock.tech/created-at: '1789759691039'
+    dock.tech/created-by: user:development/guest
+    dock.tech/scaffolder-editable-template: dns-zone-edit
+    dock.tech/scaffolder-parameters: '{"kind":"Zone","private":true,"system":"system:dns-eds437/dns","environment":"hml"}'
+  labels:
+    environment: hml
+    cloud: aws
+spec:
+  type: DNSZone
+  cloud: aws
+  owner: group:default/infrastructure
+  tribe: 
+  system: system:dns-eds437/dns
+  environment: hml
+  name: dns-internal-hml-arthurbryan-com-hml-zone
+  zoneName: dns.internal.hml.arthurbryan.com
+  visibility: private
+  aws:
+    account: "382598791794"
+    accountName: hml-account
