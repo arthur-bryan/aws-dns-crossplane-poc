@@ -46,8 +46,14 @@ spec:
         private:
           title: Private Hosted Zone
           type: boolean
-          description: Only resolvable from the platform's VPCs, not the public internet. The DNS account default VPC and the base network VPC are associated automatically.
           default: false
+
+        fqdnPreview:
+          title: Resulting Zone
+          type: string
+          ui:field: ZoneFqdnPreview
+          ui:options:
+            rootDomain: arthurbryan.com
 
   steps:
     - $yaml: ../../../shared/entities/clone.yaml

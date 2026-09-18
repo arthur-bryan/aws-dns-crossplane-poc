@@ -32,37 +32,32 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function extractSubdomain(composedName: string, systemRef: string, environment: string): string {
+function systemNameFromRef(systemRef: string): string {
   const ref = systemRef.includes('/') ? systemRef.split('/').pop()! : systemRef;
-  const systemName = ref.includes(':') ? ref.split(':').pop()! : ref;
-  const prefix = systemName ? `${systemName}-` : '';
-  const suffix = environment ? `-${environment}-zone` : '-zone';
-  let subdomain = composedName;
-  if (prefix && subdomain.startsWith(prefix)) {
-    subdomain = subdomain.slice(prefix.length);
-  }
-  if (suffix && subdomain.endsWith(suffix)) {
-    subdomain = subdomain.slice(0, subdomain.length - suffix.length);
-  }
-  return subdomain;
+  return ref.includes(':') ? ref.split(':').pop()! : ref;
+}
+
+export function computeZoneFqdn(system: string, environment: string, isPrivate: boolean, rootDomain: string): string {
+  const systemName = systemNameFromRef(system.trim());
+  if (!systemName || !environment || !rootDomain) return '';
+  const visibilityPart = isPrivate ? '.internal' : '';
+  const environmentPart = environment === 'prd' ? '' : `.${environment}`;
+  return `${systemName}${visibilityPart}${environmentPart}.${rootDomain}`;
 }
 
 export const ZoneFqdnPreview = (props: FieldExtensionComponentProps<string>) => {
   const classes = useStyles();
   const ctx = (props.formContext ?? {}) as { formData?: Record<string, any> };
   const data = ctx.formData ?? {};
+  const uiOptions = ((props.uiSchema ?? {}) as Record<string, any>)['ui:options'] ?? {};
+  const rootDomain = String(uiOptions.rootDomain ?? '').replace(/^\.+|\.+$/g, '');
 
-  const parentZone = data.parentZone;
-  const parentZoneName = parentZone && typeof parentZone === 'object'
-    ? String(parentZone.name ?? '').replace(/\.$/, '')
-    : '';
-
-  const composedName = String(data.name ?? '').trim();
-  const environment = String(data.environment ?? '').trim();
-  const systemRef = String(data.system ?? 'dns').trim();
-  const subdomain = composedName ? extractSubdomain(composedName, systemRef, environment) : '';
-
-  const fqdn = parentZoneName && subdomain ? `${subdomain}.${parentZoneName}` : '';
+  const fqdn = computeZoneFqdn(
+    String(data.system ?? ''),
+    String(data.environment ?? '').trim(),
+    data.private === true,
+    rootDomain,
+  );
 
   return (
     <div className={classes.wrap}>
