@@ -27,6 +27,11 @@ import {
   createTemplateGlobalFunction,
   scaffolderTemplatingExtensionPoint,
 } from '@backstage/plugin-scaffolder-node/alpha';
+import {
+  Route53Client,
+  ListHostedZonesByNameCommand,
+} from '@aws-sdk/client-route-53';
+import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 import { exec as execCb } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -310,6 +315,58 @@ export const githubExtrasActionsModule = createBackendModule({
           }),
 
           createTemplateAction({
+            id: 'aws:route53:zone:exists',
+            description:
+              'Return whether a Route53 hosted zone with the same name and ' +
+              'visibility already exists in the environment account.',
+            schema: {
+              input: {
+                environment: z => z.string({ description: 'dev, hml or prd.' }),
+                zoneName: z => z.string({ description: 'Zone FQDN.' }),
+                private: z =>
+                  z.boolean({ description: 'Private zone?' }).optional(),
+              },
+              output: {
+                exists: z => z.boolean({ description: 'True if found.' }),
+                zoneId: z => z.string({ description: 'Existing zone id.' }).optional(),
+              },
+            },
+            async handler(ctx) {
+              const { environment, zoneName, private: isPrivate } = ctx.input as {
+                environment: string;
+                zoneName: string;
+                private?: boolean;
+              };
+              const roleArn =
+                config.getOptionalString(`dns.accounts.${environment}.roleArn`) ??
+                '';
+              const client = new Route53Client({
+                region: 'us-east-1',
+                ...(roleArn
+                  ? {
+                      credentials: fromTemporaryCredentials({
+                        params: { RoleArn: roleArn },
+                      }),
+                    }
+                  : {}),
+              });
+              const wanted = `${zoneName.replace(/\.$/, '')}.`;
+              const resp = await client.send(
+                new ListHostedZonesByNameCommand({ DNSName: wanted, MaxItems: 20 }),
+              );
+              const match = (resp.HostedZones ?? []).find(
+                z =>
+                  z.Name === wanted &&
+                  (z.Config?.PrivateZone ?? false) === (isPrivate ?? false),
+              );
+              ctx.output('exists', Boolean(match));
+              if (match?.Id) {
+                ctx.output('zoneId', match.Id.replace('/hostedzone/', ''));
+              }
+            },
+          }),
+
+          createTemplateAction({
             id: 'error:launch',
             description: 'Fail the scaffolder task with the given message.',
             schema: {
@@ -435,7 +492,7 @@ export const githubExtrasActionsModule = createBackendModule({
 
         logger.info(
           'github-extras-actions: registered github:extras:{clone,commit,push}, ' +
-            'fs:file:exists, error:launch, activity-log:publish, ' +
+            'fs:file:exists, aws:route53:zone:exists, error:launch, activity-log:publish, ' +
             'catalog:refresh:location, catalog:system:ownership:verify',
         );
       },

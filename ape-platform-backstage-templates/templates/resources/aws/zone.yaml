@@ -123,6 +123,37 @@ spec:
             systemName & $visPart & $envSuffix & ".arthurbryan.com"
           )
 
+    - id: validateSystemLabel
+      name: Validate system name is a valid DNS label
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          systemName: ${{ steps.fetchSystem.output.entity.metadata.name }}
+        expression: >-
+          $exists($match(systemName, /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/))
+
+    - id: launchErrorIfInvalidLabel
+      name: Abort if the system name cannot be used as a DNS label
+      if: ${{ not steps.validateSystemLabel.output.result }}
+      action: error:launch
+      input:
+        message: System name "${{ steps.fetchSystem.output.entity.metadata.name }}" is not a valid DNS label (lowercase letters, digits and hyphens, max 63 chars), so a zone cannot be created for it.
+
+    - id: checkZoneExistsInAws
+      name: Check whether the hosted zone already exists in Route53
+      action: aws:route53:zone:exists
+      input:
+        environment: ${{ parameters.environment }}
+        zoneName: ${{ steps.computeZoneName.output.result }}
+        private: ${{ parameters.private }}
+
+    - id: launchErrorIfZoneExistsInAws
+      name: Abort if the hosted zone already exists in Route53
+      if: ${{ steps.checkZoneExistsInAws.output.exists }}
+      action: error:launch
+      input:
+        message: A ${{ "private" if parameters.private else "public" }} hosted zone named ${{ steps.computeZoneName.output.result }} already exists in ${{ parameters.environment }} (${{ steps.checkZoneExistsInAws.output.zoneId }}). Use Claim Existing DNS Zone to bring it under platform management instead of creating it again.
+
     - id: resolveParentZone
       name: Resolve immediate parent zone for NS delegation
       if: ${{ not parameters.private }}
