@@ -123,6 +123,32 @@ spec:
             systemName & $visPart & $envSuffix & ".arthurbryan.com"
           )
 
+    - id: resolveParentZone
+      name: Resolve immediate parent zone for NS delegation
+      if: ${{ not parameters.private }}
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          zoneName: ${{ steps.computeZoneName.output.result }}
+        expression: >-
+          (
+            $parentName := $substringAfter(zoneName, ".");
+            $parents := {
+              "dev.arthurbryan.com": {"id": "Z0945364EYNE5KZW0WIF", "accountName": "dnszone-dev"},
+              "hml.arthurbryan.com": {"id": "Z091442636MPUK86SZJ1T", "accountName": "dnszone-hml"},
+              "arthurbryan.com": {"id": "Z03010981ALJFZB4QLU8W", "accountName": "dnszone-prd"}
+            };
+            $p := $lookup($parents, $parentName);
+            $p ? {"name": $parentName, "id": $p.id, "accountName": $p.accountName} : {}
+          )
+
+    - id: launchErrorIfParentUnknown
+      name: Abort if no parent zone exists for delegation
+      if: ${{ not parameters.private and not steps.resolveParentZone.output.result.id }}
+      action: error:launch
+      input:
+        message: No parent zone found to delegate ${{ steps.computeZoneName.output.result }} from.
+
     - id: computeEntityName
       name: Compute entity name from zone name and environment
       action: roadiehq:utils:jsonata
@@ -182,6 +208,10 @@ spec:
             aws:
               account: "${{ steps.deriveAccount.output.result.account }}"
               accountName: ${{ steps.deriveAccount.output.result.accountName }}
+            {%- if not parameters.private %}
+            delegatedFromZoneId: ${{ steps.resolveParentZone.output.result.id }}
+            delegatedFromAccountName: ${{ steps.resolveParentZone.output.result.accountName }}
+            {%- endif %}
             {%- if parameters.private %}
             vpcs:
             {%- for vpc in parameters.vpcs %}
