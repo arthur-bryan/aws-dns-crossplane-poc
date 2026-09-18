@@ -102,7 +102,11 @@ spec:
 
             [[- $inlineVpcId := "" ]]
             [[- $inlineVpcRegion := "" ]]
-            [[- if and $zone.spec.forProvider.vpc (gt (len $zone.spec.forProvider.vpc) 0) ]]
+            [[- if and $zone.spec.initProvider.vpc (gt (len $zone.spec.initProvider.vpc) 0) ]]
+            [[-   $existingVpc := index $zone.spec.initProvider.vpc 0 ]]
+            [[-   $inlineVpcId = $existingVpc.vpcId ]]
+            [[-   $inlineVpcRegion = $existingVpc.vpcRegion ]]
+            [[- else if and $zone.spec.forProvider.vpc (gt (len $zone.spec.forProvider.vpc) 0) ]]
             [[-   $existingVpc := index $zone.spec.forProvider.vpc 0 ]]
             [[-   $inlineVpcId = $existingVpc.vpcId ]]
             [[-   $inlineVpcRegion = $existingVpc.vpcRegion ]]
@@ -178,11 +182,12 @@ spec:
                   [[- range $key, $value := $tags ]]
                   [[ $key ]]: [[ $value ]]
                   [[- end ]]
-                [[- if and (eq $visibility "private") $inlineVpcId ]]
+              [[- if and (eq $visibility "private") $inlineVpcId ]]
+              initProvider:
                 vpc:
                   - vpcId: [[ $inlineVpcId ]]
                     vpcRegion: [[ $inlineVpcRegion ]]
-                [[- end ]]
+              [[- end ]]
 
             [[- if and $delegatedFromZoneId $zone.status.atProvider $zone.status.atProvider.nameServers ]]
             ---
