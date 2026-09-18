@@ -1,0 +1,19 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-dns.internal.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"system":"system:dns-eds437/dns","environment":"prd","kind":"Zone","private":true}'
+spec:
+  name: zone-dns.internal.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: prd
+  zoneName: dns.internal.arthurbryan.com
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  visibility: private
