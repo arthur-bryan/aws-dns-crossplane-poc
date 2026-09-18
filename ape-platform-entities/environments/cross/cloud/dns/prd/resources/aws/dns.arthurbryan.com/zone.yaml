@@ -1,0 +1,21 @@
+---
+apiVersion: dock.tech/v1
+kind: DNSZone
+metadata:
+  name: zone-dns.arthurbryan.com
+  namespace: system-dns-prd
+  annotations:
+    dock.tech/generated-by: catalog-to-xr
+    dock.tech/scaffolder-parameters: '{"kind":"Zone","private":false,"system":"system:dns-eds437/dns","environment":"prd"}'
+spec:
+  name: zone-dns.arthurbryan.com
+  domain: cross
+  system: dns
+  environment: prd
+  zoneName: dns.arthurbryan.com
+  aws:
+    account: 597230762851
+    accountName: prd-account
+  visibility: public
+  delegatedFromZoneId: Z03010981ALJFZB4QLU8W
+  delegatedFromAccountName: dnszone-prd
